@@ -4,19 +4,6 @@ import { Platform, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 
-function TabIcon({ focused, active, inactive, children }: {
-  focused: boolean;
-  active: string;
-  inactive: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      {children}
-    </View>
-  );
-}
-
 export default function TabsLayout() {
   const theme = useTheme();
 
@@ -62,6 +49,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="chats"
+        options={{
+          title: 'Chats',
+          tabBarIcon: ({ color, size }) => (
+            <ChatsIcon color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -86,8 +82,6 @@ function DiscoverIcon({ color, size }: { color: string; size: number }) {
       }}>
         <View style={{
           position: 'absolute',
-          right: size * 0.1,
-          bottom: size * 0.1,
           width: size * 0.28,
           height: 2,
           backgroundColor: color,
@@ -128,6 +122,55 @@ function WatchlistIcon({ color, size }: { color: string; size: number }) {
     </View>
   );
 }
+
+function ChatsIcon({ color, size }: { color: string; size: number }) {
+  const r = Radius_sm;
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{
+        width: size * 0.88,
+        height: size * 0.72,
+        borderRadius: size * 0.18,
+        borderWidth: 2,
+        borderColor: color,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          gap: size * 0.12,
+        }}>
+          {[0, 1, 2].map(i => (
+            <View
+              key={i}
+              style={{
+                width: size * 0.1,
+                height: size * 0.1,
+                borderRadius: size * 0.05,
+                backgroundColor: color,
+              }}
+            />
+          ))}
+        </View>
+      </View>
+      <View style={{
+        position: 'absolute',
+        bottom: size * 0.02,
+        left: size * 0.15,
+        width: size * 0.22,
+        height: size * 0.22,
+        borderRightWidth: 2,
+        borderBottomWidth: 2,
+        borderColor: color,
+        transform: [{ rotate: '45deg' }],
+        backgroundColor: 'transparent',
+      }} />
+    </View>
+  );
+}
+
+const Radius_sm = 4;
 
 function ProfileIcon({ color, size }: { color: string; size: number }) {
   return (
