@@ -44,6 +44,12 @@ export default function DiscoverScreen() {
         <Text style={[styles.logo, { color: theme.primary }]}>PRISM</Text>
       </View>
 
+      <View style={styles.heroRow}>
+        <Text style={[styles.heroTitle, { color: theme.text }]}>
+          Discover the right software
+        </Text>
+      </View>
+
       <View style={[styles.searchRow, { backgroundColor: theme.background }]}>
         <View style={[styles.searchBox, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <Text style={[styles.searchIcon, { color: theme.mutedForeground }]}>⌕</Text>
@@ -55,15 +61,6 @@ export default function DiscoverScreen() {
             onChangeText={setQuery}
           />
         </View>
-      </View>
-
-      <View style={styles.heroRow}>
-        <Text style={[styles.heroTitle, { color: theme.text }]}>
-          Discover the right software
-        </Text>
-        <Text style={[styles.heroSub, { color: theme.mutedForeground }]}>
-          Compare pricing, features, and TCO across hundreds of vendors.
-        </Text>
       </View>
 
       <ScrollView
@@ -214,10 +211,10 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, fontWeight: '500' },
   heroRow: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
-  heroTitle: { fontSize: 20, fontWeight: '700', lineHeight: 26 },
-  heroSub: { fontSize: 13, lineHeight: 18, marginTop: 3 },
+  heroTitle: { fontSize: 16, fontWeight: '700', lineHeight: 22 },
   catScroll: { flexGrow: 0 },
   catContent: {
     paddingHorizontal: Spacing.md,
@@ -238,7 +235,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xs,
   },
   resultsCount: { fontSize: 12, fontWeight: '500' },
-  list: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl, gap: Spacing.sm },
+  list: { paddingHorizontal: Spacing.md, paddingBottom: 120, gap: Spacing.sm },
   card: {
     borderRadius: Radius.lg,
     borderWidth: 1,
