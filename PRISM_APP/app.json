@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.PRISM_APP"
+      "package": "com.anonymous.PRISM_APP",
+      "minSdkVersion": 30,
+      "targetSdkVersion": 35,
+      "compileSdkVersion": 35
     },
     "web": {
       "output": "static",
