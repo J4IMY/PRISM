@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   SafeAreaView,
@@ -13,30 +14,43 @@ import {
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { categories, mockSystems, MockSystem } from '@/lib/mock-data';
+import { useApi } from '@/hooks/use-api';
+import { api, System, Category } from '@/lib/api';
+
+const STATIC_CATS = ['All'];
 
 export default function DiscoverScreen() {
   const theme = useTheme();
   const [query, setQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
-  const [watchlisted, setWatchlisted] = useState<Set<string>>(new Set(['1', '4']));
+  const [watchlisted, setWatchlisted] = useState<Set<string>>(new Set());
 
-  const results = useMemo(() => {
-    return mockSystems.filter(s => {
-      const q = query.toLowerCase();
-      const matchQ = !q || s.name.toLowerCase().includes(q) || s.vendor.toLowerCase().includes(q) || s.category.toLowerCase().includes(q);
-      const matchC = selectedCat === 'All' || s.category === selectedCat;
-      return matchQ && matchC;
-    });
-  }, [query, selectedCat]);
+  const systemsParams = useMemo(() => ({
+    q: query.length >= 2 ? query : undefined,
+    category: selectedCat !== 'All' ? selectedCat.toLowerCase() : undefined,
+  }), [query, selectedCat]);
 
-  const toggleWatchlist = (id: string) => {
+  const { data: systemsData, loading: systemsLoading, error: systemsError } = useApi(
+    () => api.systems.list(systemsParams as Record<string, string>),
+    [systemsParams]
+  );
+
+  const { data: catsData } = useApi(() => api.categories.list(), []);
+
+  const categoryLabels = useMemo(() => {
+    if (!catsData?.categories) return STATIC_CATS;
+    return ['All', ...catsData.categories.map((c: Category) => c.name)];
+  }, [catsData]);
+
+  const systems = systemsData?.systems ?? [];
+
+  const toggleWatchlist = useCallback((id: string) => {
     setWatchlisted(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-  };
+  }, []);
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
@@ -60,6 +74,11 @@ export default function DiscoverScreen() {
             value={query}
             onChangeText={setQuery}
           />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')} hitSlop={8}>
+              <Text style={[styles.clearBtn, { color: theme.mutedForeground }]}>✕</Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -69,7 +88,7 @@ export default function DiscoverScreen() {
         style={styles.catScroll}
         contentContainerStyle={styles.catContent}
       >
-        {categories.map(cat => {
+        {categoryLabels.map(cat => {
           const active = cat === selectedCat;
           return (
             <Pressable
@@ -93,24 +112,41 @@ export default function DiscoverScreen() {
 
       <View style={styles.resultsMeta}>
         <Text style={[styles.resultsCount, { color: theme.mutedForeground }]}>
-          {results.length} system{results.length !== 1 ? 's' : ''}
+          {systemsLoading ? 'Loading…' : `${systems.length} system${systems.length !== 1 ? 's' : ''}`}
         </Text>
       </View>
 
-      <FlatList
-        data={results}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <SystemCard
-            item={item}
-            watchlisted={watchlisted.has(item.id)}
-            onPress={() => router.push({ pathname: '/system/[slug]', params: { slug: item.slug } })}
-            onWatchlist={() => toggleWatchlist(item.id)}
-          />
-        )}
-      />
+      {systemsError ? (
+        <View style={styles.errorBox}>
+          <Text style={[styles.errorText, { color: theme.mutedForeground }]}>
+            Unable to load systems. Check your connection.
+          </Text>
+        </View>
+      ) : systemsLoading ? (
+        <View style={styles.loaderBox}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={systems}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <SystemCard
+              item={item}
+              watchlisted={watchlisted.has(item.id)}
+              onPress={() => router.push({ pathname: '/system/[slug]', params: { slug: item.slug } })}
+              onWatchlist={() => toggleWatchlist(item.id)}
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Text style={[styles.emptyText, { color: theme.mutedForeground }]}>No systems found.</Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -121,7 +157,7 @@ function SystemCard({
   onPress,
   onWatchlist,
 }: {
-  item: MockSystem;
+  item: System;
   watchlisted: boolean;
   onPress: () => void;
   onWatchlist: () => void;
@@ -141,10 +177,14 @@ function SystemCard({
       ]}
     >
       <View style={styles.cardHeader}>
-        <View style={[styles.logoBox, { backgroundColor: theme.backgroundElement }]} />
+        <View style={[styles.logoBox, { backgroundColor: theme.backgroundElement }]}>
+          <Text style={[styles.logoLetter, { color: theme.mutedForeground }]}>
+            {item.name.charAt(0)}
+          </Text>
+        </View>
         <View style={styles.cardMeta}>
           <Text style={[styles.cardName, { color: theme.text }]}>{item.name}</Text>
-          <Text style={[styles.cardVendor, { color: theme.mutedForeground }]}>{item.vendor}</Text>
+          <Text style={[styles.cardVendor, { color: theme.mutedForeground }]}>{item.vendor_name}</Text>
         </View>
         <Pressable onPress={onWatchlist} style={styles.heartBtn} hitSlop={8}>
           <Text style={[styles.heart, { color: watchlisted ? '#E53E3E' : theme.mutedForeground }]}>
@@ -158,19 +198,19 @@ function SystemCard({
       </Text>
 
       <View style={styles.badgeRow}>
-        <Badge label={item.category} color={theme.badgeText} bg={theme.badgeBg} />
-        <Badge label={item.pricingTier} color={theme.badgeText} bg={theme.badgeBg} />
+        <Badge label={item.category_name} color={theme.badgeText} bg={theme.badgeBg} />
+        <Badge label={item.pricing_tier} color={theme.badgeText} bg={theme.badgeBg} />
         {item.verified && (
           <Badge label="✓ Verified" color={theme.verified} bg={theme.verifiedBg} />
         )}
-        {item.freeTrial && (
+        {item.trial_available && (
           <Badge label="Free trial" color={theme.badgeText} bg={theme.badgeBg} />
         )}
       </View>
 
       <View style={styles.priceRow}>
         <Text style={[styles.priceLabel, { color: theme.mutedForeground }]}>From</Text>
-        <Text style={[styles.price, { color: theme.text }]}>{item.startingPrice}</Text>
+        <Text style={[styles.price, { color: theme.text }]}>{item.starting_price}</Text>
       </View>
     </Pressable>
   );
@@ -209,6 +249,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: { fontSize: 18, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 15, fontWeight: '500' },
+  clearBtn: { fontSize: 14, paddingHorizontal: 4 },
   heroRow: {
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
@@ -243,7 +284,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
-  logoBox: { width: 44, height: 44, borderRadius: Radius.md },
+  logoBox: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoLetter: { fontSize: 18, fontWeight: '700' },
   cardMeta: { flex: 1 },
   cardName: { fontSize: 15, fontWeight: '700', lineHeight: 20 },
   cardVendor: { fontSize: 12, marginTop: 2 },
@@ -256,4 +304,9 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
   priceLabel: { fontSize: 12 },
   price: { fontSize: 13, fontWeight: '700' },
+  loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  errorBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.lg },
+  errorText: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  emptyBox: { paddingTop: 60, alignItems: 'center' },
+  emptyText: { fontSize: 14 },
 });
