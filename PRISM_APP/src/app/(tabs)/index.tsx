@@ -78,12 +78,12 @@ export default function DiscoverScreen() {
               style={[
                 styles.catChip,
                 {
-                  backgroundColor: active ? theme.primary : theme.backgroundElement,
-                  borderColor: active ? theme.primary : theme.border,
+                  backgroundColor: active ? theme.primary : theme.chipBg,
+                  borderColor: active ? theme.primary : theme.chipBorder,
                 },
               ]}
             >
-              <Text style={[styles.catLabel, { color: active ? theme.primaryForeground : theme.textSecondary }]}>
+              <Text style={[styles.catLabel, { color: active ? theme.primaryForeground : theme.chipText }]}>
                 {cat}
               </Text>
             </Pressable>
