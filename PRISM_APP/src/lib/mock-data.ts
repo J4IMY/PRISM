@@ -72,6 +72,130 @@ export const mockWatchlist = ['1', '4'];
 
 export const categories = ['All', 'CRM', 'ERP', 'Analytics', 'Support', 'HR', 'Security'];
 
+export type ComparisonPackage = {
+  name: string;
+  price: string;
+  billing: string;
+  highlight?: boolean;
+};
+
+export type ComparisonData = {
+  packages: ComparisonPackage[];
+  features: Record<string, boolean>;
+  tcoPerSeatPerMonth: number;
+  tcoSetupCost: number;
+  tcoYear1: number;
+  tcoYear3: number;
+};
+
+export const FEATURE_KEYS = [
+  'SSO / SAML',
+  'SCIM Provisioning',
+  'API Access',
+  'Mobile App',
+  'Custom Reporting',
+  'AI / ML Features',
+  'Multi-currency',
+  'Audit Logs',
+  'Role-based Access',
+  'Dedicated Onboarding',
+  'SLA 99.9%+',
+  'Webhooks',
+  'White-label',
+  'Custom Integrations',
+] as const;
+
+export const comparisonData: Record<string, ComparisonData> = {
+  '1': { // Nimbus CRM
+    packages: [
+      { name: 'Starter', price: '$15', billing: '/seat/mo' },
+      { name: 'Growth', price: '$29', billing: '/seat/mo', highlight: true },
+      { name: 'Enterprise', price: 'Custom', billing: 'contact sales' },
+    ],
+    features: {
+      'SSO / SAML': true, 'SCIM Provisioning': true, 'API Access': true,
+      'Mobile App': true, 'Custom Reporting': true, 'AI / ML Features': true,
+      'Multi-currency': false, 'Audit Logs': true, 'Role-based Access': true,
+      'Dedicated Onboarding': false, 'SLA 99.9%+': false, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': true,
+    },
+    tcoPerSeatPerMonth: 29, tcoSetupCost: 2500, tcoYear1: 19100, tcoYear3: 57300,
+  },
+  '2': { // IronVault ERP
+    packages: [
+      { name: 'Professional', price: '$120', billing: '/seat/mo' },
+      { name: 'Enterprise', price: 'Custom', billing: 'contact sales', highlight: true },
+    ],
+    features: {
+      'SSO / SAML': true, 'SCIM Provisioning': true, 'API Access': true,
+      'Mobile App': false, 'Custom Reporting': true, 'AI / ML Features': false,
+      'Multi-currency': true, 'Audit Logs': true, 'Role-based Access': true,
+      'Dedicated Onboarding': true, 'SLA 99.9%+': true, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': true,
+    },
+    tcoPerSeatPerMonth: 120, tcoSetupCost: 45000, tcoYear1: 89000, tcoYear3: 267000,
+  },
+  '3': { // LoopDesk
+    packages: [
+      { name: 'Free', price: '$0', billing: 'up to 3 agents' },
+      { name: 'Pro', price: '$15', billing: '/seat/mo', highlight: true },
+      { name: 'Business', price: '$39', billing: '/seat/mo' },
+    ],
+    features: {
+      'SSO / SAML': false, 'SCIM Provisioning': false, 'API Access': true,
+      'Mobile App': true, 'Custom Reporting': false, 'AI / ML Features': true,
+      'Multi-currency': false, 'Audit Logs': false, 'Role-based Access': true,
+      'Dedicated Onboarding': false, 'SLA 99.9%+': false, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': false,
+    },
+    tcoPerSeatPerMonth: 15, tcoSetupCost: 0, tcoYear1: 9000, tcoYear3: 27000,
+  },
+  '4': { // Atlas Analytics
+    packages: [
+      { name: 'Starter', price: '$99', billing: '/mo flat' },
+      { name: 'Pro', price: '$299', billing: '/mo flat', highlight: true },
+      { name: 'Enterprise', price: 'Custom', billing: 'contact sales' },
+    ],
+    features: {
+      'SSO / SAML': true, 'SCIM Provisioning': false, 'API Access': true,
+      'Mobile App': false, 'Custom Reporting': true, 'AI / ML Features': true,
+      'Multi-currency': false, 'Audit Logs': true, 'Role-based Access': true,
+      'Dedicated Onboarding': false, 'SLA 99.9%+': false, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': true,
+    },
+    tcoPerSeatPerMonth: 0, tcoSetupCost: 500, tcoYear1: 4100, tcoYear3: 12300,
+  },
+  '5': { // Northbeam HR
+    packages: [
+      { name: 'Essential', price: '$6', billing: '/seat/mo' },
+      { name: 'Growth', price: '$8', billing: '/seat/mo', highlight: true },
+      { name: 'Enterprise', price: '$14', billing: '/seat/mo' },
+    ],
+    features: {
+      'SSO / SAML': true, 'SCIM Provisioning': true, 'API Access': true,
+      'Mobile App': true, 'Custom Reporting': true, 'AI / ML Features': false,
+      'Multi-currency': true, 'Audit Logs': true, 'Role-based Access': true,
+      'Dedicated Onboarding': false, 'SLA 99.9%+': false, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': false,
+    },
+    tcoPerSeatPerMonth: 8, tcoSetupCost: 1200, tcoYear1: 6000, tcoYear3: 18000,
+  },
+  '6': { // Sentinel SecOps
+    packages: [
+      { name: 'Protect', price: 'Custom', billing: 'contact sales' },
+      { name: 'Detect & Respond', price: 'Custom', billing: 'contact sales', highlight: true },
+    ],
+    features: {
+      'SSO / SAML': true, 'SCIM Provisioning': true, 'API Access': true,
+      'Mobile App': false, 'Custom Reporting': true, 'AI / ML Features': true,
+      'Multi-currency': false, 'Audit Logs': true, 'Role-based Access': true,
+      'Dedicated Onboarding': true, 'SLA 99.9%+': true, 'Webhooks': true,
+      'White-label': false, 'Custom Integrations': true,
+    },
+    tcoPerSeatPerMonth: 0, tcoSetupCost: 30000, tcoYear1: 72000, tcoYear3: 216000,
+  },
+};
+
 export type ChatMessage = {
   id: string;
   text: string;
