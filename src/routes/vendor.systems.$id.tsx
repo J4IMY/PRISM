@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,15 +8,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Upload, Plus, Trash2 } from "lucide-react";
-import { mockSystems } from "@/lib/mock-data";
+import { queryOne } from "@/lib/db";
+
+const getSystem = createServerFn({ method: "GET" }).handler(async ({ id }: any) => {
+  const system = await queryOne<any>(
+    `SELECT
+       s.id, s.name, s.slug, s.description,
+       s.tagline, s.verified, s.pricing_tier,
+       s.starting_price, s.deployment_type,
+       c.name AS category_name
+     FROM systems s
+     LEFT JOIN categories c ON s.category_id = c.id
+     WHERE s.id = $1 AND s.status = 'active'`,
+    [id]
+  );
+  return system;
+});
 
 export const Route = createFileRoute("/vendor/systems/$id")({
-  component: VendorSystemEditPage,
-  loader: ({ params }) => {
-    const system = mockSystems.find((s) => s.id === params.id);
+  loader: async ({ params }) => {
+    const system = await getSystem({ id: params.id });
     if (!system) throw notFound();
     return { system };
   },
+  component: VendorSystemEditPage,
 });
 
 function VendorSystemEditPage() {

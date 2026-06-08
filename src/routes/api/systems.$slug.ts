@@ -23,7 +23,7 @@ export const APIRoute = createAPIFileRoute("/api/systems/$slug")({
         return Response.json({ error: "System not found" }, { status: 404 });
       }
 
-      const [features, integrations, plans, reviews] = await Promise.all([
+      const [features, integrations, plans, reviews, media] = await Promise.all([
         query(
           `SELECT feature_name, feature_value, feature_detail, category
            FROM system_features WHERE system_id = $1 ORDER BY category, feature_name`,
@@ -47,9 +47,14 @@ export const APIRoute = createAPIFileRoute("/api/systems/$slug")({
            ORDER BY r.created_at DESC LIMIT 10`,
           [(system as Record<string, unknown>).id]
         ),
+        query(
+          `SELECT id, media_type, url, caption, sort_order
+           FROM system_media WHERE system_id = $1 ORDER BY sort_order`,
+          [(system as Record<string, unknown>).id]
+        ),
       ]);
 
-      return Response.json({ system, features, integrations, plans, reviews });
+      return Response.json({ system, features, integrations, plans, reviews, media });
     } catch (err) {
       console.error(`GET /api/systems/${slug} error:`, err);
       return Response.json({ error: "Failed to fetch system" }, { status: 500 });

@@ -1,26 +1,45 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Minus } from "lucide-react";
-import { mockSystems } from "@/lib/mock-data";
+import { query } from "@/lib/db";
+
+const getSystems = createServerFn({ method: "GET" }).handler(async () => {
+  return query<any>(
+    `SELECT
+       s.id, s.name, s.slug, s.description,
+       s.deployment_type, s.pricing_tier, s.starting_price,
+       s.verified, s.trial_available,
+       c.name AS category_name,
+       v.company_name AS vendor_name
+     FROM systems s
+     LEFT JOIN categories c ON s.category_id = c.id
+     LEFT JOIN vendors v ON s.vendor_id = v.id
+     WHERE s.status = 'active'
+     ORDER BY s.verified DESC, s.rating DESC
+     LIMIT 5`
+  );
+});
 
 export const Route = createFileRoute("/compare")({
+  loader: async () => {
+    const systems = await getSystems();
+    return { systems: systems.slice(0, 3) };
+  },
   component: ComparePage,
 });
 
 function ComparePage() {
-  const systems = mockSystems.slice(0, 3);
-  const rows: Array<[string, (s: typeof systems[number]) => React.ReactNode]> = [
-    ["Vendor", (s) => s.vendor],
-    ["Category", (s) => s.category],
-    ["Pricing tier", (s) => s.pricingTier],
-    ["Deployment", (s) => s.deployment],
-    ["Fit", (s) => s.fit],
-    ["Starting price", (s) => s.startingPrice],
-    ["Free trial", (s) => s.freeTrial ? <Check className="h-4 w-4 text-primary" /> : <Minus className="h-4 w-4 text-muted-foreground" />],
+  const { systems } = Route.useLoaderData();
+  const rows: Array<[string, (s: any) => React.ReactNode]> = [
+    ["Vendor", (s) => s.vendor_name || "—"],
+    ["Category", (s) => s.category_name || "—"],
+    ["Pricing tier", (s) => s.pricing_tier || "—"],
+    ["Deployment", (s) => s.deployment_type || "—"],
+    ["Starting price", (s) => s.starting_price || "—"],
+    ["Free trial", (s) => s.trial_available ? <Check className="h-4 w-4 text-primary" /> : <Minus className="h-4 w-4 text-muted-foreground" />],
     ["Verified", (s) => s.verified ? <Check className="h-4 w-4 text-primary" /> : <Minus className="h-4 w-4 text-muted-foreground" />],
-    ["Compliance", (s) => s.compliance.join(", ")],
-    ["Integrations", (s) => s.integrations.join(", ")],
     ["Est. 3yr TCO", () => "$182,400"],
   ];
 

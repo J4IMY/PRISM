@@ -64,10 +64,11 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { systems, categories } = Route.useLoaderData();
+  const { user } = Route.useRouteContext();
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <SiteHeader user={user} />
       <main className="container mx-auto px-4 py-8">
         <section className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight">Discover the right software for your stack</h1>

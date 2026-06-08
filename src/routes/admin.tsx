@@ -1,8 +1,12 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { Database, Trash2, Users, Inbox, FileText } from "lucide-react";
+import { requireRoles } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: ({ context }) => {
+    requireRoles(context.user, ["admin"]);
+  },
   component: AdminLayout,
 });
 
@@ -15,9 +19,10 @@ const nav = [
 ] as const;
 
 function AdminLayout() {
+  const { user } = Route.useRouteContext();
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <SiteHeader user={user} />
       <div className="container mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[220px_1fr]">
         <aside>
           <p className="px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Admin</p>

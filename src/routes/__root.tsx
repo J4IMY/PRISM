@@ -9,6 +9,9 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { ThemeProvider } from "@/components/theme-provider";
+import { getSessionUser } from "@/lib/get-session";
+import type { AuthUser } from "@/lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -67,13 +70,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user: AuthUser | null }>()({
+  beforeLoad: async () => {
+    const user = await getSessionUser();
+    return { user };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "PRISM" },
+      { name: "description", content: "Discover and adopt the right software for your business" },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
       { property: "og:description", content: "Lovable Generated Project" },
@@ -109,11 +116,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const { queryClient, user } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <ThemeProvider user={user}>
+        <Outlet />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

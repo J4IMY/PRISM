@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, AlertTriangle } from "lucide-react";
-import { mockScraperItems } from "@/lib/mock-data";
+import { queryOne } from "@/lib/db";
+
+const getScraperItem = createServerFn({ method: "GET" }).handler(async ({ params }: any) => {
+  const item = await queryOne<{
+    id: string;
+    name: string;
+    source: string;
+    confidence: number;
+    age_days: number;
+    status: string;
+  }>(
+    `SELECT id, name, source, confidence, age_days, status
+     FROM scraper_items
+     WHERE id = $1`,
+    [params.id]
+  );
+  return item;
+});
 
 export const Route = createFileRoute("/moderator/item/$id")({
-  loader: ({ params }) => {
-    const item = mockScraperItems.find((i) => i.id === params.id);
+  loader: async ({ params }) => {
+    const item = await getScraperItem({ params });
     if (!item) throw notFound();
     return { item };
   },

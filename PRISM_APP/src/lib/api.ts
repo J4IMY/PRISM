@@ -1,3 +1,5 @@
+import { getAuthToken } from "./auth-storage";
+
 function getApiBase(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && envUrl.length > 0) return envUrl;
@@ -6,6 +8,15 @@ function getApiBase(): string {
 }
 
 const API_BASE = getApiBase();
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  email_verified: boolean;
+  theme: string;
+}
 
 export interface System {
   id: string;
@@ -39,6 +50,7 @@ export interface System {
 export interface SystemDetail extends System {
   vendor_website: string | null;
   vendor_verified: string;
+  demo_url?: string | null;
 }
 
 export interface SystemFeature {
@@ -82,15 +94,47 @@ export interface Category {
   system_count: number;
 }
 
-async function apiFetch<T>(path: string, params?: Record<string, string>): Promise<T> {
+export interface Thread {
+  id: string;
+  subject: string;
+  last_message: string | null;
+  unread_count: number;
+  system_name?: string;
+  vendor_name?: string;
+  updated_at: string;
+}
+
+export interface Message {
+  id: string;
+  body: string;
+  sender_id: string;
+  sender_name: string;
+  created_at: string;
+}
+
+export interface WatchlistItem extends System {
+  watchlist_id: string;
+  saved_at: string;
+}
+
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit & { params?: Record<string, string> } = {}
+): Promise<T> {
   const url = new URL(path, API_BASE);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v));
+  if (options.params) {
+    Object.entries(options.params).forEach(([k, v]) => v && url.searchParams.set(k, v));
   }
 
-  const res = await fetch(url.toString(), {
-    headers: { Accept: "application/json" },
-  });
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (options.body) headers["Content-Type"] = "application/json";
+
+  const res = await fetch(url.toString(), { ...options, headers });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -101,18 +145,30 @@ async function apiFetch<T>(path: string, params?: Record<string, string>): Promi
 }
 
 export const api = {
+  auth: {
+    login: async (email: string, password: string) => {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-client": "mobile" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Login failed");
+      return data as { user: AuthUser; token: string };
+    },
+    signup: (body: { email: string; password: string; name?: string }) =>
+      apiFetch<{ success: boolean; error?: string; message?: string }>("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    me: () => apiFetch<{ user: AuthUser | null }>("/api/auth/me"),
+    logout: () =>
+      apiFetch<{ success: boolean }>("/api/auth/logout", { method: "POST" }),
+  },
+
   systems: {
-    list: (params?: {
-      category?: string;
-      q?: string;
-      verified?: string;
-      limit?: string;
-      offset?: string;
-    }) =>
-      apiFetch<{ systems: System[]; count: number; offset: number; limit: number }>(
-        "/api/systems",
-        params as Record<string, string>
-      ),
+    list: (params?: Record<string, string>) =>
+      apiFetch<{ systems: System[]; count: number }>("/api/systems", { params }),
 
     get: (slug: string) =>
       apiFetch<{
@@ -129,7 +185,45 @@ export const api = {
   },
 
   search: {
-    query: (q: string) =>
-      apiFetch<{ results: System[]; query: string }>("/api/search", { q }),
+    query: (q: string) => apiFetch<{ results: System[]; query: string }>("/api/search", { params: { q } }),
+  },
+
+  watchlist: {
+    list: () => apiFetch<{ items: WatchlistItem[] }>("/api/watchlist"),
+    add: (system_id: string) =>
+      apiFetch("/api/watchlist", { method: "POST", body: JSON.stringify({ system_id }) }),
+    remove: (systemId: string) =>
+      apiFetch(`/api/watchlist/${systemId}`, { method: "DELETE" }),
+  },
+
+  threads: {
+    list: () => apiFetch<{ threads: Thread[] }>("/api/threads"),
+    get: (id: string) =>
+      apiFetch<{ thread: Thread; messages: Message[] }>(`/api/threads/${id}`),
+    create: (body: { system_id?: string; vendor_id?: string; subject: string; message?: string }) =>
+      apiFetch("/api/threads", { method: "POST", body: JSON.stringify(body) }),
+    sendMessage: (threadId: string, body: string) =>
+      apiFetch<{ message: Message }>(`/api/threads/${threadId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ body }),
+      }),
+  },
+
+  recommendations: {
+    submit: (answers: Record<string, unknown>) =>
+      apiFetch<{ categories: string[]; systems: System[] }>("/api/recommendations", {
+        method: "POST",
+        body: JSON.stringify(answers),
+      }),
+  },
+
+  theme: {
+    get: () => apiFetch<{ theme: string }>("/api/user/theme"),
+    set: (theme: string) =>
+      apiFetch("/api/user/theme", { method: "PATCH", body: JSON.stringify({ theme }) }),
+  },
+
+  notifications: {
+    list: () => apiFetch<{ notifications: unknown[]; unread: number }>("/api/notifications"),
   },
 };

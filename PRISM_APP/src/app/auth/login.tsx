@@ -13,11 +13,29 @@ import {
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { api } from '@/lib/api';
+import { setAuthToken } from '@/lib/auth-storage';
 
 export default function LoginScreen() {
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { token } = await api.auth.login(email.trim(), password);
+      await setAuthToken(token);
+      router.replace('/(tabs)');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
@@ -35,6 +53,8 @@ export default function LoginScreen() {
           Discover and compare enterprise software
         </Text>
 
+        {error ? <Text style={[styles.error, { color: '#E53E3E' }]}>{error}</Text> : null}
+
         <View style={styles.form}>
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.mutedForeground }]}>Email</Text>
@@ -51,12 +71,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.field}>
-            <View style={styles.labelRow}>
-              <Text style={[styles.label, { color: theme.mutedForeground }]}>Password</Text>
-              <Pressable>
-                <Text style={[styles.forgotText, { color: theme.primary }]}>Forgot password?</Text>
-              </Pressable>
-            </View>
+            <Text style={[styles.label, { color: theme.mutedForeground }]}>Password</Text>
             <TextInput
               style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
               value={password}
@@ -68,20 +83,13 @@ export default function LoginScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.replace('/(tabs)')}
-            style={({ pressed }) => [styles.signInBtn, { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 }]}
+            onPress={handleLogin}
+            disabled={loading}
+            style={({ pressed }) => [styles.signInBtn, { backgroundColor: theme.primary, opacity: pressed || loading ? 0.85 : 1 }]}
           >
-            <Text style={[styles.signInText, { color: theme.primaryForeground }]}>Sign in</Text>
-          </Pressable>
-
-          <View style={[styles.dividerRow]}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-          </View>
-
-          <Pressable style={[styles.googleBtn, { borderColor: theme.border, backgroundColor: theme.card }]}>
-            <Text style={[styles.googleBtnText, { color: theme.text }]}>Continue with Google</Text>
+            <Text style={[styles.signInText, { color: theme.primaryForeground }]}>
+              {loading ? 'Signing in…' : 'Sign in'}
+            </Text>
           </Pressable>
         </View>
 
@@ -105,11 +113,10 @@ const styles = StyleSheet.create({
   logo: { fontSize: 28, fontWeight: '900', letterSpacing: 3 },
   title: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: Spacing.lg },
   subtitle: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
+  error: { textAlign: 'center', marginTop: Spacing.md, fontSize: 14 },
   form: { marginTop: Spacing.xl, gap: Spacing.md },
   field: { gap: 6 },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { fontSize: 13, fontWeight: '600' },
-  forgotText: { fontSize: 13, fontWeight: '600' },
   input: {
     height: 48,
     borderRadius: Radius.md,
@@ -125,17 +132,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   signInText: { fontSize: 16, fontWeight: '700' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { fontSize: 13 },
-  googleBtn: {
-    height: 50,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleBtnText: { fontSize: 15, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xl },
   footerText: { fontSize: 14 },
   footerLink: { fontSize: 14, fontWeight: '700' },

@@ -26,6 +26,7 @@ import { Route as VendorInboxRouteImport } from './routes/vendor.inbox'
 import { Route as VendorCompanyRouteImport } from './routes/vendor.company'
 import { Route as SystemsSlugRouteImport } from './routes/systems.$slug'
 import { Route as ModeratorQueueRouteImport } from './routes/moderator.queue'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -124,6 +125,11 @@ const ModeratorQueueRoute = ModeratorQueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => ModeratorRoute,
 } as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/company': typeof VendorCompanyRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/company': typeof VendorCompanyRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/company': typeof VendorCompanyRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
+    | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
     | '/vendor/company'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
+    | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
     | '/vendor/company'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
+    | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
     | '/vendor/company'
@@ -503,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModeratorQueueRouteImport
       parentRoute: typeof ModeratorRoute
     }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/signup'
@@ -615,6 +634,7 @@ interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetRoute: typeof AuthResetRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -622,6 +642,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetRoute: AuthResetRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

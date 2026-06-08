@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,18 +10,36 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Heart, MessageSquare, ShieldCheck, ExternalLink, Check, Minus } from "lucide-react";
-import { mockSystems } from "@/lib/mock-data";
+import { queryOne } from "@/lib/db";
+
+const getSystem = createServerFn({ method: "GET" }).handler(async ({ slug }: any) => {
+  const system = await queryOne<any>(
+    `SELECT
+       s.id, s.name, s.slug, s.tagline, s.description,
+       s.deployment_type, s.pricing_tier, s.starting_price,
+       s.verified, s.trial_available, s.has_api, s.has_mobile_app,
+       s.has_ai_features, s.has_offline_mode, s.security_certifications,
+       c.name AS category_name,
+       v.company_name AS vendor_name
+     FROM systems s
+     LEFT JOIN categories c ON s.category_id = c.id
+     LEFT JOIN vendors v ON s.vendor_id = v.id
+     WHERE s.slug = $1 AND s.status = 'active'`,
+    [slug]
+  );
+  return system;
+});
 
 export const Route = createFileRoute("/systems/$slug")({
-  component: SystemDetailPage,
-  notFoundComponent: () => (
-    <div className="p-12 text-center"><h1 className="text-2xl font-semibold">System not found</h1></div>
-  ),
-  loader: ({ params }) => {
-    const system = mockSystems.find((s) => s.slug === params.slug);
+  loader: async ({ params }) => {
+    const system = await getSystem({ slug: params.slug });
     if (!system) throw notFound();
     return { system };
   },
+  notFoundComponent: () => (
+    <div className="p-12 text-center"><h1 className="text-2xl font-semibold">System not found</h1></div>
+  ),
+  component: SystemDetailPage,
 });
 
 function SystemDetailPage() {
@@ -37,7 +56,7 @@ function SystemDetailPage() {
               <h1 className="text-2xl font-semibold">{system.name}</h1>
               {system.verified && <Badge className="gap-1"><ShieldCheck className="h-3 w-3" />Verified</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground">by {system.vendor} · {system.category}</p>
+            <p className="text-sm text-muted-foreground">by {system.vendor_name} · {system.category_name}</p>
             <p className="mt-2">{system.tagline}</p>
           </div>
           <div className="flex gap-2">
@@ -59,12 +78,12 @@ function SystemDetailPage() {
           <TabsContent value="overview" className="space-y-4">
             <Card><CardContent className="pt-6 prose prose-sm max-w-none">
               <p>{system.description}</p>
-              <p>Designed for {system.fit} teams, deployed via {system.deployment.toLowerCase()}.</p>
+              <p>Deployed via {system.deployment_type?.toLowerCase() || "cloud"}.</p>
             </CardContent></Card>
             <div className="grid gap-4 sm:grid-cols-3">
-              <InfoCard label="Compliance" value={system.compliance.join(", ")} />
-              <InfoCard label="Integrations" value={system.integrations.join(", ")} />
-              <InfoCard label="Starting price" value={system.startingPrice} />
+              <InfoCard label="Security" value={system.security_certifications?.join(", ") || "None listed"} />
+              <InfoCard label="Features" value={`${system.has_api ? "API, " : ""}${system.has_mobile_app ? "Mobile, " : ""}${system.has_ai_features ? "AI" : ""}` || "Standard"} />
+              <InfoCard label="Starting price" value={system.starting_price} />
             </div>
           </TabsContent>
 
