@@ -1,18 +1,23 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { login } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    google: (search.google as string) || undefined,
+  }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
+  const { google } = useSearch({ from: "/auth/login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -44,9 +49,37 @@ function LoginPage() {
         <CardDescription>Welcome back to PRISM.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {google === "unavailable" && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            Google sign-in is not configured yet. Set GOOGLE_CLIENT_ID in your environment to enable it.
+          </div>
+        )}
+        {google === "error" && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            Google sign-in failed. Please try again or use email.
+          </div>
+        )}
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
         )}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            window.location.href = "/api/auth/google";
+          }}
+        >
+          Continue with Google
+        </Button>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -64,9 +97,8 @@ function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Link to="/auth/forgot" className="text-xs text-muted-foreground hover:text-foreground">Forgot?</Link>
             </div>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

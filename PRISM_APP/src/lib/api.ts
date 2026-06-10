@@ -47,10 +47,27 @@ export interface System {
   vendor_logo: string | null;
 }
 
+export interface SystemMedia {
+  id: string;
+  media_type: "image" | "video" | "screenshot";
+  url: string;
+  caption: string | null;
+  sort_order: number;
+}
+
 export interface SystemDetail extends System {
   vendor_website: string | null;
   vendor_verified: string;
   demo_url?: string | null;
+}
+
+export interface SystemDetailResponse {
+  system: SystemDetail;
+  features: SystemFeature[];
+  integrations: SystemIntegration[];
+  plans: PricingPlan[];
+  reviews: Review[];
+  media: SystemMedia[];
 }
 
 export interface SystemFeature {
@@ -170,14 +187,23 @@ export const api = {
     list: (params?: Record<string, string>) =>
       apiFetch<{ systems: System[]; count: number }>("/api/systems", { params }),
 
-    get: (slug: string) =>
-      apiFetch<{
-        system: SystemDetail;
-        features: SystemFeature[];
-        integrations: SystemIntegration[];
-        plans: PricingPlan[];
-        reviews: Review[];
-      }>(`/api/systems/${slug}`),
+    get: (slug: string) => apiFetch<SystemDetailResponse>(`/api/systems/${slug}`),
+
+    byIds: (ids: string[]) =>
+      apiFetch<{ systems: System[] }>("/api/systems", {
+        params: { ids: ids.join(","), limit: String(Math.max(ids.length, 2)) },
+      }),
+  },
+
+  compare: {
+    load: async (ids: string[]) => {
+      const { systems } = await api.systems.byIds(ids);
+      const ordered = ids
+        .map((id) => systems.find((s) => s.id === id))
+        .filter((s): s is System => !!s);
+      const details = await Promise.all(ordered.map((s) => api.systems.get(s.slug)));
+      return details;
+    },
   },
 
   categories: {
@@ -225,5 +251,13 @@ export const api = {
 
   notifications: {
     list: () => apiFetch<{ notifications: unknown[]; unread: number }>("/api/notifications"),
+  },
+
+  pushTokens: {
+    register: (token: string, platform: "ios" | "android" | "web") =>
+      apiFetch("/api/push-tokens", {
+        method: "POST",
+        body: JSON.stringify({ token, platform }),
+      }),
   },
 };

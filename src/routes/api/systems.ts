@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import { query } from "@/lib/db";
 
 export const APIRoute = createAPIFileRoute("/api/systems")({
@@ -7,6 +7,7 @@ export const APIRoute = createAPIFileRoute("/api/systems")({
     const category = url.searchParams.get("category");
     const search = url.searchParams.get("q");
     const verified = url.searchParams.get("verified");
+    const idsParam = url.searchParams.get("ids");
     const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "50"), 100);
     const offset = parseInt(url.searchParams.get("offset") ?? "0");
 
@@ -25,6 +26,13 @@ export const APIRoute = createAPIFileRoute("/api/systems")({
     }
     if (verified === "true") {
       conditions.push(`s.verified = true`);
+    }
+    if (idsParam) {
+      const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean);
+      if (ids.length > 0) {
+        conditions.push(`s.id = ANY($${paramIdx++}::uuid[])`);
+        params.push(ids);
+      }
     }
 
     params.push(limit, offset);

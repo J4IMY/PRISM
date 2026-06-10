@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -11,10 +12,12 @@ import {
   View,
 } from 'react-native';
 
+import { PasswordInput } from '@/components/password-input';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/lib/api';
 import { setAuthToken } from '@/lib/auth-storage';
+import { registerPushTokenAfterAuth } from '@/hooks/use-notifications';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -29,6 +32,7 @@ export default function LoginScreen() {
     try {
       const { token } = await api.auth.login(email.trim(), password);
       await setAuthToken(token);
+      registerPushTokenAfterAuth().catch(() => {});
       router.replace('/(tabs)');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Login failed');
@@ -72,13 +76,11 @@ export default function LoginScreen() {
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.mutedForeground }]}>Password</Text>
-            <TextInput
-              style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
+            <PasswordInput
               value={password}
               onChangeText={setPassword}
               placeholder="••••••••"
               placeholderTextColor={theme.mutedForeground}
-              secureTextEntry
             />
           </View>
 
@@ -92,6 +94,19 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
         </View>
+
+        <Pressable
+          onPress={() => {
+            const base = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+            WebBrowser.openBrowserAsync(`${base}/api/auth/google`).catch(() => {});
+          }}
+          style={({ pressed }) => [
+            styles.googleBtn,
+            { borderColor: theme.border, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Text style={[styles.googleBtnText, { color: theme.text }]}>Continue with Google</Text>
+        </Pressable>
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>Don't have an account? </Text>
@@ -132,6 +147,15 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   signInText: { fontSize: 16, fontWeight: '700' },
+  googleBtn: {
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.md,
+  },
+  googleBtnText: { fontSize: 15, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xl },
   footerText: { fontSize: 14 },
   footerLink: { fontSize: 14, fontWeight: '700' },

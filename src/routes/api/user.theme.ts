@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import { query } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 

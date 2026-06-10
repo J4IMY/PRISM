@@ -1,5 +1,15 @@
+﻿import { existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { loadEnvFile } from "node:process";
 import bcrypt from "bcryptjs";
 import pg from "pg";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = join(__dirname, "..", ".env");
+if (existsSync(envPath)) {
+  loadEnvFile(envPath);
+}
 
 const DEMO_USERS = [
   { email: "admin@prism.local", password: "Admin123!", name: "PRISM Admin", role: "admin" },
@@ -19,6 +29,29 @@ async function main() {
   const client = await pool.connect();
 
   try {
+    const extraCategories = [
+      { name: "Security", slug: "security", description: "Cybersecurity and identity management", icon: "shield", sort_order: 7 },
+      { name: "Project Management", slug: "project-management", description: "Project and task management", icon: "kanban", sort_order: 8 },
+      { name: "Communication", slug: "communication", description: "Team chat and collaboration", icon: "message-circle", sort_order: 9 },
+      { name: "Finance", slug: "finance", description: "Accounting and financial software", icon: "dollar-sign", sort_order: 10 },
+      { name: "DevOps", slug: "devops", description: "CI/CD and infrastructure tools", icon: "server", sort_order: 11 },
+      { name: "eCommerce", slug: "ecommerce", description: "Online store and retail platforms", icon: "shopping-cart", sort_order: 12 },
+    ];
+
+    for (const c of extraCategories) {
+      await client.query(
+        `INSERT INTO categories (name, slug, description, icon, sort_order)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (slug) DO NOTHING`,
+        [c.name, c.slug, c.description, c.icon, c.sort_order]
+      );
+      console.log(`category  ${c.name}`);
+    }
+
+    let demoUserId: string | null = null;
+    let vendorId: string | null = null;
+    let acmeCrmId: string | null = null;
+
     for (const u of DEMO_USERS) {
       const hash = await bcrypt.hash(u.password, 10);
       const result = await client.query<{ id: string }>(
@@ -30,6 +63,7 @@ async function main() {
       );
       console.log(`user  ${u.email} (${u.role})`);
       const userId = result.rows[0].id;
+      if (u.role === "user") demoUserId = userId;
 
       if (u.role === "vendor") {
         const vendor = await client.query<{ id: string }>(
@@ -40,7 +74,7 @@ async function main() {
            RETURNING id`,
           [userId]
         );
-        const vendorId = vendor.rows[0].id;
+        vendorId = vendor.rows[0].id;
         await client.query(
           `INSERT INTO vendor_members (vendor_id, user_id, role, can_manage_systems, can_manage_team, can_respond_messages)
            VALUES ($1, $2, 'owner', true, true, true)
@@ -53,7 +87,7 @@ async function main() {
         );
         const categoryId = crm.rows[0]?.id;
 
-        await client.query(
+        const systemResult = await client.query<{ id: string }>(
           `INSERT INTO systems (
              vendor_id, category_id, name, slug, tagline, description,
              industry, target_size, deployment_type, pricing_tier, starting_price,
@@ -67,9 +101,11 @@ async function main() {
              true, true, true, true, true,
              true, 4.5, 128, 'active', true
            )
-           ON CONFLICT (slug) DO NOTHING`,
+           ON CONFLICT (slug) DO UPDATE SET vendor_id = EXCLUDED.vendor_id
+           RETURNING id`,
           [vendorId, categoryId]
         );
+        acmeCrmId = systemResult.rows[0]?.id ?? null;
 
         await client.query(
           `INSERT INTO systems (
@@ -88,6 +124,38 @@ async function main() {
            ON CONFLICT (slug) DO NOTHING`,
           [categoryId]
         );
+      }
+    }
+
+    if (demoUserId && vendorId && acmeCrmId) {
+      const existing = await client.query<{ id: string }>(
+        `SELECT id FROM vendor_threads
+         WHERE user_id = $1 AND vendor_id = $2 AND system_id = $3
+         LIMIT 1`,
+        [demoUserId, vendorId, acmeCrmId]
+      );
+
+      let threadId = existing.rows[0]?.id;
+      if (!threadId) {
+        const thread = await client.query<{ id: string }>(
+          `INSERT INTO vendor_threads (vendor_id, system_id, user_id, subject, last_message, vendor_unread_count)
+           VALUES ($1, $2, $3, 'Question about Acme CRM Pro', 'Hi, does Acme CRM Pro integrate with Salesforce?', 1)
+           RETURNING id`,
+          [vendorId, acmeCrmId, demoUserId]
+        );
+        threadId = thread.rows[0]?.id;
+      }
+
+      if (threadId) {
+        await client.query(
+          `INSERT INTO messages (thread_id, sender_id, body)
+           SELECT $1, $2, 'Hi, does Acme CRM Pro integrate with Salesforce?'
+           WHERE NOT EXISTS (
+             SELECT 1 FROM messages WHERE thread_id = $1
+           )`,
+          [threadId, demoUserId]
+        );
+        console.log("thread  demo user ↔ acme vendor");
       }
     }
 

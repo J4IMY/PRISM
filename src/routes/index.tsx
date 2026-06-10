@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Heart, Search, ShieldCheck, Sparkles, Star } from "lucide-react";
+import { Search, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { query } from "@/lib/db";
+import { WatchlistButton } from "@/components/watchlist-button";
 
 const getSystems = createServerFn({ method: "GET" }).handler(async () => {
   return query<{
@@ -42,8 +43,7 @@ const getCategories = createServerFn({ method: "GET" }).handler(async () => {
     `SELECT c.name, COUNT(s.id)::int AS system_count
      FROM categories c
      LEFT JOIN systems s ON s.category_id = c.id AND s.status = 'active'
-     GROUP BY c.id, c.name
-     HAVING COUNT(s.id) > 0
+     GROUP BY c.id, c.name, c.sort_order
      ORDER BY c.sort_order`
   );
 });
@@ -85,10 +85,8 @@ function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
           <aside className="space-y-6">
             <FilterGroup title="Category" options={categories.map(c => c.name)} />
-            <FilterGroup title="Pricing tier" options={["Free", "$", "$$", "$$$"]} />
             <FilterGroup title="Deployment" options={["Cloud", "On-prem", "Hybrid"]} />
             <FilterGroup title="Company size" options={["SMB", "Mid", "Enterprise"]} />
-            <FilterGroup title="Compliance" options={["SOC2", "ISO27001", "HIPAA", "GDPR"]} />
           </aside>
 
           <section>
@@ -115,9 +113,7 @@ function HomePage() {
                       </CardTitle>
                       <p className="text-xs text-muted-foreground truncate">{s.vendor_name}</p>
                     </div>
-                    <Button variant="ghost" size="icon" aria-label="Add to watchlist">
-                      <Heart className="h-4 w-4" />
-                    </Button>
+                    <WatchlistButton systemId={s.id} user={user} />
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-sm text-muted-foreground line-clamp-2">{s.tagline}</p>

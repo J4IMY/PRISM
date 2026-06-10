@@ -14,7 +14,7 @@ const nav = [
   { to: "/vendor/company", label: "Company", icon: Building2 },
   { to: "/vendor/systems", label: "Systems", icon: LayoutGrid },
   { to: "/vendor/team", label: "Team", icon: Users },
-  { to: "/vendor/inbox", label: "Inbox", icon: Inbox },
+  { to: "/chats", label: "Inbox", icon: Inbox },
 ] as const;
 
 function VendorLayout() {

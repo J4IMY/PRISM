@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -9,12 +10,73 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemeMode } from '@/hooks/use-theme';
+import { api, AuthUser } from '@/lib/api';
+import { clearAuthToken } from '@/lib/auth-storage';
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const { mode, setMode } = useThemeMode();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadUser = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { user: me } = await api.auth.me();
+      setUser(me);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { loadUser(); }, [loadUser]));
+
+  const handleSignOut = async () => {
+    try {
+      await api.auth.logout();
+    } catch {
+      // ignore
+    }
+    await clearAuthToken();
+    setUser(null);
+    router.push('/auth/login');
+  };
+
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Guest';
+  const initial = displayName.charAt(0).toUpperCase();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
+        <ActivityIndicator style={{ marginTop: 40 }} color={theme.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { borderBottomColor: theme.border }]}>
+          <Text style={[styles.title, { color: theme.text }]}>Profile</Text>
+        </View>
+        <View style={styles.guestBox}>
+          <Text style={[styles.guestTitle, { color: theme.text }]}>Sign in to view your profile</Text>
+          <Pressable
+            onPress={() => router.push('/auth/login')}
+            style={[styles.btn, { backgroundColor: theme.primary }]}
+          >
+            <Text style={[styles.btnText, { color: theme.primaryForeground }]}>Sign in</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
@@ -25,62 +87,56 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.avatarRow}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <Text style={[styles.avatarInitial, { color: theme.primaryForeground }]}>A</Text>
+            <Text style={[styles.avatarInitial, { color: theme.primaryForeground }]}>{initial}</Text>
           </View>
           <View>
-            <Text style={[styles.displayName, { color: theme.text }]}>alex.kim</Text>
-            <Text style={[styles.email, { color: theme.mutedForeground }]}>alex@acme.com</Text>
+            <Text style={[styles.displayName, { color: theme.text }]}>{displayName}</Text>
+            <Text style={[styles.email, { color: theme.mutedForeground }]}>{user.email}</Text>
           </View>
         </View>
 
         <Section title="Account" theme={theme}>
-          <Field label="Username" value="alex.kim" theme={theme} />
-          <Field label="Email" value="alex@acme.com" keyboardType="email-address" theme={theme} />
-          <PrimaryButton label="Save changes" onPress={() => {}} theme={theme} />
-        </Section>
-
-        <Section title="Change Password" theme={theme}>
-          <Field label="Current password" secure theme={theme} />
-          <Field label="New password" secure theme={theme} />
-          <Field label="Confirm new password" secure theme={theme} />
-          <PrimaryButton label="Update password" onPress={() => {}} theme={theme} />
-        </Section>
-
-        <Section title="Privacy" theme={theme}>
-          <OutlineButton label="Export my data (JSON)" onPress={() => {}} theme={theme} />
-          <View style={{ height: Spacing.sm }} />
-          <View style={[styles.gdprNote, { backgroundColor: theme.backgroundElement }]}>
-            <Text style={[styles.gdprText, { color: theme.mutedForeground }]}>
-              Data deletion requests are processed within 30 days per GDPR requirements.
-            </Text>
-          </View>
-          <View style={{ height: Spacing.sm }} />
-          <DestructiveButton label="Request data deletion" onPress={() => {}} theme={theme} />
+          <Field label="Name" value={user.name ?? ''} theme={theme} editable={false} />
+          <Field label="Email" value={user.email} theme={theme} editable={false} />
+          <Field label="Role" value={user.role} theme={theme} editable={false} />
         </Section>
 
         <Section title="Appearance" theme={theme}>
           <View style={[styles.themeRow, { borderColor: theme.border }]}>
-            {(['System', 'Light', 'Dark'] as const).map(opt => (
-              <Pressable
-                key={opt}
-                style={[
-                  styles.themeOpt,
-                  {
-                    backgroundColor: opt === 'System' ? theme.primary : 'transparent',
-                    borderRadius: Radius.sm,
-                  },
-                ]}
-              >
-                <Text style={[styles.themeOptText, { color: opt === 'System' ? theme.primaryForeground : theme.textSecondary }]}>
-                  {opt}
-                </Text>
-              </Pressable>
-            ))}
+            {(['system', 'light', 'dark'] as const).map((opt) => {
+              const label = opt === 'system' ? 'System' : opt === 'light' ? 'Light' : 'Dark';
+              const active = mode === opt;
+              return (
+                <Pressable
+                  key={opt}
+                  onPress={() => {
+                    setMode(opt);
+                    api.theme.set(opt).catch(() => {});
+                  }}
+                  style={[
+                    styles.themeOpt,
+                    {
+                      backgroundColor: active ? theme.primary : 'transparent',
+                      borderRadius: Radius.sm,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.themeOptText,
+                      { color: active ? theme.primaryForeground : theme.textSecondary },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </Section>
 
         <View style={styles.bottomActions}>
-          <OutlineButton label="Sign out" onPress={() => {}} theme={theme} />
+          <OutlineButton label="Sign out" onPress={handleSignOut} theme={theme} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -98,36 +154,35 @@ function Section({ title, children, theme }: { title: string; children: React.Re
   );
 }
 
-function Field({ label, value, secure, keyboardType, theme }: {
+function Field({
+  label,
+  value,
+  theme,
+  editable = true,
+}: {
   label: string;
-  value?: string;
-  secure?: boolean;
-  keyboardType?: any;
+  value: string;
   theme: any;
+  editable?: boolean;
 }) {
   return (
     <View style={styles.field}>
       <Text style={[styles.fieldLabel, { color: theme.mutedForeground }]}>{label}</Text>
       <TextInput
-        style={[styles.fieldInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
-        defaultValue={value}
-        secureTextEntry={secure}
-        keyboardType={keyboardType}
+        style={[
+          styles.fieldInput,
+          {
+            color: theme.text,
+            borderColor: theme.border,
+            backgroundColor: theme.backgroundElement,
+            opacity: editable ? 1 : 0.7,
+          },
+        ]}
+        value={value}
+        editable={editable}
         placeholderTextColor={theme.mutedForeground}
-        placeholder={secure ? '••••••••' : undefined}
       />
     </View>
-  );
-}
-
-function PrimaryButton({ label, onPress, theme }: { label: string; onPress: () => void; theme: any }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.btn, { backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 }]}
-    >
-      <Text style={[styles.btnText, { color: theme.primaryForeground }]}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -135,20 +190,12 @@ function OutlineButton({ label, onPress, theme }: { label: string; onPress: () =
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.btn, { borderWidth: 1, borderColor: theme.border, opacity: pressed ? 0.8 : 1 }]}
+      style={({ pressed }) => [
+        styles.btn,
+        { borderWidth: 1, borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
+      ]}
     >
       <Text style={[styles.btnText, { color: theme.text }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function DestructiveButton({ label, onPress, theme }: { label: string; onPress: () => void; theme: any }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.btn, { backgroundColor: theme.destructive, opacity: pressed ? 0.8 : 1 }]}
-    >
-      <Text style={[styles.btnText, { color: theme.destructiveFg }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -161,6 +208,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: { fontSize: 22, fontWeight: '700' },
+  guestBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
+  guestTitle: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
   scroll: { padding: Spacing.md, gap: Spacing.lg, paddingBottom: Spacing.xxl },
   avatarRow: {
     flexDirection: 'row',
@@ -203,11 +252,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   btnText: { fontSize: 15, fontWeight: '600' },
-  gdprNote: {
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-  },
-  gdprText: { fontSize: 13, lineHeight: 18 },
   themeRow: {
     flexDirection: 'row',
     padding: 4,

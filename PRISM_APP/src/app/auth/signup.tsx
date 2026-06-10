@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { PasswordInput } from '@/components/password-input';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -53,25 +54,21 @@ export default function SignupScreen() {
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.mutedForeground }]}>Password</Text>
-            <TextInput
-              style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
+            <PasswordInput
               value={password}
               onChangeText={setPassword}
               placeholder="Min. 8 characters"
               placeholderTextColor={theme.mutedForeground}
-              secureTextEntry
             />
           </View>
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.mutedForeground }]}>Confirm password</Text>
-            <TextInput
-              style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
+            <PasswordInput
               value={confirm}
               onChangeText={setConfirm}
               placeholder="••••••••"
               placeholderTextColor={theme.mutedForeground}
-              secureTextEntry
             />
           </View>
 

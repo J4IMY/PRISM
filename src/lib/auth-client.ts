@@ -27,7 +27,7 @@ export async function signup(body: {
   email: string;
   password: string;
   name?: string;
-}): Promise<{ success: boolean; error?: string; message?: string }> {
+}): Promise<{ success: boolean; error?: string; message?: string; devVerificationUrl?: string }> {
   const res = await fetch("/api/auth/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

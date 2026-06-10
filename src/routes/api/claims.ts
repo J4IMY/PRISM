@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import crypto from "crypto";
 import { query, queryOne } from "@/lib/db";
 import { requireRole, logAudit } from "@/lib/auth";

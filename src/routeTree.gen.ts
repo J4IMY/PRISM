@@ -15,6 +15,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ModeratorRouteImport } from './routes/moderator'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -68,6 +69,11 @@ const ModeratorRoute = ModeratorRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/moderator': typeof ModeratorRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/moderator': typeof ModeratorRouteWithChildren
   '/profile': typeof ProfileRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/chats'
     | '/compare'
     | '/moderator'
     | '/profile'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/chats'
     | '/compare'
     | '/profile'
     | '/settings'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/chats'
     | '/compare'
     | '/moderator'
     | '/profile'
@@ -385,6 +397,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ChatsRoute: typeof ChatsRoute
   CompareRoute: typeof CompareRoute
   ModeratorRoute: typeof ModeratorRouteWithChildren
   ProfileRoute: typeof ProfileRoute
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -688,6 +708,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ChatsRoute: ChatsRoute,
   CompareRoute: CompareRoute,
   ModeratorRoute: ModeratorRouteWithChildren,
   ProfileRoute: ProfileRoute,

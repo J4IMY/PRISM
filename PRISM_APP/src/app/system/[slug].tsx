@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Video, ResizeMode } from 'expo-av';
 import {
   ActivityIndicator,
   Pressable,
@@ -14,9 +15,10 @@ import {
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useApi } from '@/hooks/use-api';
-import { api, SystemFeature, PricingPlan, SystemIntegration, Review } from '@/lib/api';
+import { api, SystemFeature, PricingPlan, SystemIntegration, Review, SystemMedia } from '@/lib/api';
+import { getAuthToken } from '@/lib/auth-storage';
 
-const TABS = ['Overview', 'Pricing', 'Features', 'TCO', 'Reviews'] as const;
+const TABS = ['Overview', 'Pricing', 'Features', 'TCO', 'Media', 'Reviews'] as const;
 type Tab = typeof TABS[number];
 
 export default function SystemDetailScreen() {
@@ -24,6 +26,7 @@ export default function SystemDetailScreen() {
   const theme = useTheme();
   const [tab, setTab] = useState<Tab>('Overview');
   const [watchlisted, setWatchlisted] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [seats, setSeats] = useState('50');
   const [term, setTerm] = useState('3');
   const [escalation, setEscalation] = useState('5');
@@ -39,6 +42,44 @@ export default function SystemDetailScreen() {
   const integrations = data?.integrations ?? [];
   const plans = data?.plans ?? [];
   const reviews = data?.reviews ?? [];
+  const media = data?.media ?? [];
+
+  useEffect(() => {
+    if (!system?.id) return;
+    (async () => {
+      const token = await getAuthToken();
+      if (!token) return;
+      try {
+        const { items } = await api.watchlist.list();
+        setWatchlisted(items.some((i) => i.id === system.id));
+      } catch {
+        // ignore
+      }
+    })();
+  }, [system?.id]);
+
+  const toggleWatchlist = useCallback(async () => {
+    if (!system) return;
+    const token = await getAuthToken();
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+    setWatchlistLoading(true);
+    const wasListed = watchlisted;
+    setWatchlisted(!wasListed);
+    try {
+      if (wasListed) {
+        await api.watchlist.remove(system.id);
+      } else {
+        await api.watchlist.add(system.id);
+      }
+    } catch {
+      setWatchlisted(wasListed);
+    } finally {
+      setWatchlistLoading(false);
+    }
+  }, [system, watchlisted]);
 
   const basePrice = plans.find(p => p.is_popular)?.price ?? '$0';
   const basePriceNum = parseInt(basePrice.replace(/[^0-9]/g, '')) || 0;
@@ -100,7 +141,7 @@ export default function SystemDetailScreen() {
         <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
           {system.name}
         </Text>
-        <Pressable onPress={() => setWatchlisted(v => !v)} hitSlop={8}>
+        <Pressable onPress={toggleWatchlist} hitSlop={8} disabled={watchlistLoading}>
           <Text style={[styles.heartBtn, { color: watchlisted ? '#E53E3E' : theme.mutedForeground }]}>
             {watchlisted ? '♥' : '♡'}
           </Text>
@@ -139,7 +180,8 @@ export default function SystemDetailScreen() {
 
         <View style={styles.ctaRow}>
           <Pressable
-            onPress={() => setWatchlisted(v => !v)}
+            onPress={toggleWatchlist}
+            disabled={watchlistLoading}
             style={[styles.ctaBtn, { borderColor: theme.border, flex: 1 }]}
           >
             <Text style={[styles.ctaBtnText, { color: theme.text }]}>
@@ -323,6 +365,39 @@ export default function SystemDetailScreen() {
                 {parseInt(term) >= 2 && <TcoRow label="Year 2" value={tcoYear2} color={theme.primaryForeground} />}
                 {parseInt(term) >= 3 && <TcoRow label="Year 3" value={tcoYear3} color={theme.primaryForeground} />}
               </Card>
+            </>
+          )}
+
+          {/* MEDIA */}
+          {tab === 'Media' && (
+            <>
+              {media.length === 0 ? (
+                <Card theme={theme}>
+                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>No media available.</Text>
+                </Card>
+              ) : (
+                media.map((m: SystemMedia) => (
+                  <Card key={m.id} theme={theme}>
+                    {m.media_type === 'video' ? (
+                      <Video
+                        source={{ uri: m.url }}
+                        style={styles.videoPlayer}
+                        useNativeControls
+                        resizeMode={ResizeMode.CONTAIN}
+                      />
+                    ) : (
+                      <View style={[styles.mediaPlaceholder, { backgroundColor: theme.backgroundElement }]}>
+                        <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                          {m.media_type}: {m.url}
+                        </Text>
+                      </View>
+                    )}
+                    {m.caption ? (
+                      <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>{m.caption}</Text>
+                    ) : null}
+                  </Card>
+                ))
+              )}
             </>
           )}
 
@@ -579,4 +654,6 @@ const styles = StyleSheet.create({
   proLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2, width: 32 },
   conLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2, width: 32 },
   proConText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  videoPlayer: { width: '100%', height: 200, borderRadius: Radius.md, backgroundColor: '#000' },
+  mediaPlaceholder: { width: '100%', minHeight: 120, borderRadius: Radius.md, padding: Spacing.md, justifyContent: 'center' },
 });

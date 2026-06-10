@@ -1,5 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
-import { Heart, MessageSquare, ShieldCheck, ExternalLink, Check, Minus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare, ShieldCheck, ExternalLink, Check, Minus } from "lucide-react";
 import { queryOne } from "@/lib/db";
+import { WatchlistButton } from "@/components/watchlist-button";
 
 const getSystem = createServerFn({ method: "GET" }).handler(async ({ slug }: any) => {
   const system = await queryOne<any>(
@@ -44,10 +55,52 @@ export const Route = createFileRoute("/systems/$slug")({
 
 function SystemDetailPage() {
   const { system } = Route.useLoaderData();
+  const { user } = Route.useRouteContext();
+  const router = useRouter();
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageBody, setMessageBody] = useState("");
+  const [messageError, setMessageError] = useState("");
+  const [messageSending, setMessageSending] = useState(false);
+
+  const handleMessageVendor = async () => {
+    if (!messageBody.trim() || messageSending) return;
+    setMessageSending(true);
+    setMessageError("");
+    try {
+      const res = await fetch("/api/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          system_id: system.id,
+          subject: `Question about ${system.name}`,
+          message: messageBody.trim(),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        thread?: { id: string };
+        thread_id?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Failed to start conversation");
+      const threadId = data.thread?.id ?? data.thread_id;
+      setMessageOpen(false);
+      setMessageBody("");
+      if (threadId) {
+        router.navigate({ to: "/chats", search: { thread: threadId } });
+      } else {
+        router.navigate({ to: "/chats" });
+      }
+    } catch (e) {
+      setMessageError(e instanceof Error ? e.message : "Failed to start conversation");
+    } finally {
+      setMessageSending(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <SiteHeader user={user} />
       <main className="container mx-auto px-4 py-8 space-y-8">
         <header className="flex flex-wrap items-start gap-4">
           <div className="h-16 w-16 rounded-lg bg-secondary" />
@@ -60,10 +113,46 @@ function SystemDetailPage() {
             <p className="mt-2">{system.tagline}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2"><Heart className="h-4 w-4" />Watchlist</Button>
-            <Button className="gap-2"><MessageSquare className="h-4 w-4" />Message vendor</Button>
+            <WatchlistButton systemId={system.id} user={user} variant="button" />
+            {user ? (
+              <Button className="gap-2" onClick={() => setMessageOpen(true)}>
+                <MessageSquare className="h-4 w-4" />Message vendor
+              </Button>
+            ) : (
+              <Button asChild className="gap-2">
+                <Link to="/auth/login"><MessageSquare className="h-4 w-4" />Message vendor</Link>
+              </Button>
+            )}
           </div>
         </header>
+
+        <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Message {system.vendor_name ?? "vendor"}</DialogTitle>
+              <DialogDescription>
+                Ask about {system.name}. Your message starts a conversation in Messages.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="vendor-message">Your message</Label>
+              <Textarea
+                id="vendor-message"
+                placeholder="Hi, I have a question about…"
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+                rows={4}
+              />
+              {messageError && <p className="text-sm text-destructive">{messageError}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMessageOpen(false)}>Cancel</Button>
+              <Button onClick={handleMessageVendor} disabled={!messageBody.trim() || messageSending}>
+                {messageSending ? "Sending…" : "Send message"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Tabs defaultValue="overview">
           <TabsList>

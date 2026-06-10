@@ -1,6 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Search, Heart, User, LayoutDashboard, ShieldCheck, GavelIcon, LogOut } from "lucide-react";
+import { Search, Heart, User, LayoutDashboard, ShieldCheck, GavelIcon, LogOut, MessageSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/lib/auth-client";
 import type { AuthUser } from "@/lib/auth";
@@ -25,9 +25,12 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           <span className="inline-block h-6 w-6 rounded bg-primary" />
           <span>PRISM</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
+        <nav className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
           <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
             <Search className="h-4 w-4" /> Discover
+          </Link>
+          <Link to="/chats" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+            <MessageSquare className="h-4 w-4" /> Messages
           </Link>
           {user && (
             <Link to="/watchlist" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">

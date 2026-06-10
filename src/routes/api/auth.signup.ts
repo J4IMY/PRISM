@@ -1,8 +1,8 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import crypto from "crypto";
 import { query } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
-import { sendVerificationEmail } from "@/lib/email";
+import { isDevEnvironment, sendVerificationEmail, useConsoleMailer } from "@/lib/email";
 
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -73,20 +73,18 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
 
       const baseUrl = process.env.APP_URL || "http://localhost:5000";
       const verificationUrl = `${baseUrl}/auth/verify?token=${token}`;
-      try {
-        await sendVerificationEmail(user.email, verificationUrl, user.name ?? undefined);
-      } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
+      await sendVerificationEmail(user.email, verificationUrl, user.name ?? undefined);
+
+      const response: Record<string, unknown> = {
+        success: true,
+        message: "Account created! Check your email to verify your address.",
+        user: { id: user.id, email: user.email, name: user.name ?? undefined },
+      };
+      if (isDevEnvironment() && useConsoleMailer()) {
+        response.devVerificationUrl = verificationUrl;
       }
 
-      return Response.json(
-        {
-          success: true,
-          message: "Account created! Check your email to verify your address.",
-          user: { id: user.id, email: user.email, name: user.name ?? undefined },
-        },
-        { status: 201 }
-      );
+      return Response.json(response, { status: 201 });
     } catch (error) {
       console.error("Signup error:", error);
       return Response.json({ success: false, error: "Failed to create account" }, { status: 500 });

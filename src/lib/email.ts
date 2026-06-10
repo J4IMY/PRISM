@@ -1,36 +1,66 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+let etherealReady: Promise<void> | null = null;
 
-function getTransporter() {
-  if (!transporter) {
-    const nodeEnv = process.env.NODE_ENV || 'development';
-    
-    if (nodeEnv === 'development') {
-      // Use Ethereal Email for testing in development
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-    } else {
-      // Use production SMTP
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
+function isSmtpConfigured(): boolean {
+  return !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+/** Console-only mailer when SMTP creds are missing (unless SMTP_FORCE opts into Ethereal). */
+export function useConsoleMailer(): boolean {
+  if (isSmtpConfigured()) return false;
+  if (process.env.SMTP_FORCE === "true") return false;
+  return true;
+}
+
+export function isDevEnvironment(): boolean {
+  return (process.env.NODE_ENV || "development") === "development";
+}
+
+function logConsoleEmail(options: EmailOptions, label = "email"): void {
+  const linkMatch = options.text.match(/https?:\/\/\S+/);
+  console.log("\n══════════════════════════════════════════════════");
+  console.log(`📧 PRISM ${label} (dev — console only, no SMTP)`);
+  console.log(`   To:      ${options.to}`);
+  console.log(`   Subject: ${options.subject}`);
+  if (linkMatch) {
+    console.log(`   Link:    ${linkMatch[0]}`);
+  }
+  console.log("══════════════════════════════════════════════════\n");
+}
+
+async function ensureTransporter() {
+  if (transporter) return transporter;
+
+  if (!isSmtpConfigured()) {
+    if (!etherealReady) {
+      etherealReady = nodemailer.createTestAccount().then((account) => {
+        transporter = nodemailer.createTransport({
+          host: "smtp.ethereal.email",
+          port: 587,
+          secure: false,
+          auth: { user: account.user, pass: account.pass },
+        });
+        console.log("\n📧 PRISM dev email: using Ethereal test account (SMTP_FORCE=true)");
+        console.log(`   User: ${account.user}`);
+        console.log(`   Pass: ${account.pass}\n`);
       });
     }
+    await etherealReady;
+    return transporter!;
   }
-  
+
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.ethereal.email",
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
   return transporter;
 }
 
@@ -41,13 +71,35 @@ export interface EmailOptions {
   html?: string;
 }
 
-export async function sendEmail(options: EmailOptions): Promise<void> {
-  const transporter = getTransporter();
-  
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || 'noreply@prism.local',
+export async function sendEmail(options: EmailOptions, label = "email"): Promise<void> {
+  if (useConsoleMailer()) {
+    logConsoleEmail(options, label);
+    return;
+  }
+
+  const transport = await ensureTransporter();
+  const nodeEnv = process.env.NODE_ENV || "development";
+
+  const info = await transport.sendMail({
+    from: process.env.EMAIL_FROM || "noreply@prism.local",
     ...options,
   });
+
+  if (nodeEnv === "development") {
+    const preview = nodemailer.getTestMessageUrl(info);
+    console.log("\n══════════════════════════════════════════════════");
+    console.log("📧 PRISM email (dev — SMTP)");
+    console.log(`   To:      ${options.to}`);
+    console.log(`   Subject: ${options.subject}`);
+    if (preview) {
+      console.log(`   Preview: ${preview}`);
+    }
+    const linkMatch = options.text.match(/https?:\/\/\S+/);
+    if (linkMatch) {
+      console.log(`   Link:    ${linkMatch[0]}`);
+    }
+    console.log("══════════════════════════════════════════════════\n");
+  }
 }
 
 export async function sendVerificationEmail(
@@ -55,9 +107,9 @@ export async function sendVerificationEmail(
   verificationUrl: string,
   name?: string
 ): Promise<void> {
-  const appName = process.env.APP_NAME || 'PRISM';
-  const greeting = name ? `Hi ${name}` : 'Hi there';
-  
+  const appName = process.env.APP_NAME || "PRISM";
+  const greeting = name ? `Hi ${name}` : "Hi there";
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -91,10 +143,11 @@ export async function sendVerificationEmail(
 </html>
   `;
 
-  await sendEmail({
-    to: email,
-    subject: `Verify your email for ${appName}`,
-    text: `
+  await sendEmail(
+    {
+      to: email,
+      subject: `Verify your email for ${appName}`,
+      text: `
 ${greeting},
 
 Thanks for signing up to ${appName}! Please verify your email by visiting this link:
@@ -104,7 +157,9 @@ ${verificationUrl}
 This link will expire in 24 hours.
 
 If you didn't create this account, ignore this email.
-    `.trim(),
-    html,
-  });
+      `.trim(),
+      html,
+    },
+    "verification"
+  );
 }

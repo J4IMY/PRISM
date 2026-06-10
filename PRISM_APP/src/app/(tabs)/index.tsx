@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,6 +16,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useApi } from '@/hooks/use-api';
 import { api, System, Category } from '@/lib/api';
+import { getAuthToken } from '@/lib/auth-storage';
 
 const STATIC_CATS = ['All'];
 
@@ -44,13 +45,45 @@ export default function DiscoverScreen() {
 
   const systems = systemsData?.systems ?? [];
 
-  const toggleWatchlist = useCallback((id: string) => {
-    setWatchlisted(prev => {
+  useEffect(() => {
+    (async () => {
+      const token = await getAuthToken();
+      if (!token) return;
+      try {
+        const { items } = await api.watchlist.list();
+        setWatchlisted(new Set(items.map((i) => i.id)));
+      } catch {
+        // not signed in
+      }
+    })();
+  }, []);
+
+  const toggleWatchlist = useCallback(async (id: string) => {
+    const token = await getAuthToken();
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+    const wasListed = watchlisted.has(id);
+    setWatchlisted((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      wasListed ? next.delete(id) : next.add(id);
       return next;
     });
-  }, []);
+    try {
+      if (wasListed) {
+        await api.watchlist.remove(id);
+      } else {
+        await api.watchlist.add(id);
+      }
+    } catch {
+      setWatchlisted((prev) => {
+        const next = new Set(prev);
+        wasListed ? next.add(id) : next.delete(id);
+        return next;
+      });
+    }
+  }, [watchlisted]);
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>

@@ -1,9 +1,15 @@
-import { readFileSync, readdirSync } from "fs";
+﻿import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { loadEnvFile } from "node:process";
 import pg from "pg";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = join(__dirname, "..", ".env");
+if (existsSync(envPath)) {
+  loadEnvFile(envPath);
+}
+
 const migrationsDir = join(__dirname, "..", "migrations");
 
 async function main() {

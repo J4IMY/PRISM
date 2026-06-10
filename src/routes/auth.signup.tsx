@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { signup } from "@/lib/auth-client";
 
@@ -18,6 +19,7 @@ function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [savedEmail, setSavedEmail] = useState("");
+  const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,9 @@ function SignupPage() {
       const result = await signup({ email, password, name });
       if (result.success) {
         setSavedEmail(email);
+        if (result.devVerificationUrl) {
+          setDevVerificationUrl(result.devVerificationUrl);
+        }
         setSuccess(true);
       } else {
         setError(result.error || "Failed to create account");
@@ -45,8 +50,21 @@ function SignupPage() {
           <CardTitle>Account Created!</CardTitle>
           <CardDescription>Check your email to verify your account</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm">We've sent a verification email to <span className="font-semibold">{savedEmail}</span></p>
+        <CardContent className="space-y-3">
+          <p className="text-sm">
+            We've sent a verification email to <span className="font-semibold">{savedEmail}</span>
+          </p>
+          {devVerificationUrl && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+              <p className="font-medium text-amber-900">Dev mode — no SMTP configured</p>
+              <p className="mt-1 text-amber-800">
+                Open this link to verify your account:{" "}
+                <a href={devVerificationUrl} className="break-all font-mono underline">
+                  {devVerificationUrl}
+                </a>
+              </p>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button asChild className="w-full"><Link to="/auth/login">Go to Login</Link></Button>
@@ -74,7 +92,7 @@ function SignupPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Creating Account..." : "Create account"}

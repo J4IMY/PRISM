@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, AlertTriangle } from "lucide-react";
 import { queryOne } from "@/lib/db";
+import { ScraperActions } from "@/components/scraper-actions";
+import { Toaster } from "@/components/ui/sonner";
 
 const getScraperItem = createServerFn({ method: "GET" }).handler(async ({ params }: any) => {
   const item = await queryOne<{
@@ -39,6 +41,7 @@ function ModeratorItemPage() {
   const { item } = Route.useLoaderData();
   return (
     <div className="space-y-6">
+      <Toaster />
       <Link to="/moderator/queue" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"><ChevronLeft className="h-4 w-4" />Back to queue</Link>
       <div className="flex items-center justify-between">
         <div>
@@ -78,9 +81,7 @@ function ModeratorItemPage() {
       </div>
 
       <div className="flex gap-2 justify-end">
-        <Button variant="outline">Escalate to admin</Button>
-        <Button variant="destructive">Reject</Button>
-        <Button>Mark ready → publish</Button>
+        <ScraperActions itemId={item.id} status={item.status} layout="stacked" />
       </div>
     </div>
   );

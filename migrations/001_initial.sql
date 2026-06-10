@@ -334,5 +334,11 @@ INSERT INTO categories (name, slug, description, icon, sort_order) VALUES
   ('Helpdesk', 'helpdesk', 'Customer support & ticketing', 'headphones', 3),
   ('HR', 'hr', 'Human resources & payroll', 'user-check', 4),
   ('Marketing', 'marketing', 'Marketing automation', 'megaphone', 5),
-  ('Analytics', 'analytics', 'Business intelligence & analytics', 'bar-chart', 6)
+  ('Analytics', 'analytics', 'Business intelligence & analytics', 'bar-chart', 6),
+  ('Security', 'security', 'Cybersecurity and identity management', 'shield', 7),
+  ('Project Management', 'project-management', 'Project and task management', 'kanban', 8),
+  ('Communication', 'communication', 'Team chat and collaboration', 'message-circle', 9),
+  ('Finance', 'finance', 'Accounting and financial software', 'dollar-sign', 10),
+  ('DevOps', 'devops', 'CI/CD and infrastructure tools', 'server', 11),
+  ('eCommerce', 'ecommerce', 'Online store and retail platforms', 'shopping-cart', 12)
 ON CONFLICT (slug) DO NOTHING;
