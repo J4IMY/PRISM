@@ -7,7 +7,10 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   return data.user;
 }
 
-export async function login(email: string, password: string): Promise<{ user: AuthUser; error?: string }> {
+export async function login(
+  email: string,
+  password: string
+): Promise<{ user: AuthUser; error?: string; redirectTo?: string }> {
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,7 +19,7 @@ export async function login(email: string, password: string): Promise<{ user: Au
   });
   const data = await res.json();
   if (!res.ok) return { user: null as unknown as AuthUser, error: data.error ?? "Login failed" };
-  return { user: data.user };
+  return { user: data.user, redirectTo: data.redirectTo };
 }
 
 export async function logout(): Promise<void> {
@@ -27,6 +30,7 @@ export async function signup(body: {
   email: string;
   password: string;
   name?: string;
+  vendorApplication?: boolean;
 }): Promise<{ success: boolean; error?: string; message?: string; devVerificationUrl?: string }> {
   const res = await fetch("/api/auth/signup", {
     method: "POST",

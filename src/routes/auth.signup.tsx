@@ -1,20 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { signup } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/signup")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    vendor: (search.vendor as string) || undefined,
+  }),
   component: SignupPage,
 });
 
 function SignupPage() {
+  const { vendor } = useSearch({ from: "/auth/signup" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [applyAsVendor, setApplyAsVendor] = useState(vendor === "1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -26,7 +32,7 @@ function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await signup({ email, password, name });
+      const result = await signup({ email, password, name, vendorApplication: applyAsVendor });
       if (result.success) {
         setSavedEmail(email);
         if (result.devVerificationUrl) {
@@ -77,7 +83,11 @@ function SignupPage() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
-        <CardDescription>We'll send a verification email.</CardDescription>
+        <CardDescription>
+          {applyAsVendor
+            ? "Register with your company email. We'll send a verification link."
+            : "We'll send a verification email."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -86,9 +96,33 @@ function SignupPage() {
             <Label htmlFor="name">Full Name (Optional)</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="apply-as-vendor"
+              checked={applyAsVendor}
+              onCheckedChange={(checked) => setApplyAsVendor(checked === true)}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="apply-as-vendor" className="text-sm font-normal cursor-pointer">
+                Apply as a software vendor
+              </Label>
+              {applyAsVendor && (
+                <p className="text-xs text-muted-foreground">
+                  Use your work email — personal domains like Gmail and Outlook are not accepted.
+                </p>
+              )}
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              placeholder={applyAsVendor ? "you@company.com" : undefined}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>

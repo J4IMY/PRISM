@@ -2,6 +2,7 @@ import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import crypto from "crypto";
 import { query } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { COMPANY_EMAIL_REQUIRED_MESSAGE, isCompanyEmail } from "@/lib/company-email";
 import { isDevEnvironment, sendVerificationEmail, useConsoleMailer } from "@/lib/email";
 
 function validateEmail(email: string): boolean {
@@ -31,8 +32,9 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
         email?: string;
         password?: string;
         name?: string;
+        vendorApplication?: boolean;
       };
-      const { email, password, name } = body;
+      const { email, password, name, vendorApplication } = body;
 
       if (!email || !password) {
         return Response.json({ success: false, error: "Email and password are required" }, { status: 400 });
@@ -46,6 +48,10 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
         return Response.json({ success: false, error: passwordValidation.message }, { status: 400 });
       }
 
+      if (vendorApplication && !isCompanyEmail(email)) {
+        return Response.json({ success: false, error: COMPANY_EMAIL_REQUIRED_MESSAGE }, { status: 400 });
+      }
+
       const existing = await query<{ id: string }>(
         "SELECT id FROM users WHERE email = $1",
         [email.toLowerCase()]
@@ -55,11 +61,12 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
       }
 
       const passwordHash = await hashPassword(password);
+      const role = vendorApplication ? "vendor" : "user";
       const users = await query<{ id: string; email: string; name: string | null }>(
-        `INSERT INTO users (email, password_hash, name, role)
-         VALUES ($1, $2, $3, 'user')
+        `INSERT INTO users (email, password_hash, name, role, vendor_application)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING id, email, name`,
-        [email.toLowerCase(), passwordHash, name || null]
+        [email.toLowerCase(), passwordHash, name || null, role, !!vendorApplication]
       );
       const user = users[0];
 

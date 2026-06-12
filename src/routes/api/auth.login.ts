@@ -1,4 +1,5 @@
 import { createAPIFileRoute } from "@/lib/create-api-file-route";
+import { query } from "@/lib/db";
 import {
   createSession,
   getUserByEmail,
@@ -41,13 +42,29 @@ export const APIRoute = createAPIFileRoute("/api/auth/login")({
         theme: user.theme,
       };
 
+      let redirectTo: string | undefined;
+      try {
+        const vendorFlags = await query<{ vendor_application: boolean }>(
+          "SELECT vendor_application FROM users WHERE id = $1",
+          [user.id]
+        );
+        if (vendorFlags[0]?.vendor_application) {
+          redirectTo = "/vendor/company";
+          await query("UPDATE users SET vendor_application = false WHERE id = $1", [user.id]);
+        }
+      } catch (vendorErr) {
+        console.warn("vendor_application check skipped (run npm run migrate):", vendorErr);
+      }
+
       const isMobile = request.headers.get("x-client") === "mobile";
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (!isMobile) {
         headers["Set-Cookie"] = sessionCookie(token);
       }
 
-      return new Response(JSON.stringify({ user: authUser, token: isMobile ? token : undefined }), {
+      return new Response(
+        JSON.stringify({ user: authUser, token: isMobile ? token : undefined, redirectTo }),
+        {
         status: 200,
         headers,
       });

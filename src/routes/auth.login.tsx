@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { login } from "@/lib/auth-client";
 
@@ -20,6 +21,7 @@ function LoginPage() {
   const { google } = useSearch({ from: "/auth/login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [applyAsVendor, setApplyAsVendor] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +36,7 @@ function LoginPage() {
         return;
       }
       await router.invalidate();
-      router.navigate({ to: "/" });
+      router.navigate({ to: result.redirectTo ?? "/" });
     } catch {
       setError("An unexpected error occurred");
     } finally {
@@ -109,8 +111,34 @@ function LoginPage() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="justify-center text-sm text-muted-foreground">
-        No account? <Link to="/auth/signup" className="ml-1 text-foreground hover:underline">Sign up</Link>
+      <CardFooter className="flex-col gap-4">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="apply-as-vendor"
+            checked={applyAsVendor}
+            onCheckedChange={(checked) => setApplyAsVendor(checked === true)}
+          />
+          <div className="space-y-1">
+            <Label htmlFor="apply-as-vendor" className="text-sm font-normal cursor-pointer">
+              Apply as a software vendor
+            </Label>
+            {applyAsVendor && (
+              <p className="text-xs text-muted-foreground">
+                Sign up with your company email to list software on PRISM.
+              </p>
+            )}
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          No account?{" "}
+          <Link
+            to="/auth/signup"
+            search={applyAsVendor ? { vendor: "1" } : {}}
+            className="text-foreground hover:underline"
+          >
+            Sign up
+          </Link>
+        </p>
       </CardFooter>
     </Card>
   );

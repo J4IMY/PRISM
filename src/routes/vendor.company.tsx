@@ -46,6 +46,7 @@ function VendorCompanyPage() {
   const [github, setGithub] = useState("");
   const [logoFileError, setLogoFileError] = useState("");
   const [verified, setVerified] = useState(false);
+  const [isNew, setIsNew] = useState(false);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,10 +63,11 @@ function VendorCompanyPage() {
         }
         const vendor = data.vendor as Vendor | null;
         if (!vendor) {
-          if (!cancelled) setError("No vendor profile found. Create one first.");
+          if (!cancelled) setIsNew(true);
           return;
         }
         if (cancelled) return;
+        setIsNew(false);
         setCompanyName(vendor.company_name ?? "");
         setLogoUrl(vendor.logo_url ?? "");
         setWebsite(vendor.website ?? "");
@@ -119,29 +121,40 @@ function VendorCompanyPage() {
     setError("");
     setSuccess("");
     try {
+      const socialLinks = {
+        linkedin: linkedin || undefined,
+        twitter: twitter || undefined,
+        youtube: youtube || undefined,
+        github: github || undefined,
+      };
+      const payload = isNew
+        ? {
+            company_name: companyName,
+            logo_url: logoUrl || null,
+            website: website || null,
+            description: description || null,
+          }
+        : {
+            company_name: companyName,
+            logo_url: logoUrl || null,
+            website: website || null,
+            description: description || null,
+            social_links: socialLinks,
+          };
       const res = await fetch("/api/vendors", {
-        method: "PATCH",
+        method: isNew ? "POST" : "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company_name: companyName,
-          logo_url: logoUrl || null,
-          website: website || null,
-          description: description || null,
-          social_links: {
-            linkedin: linkedin || undefined,
-            twitter: twitter || undefined,
-            youtube: youtube || undefined,
-            github: github || undefined,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Failed to save");
         return;
       }
-      setSuccess("Company profile saved.");
+      const wasNew = isNew;
+      if (isNew) setIsNew(false);
+      setSuccess(wasNew ? "Company profile created." : "Company profile saved.");
     } catch {
       setError("Failed to save");
     } finally {
@@ -158,7 +171,7 @@ function VendorCompanyPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Company profile</h1>
+        <h1 className="text-2xl font-semibold">{isNew ? "Set up your company profile" : "Company profile"}</h1>
         {verified && (
           <Badge className="gap-1">
             <ShieldCheck className="h-3 w-3" /> Verified
@@ -274,7 +287,7 @@ function VendorCompanyPage() {
         </Card>
 
         <Button type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Save"}
+          {saving ? "Saving…" : isNew ? "Create profile" : "Save"}
         </Button>
       </form>
     </div>
