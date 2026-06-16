@@ -23,7 +23,8 @@ import { MessageSquare, ShieldCheck, ExternalLink, Check, Minus } from "lucide-r
 import { queryOne } from "@/lib/db";
 import { WatchlistButton } from "@/components/watchlist-button";
 
-const getSystem = createServerFn({ method: "GET" }).handler(async ({ slug }: any) => {
+const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: { data: { slug: string } }) => {
+  const { slug } = data;
   const system = await queryOne<any>(
     `SELECT
        s.id, s.name, s.slug, s.tagline, s.description,
@@ -43,7 +44,7 @@ const getSystem = createServerFn({ method: "GET" }).handler(async ({ slug }: any
 
 export const Route = createFileRoute("/systems/$slug")({
   loader: async ({ params }) => {
-    const system = await getSystem({ slug: params.slug });
+    const system = await getSystem({ data: { slug: params.slug } });
     if (!system) throw notFound();
     return { system };
   },
