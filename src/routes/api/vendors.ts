@@ -22,7 +22,24 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
          LIMIT 1`,
         [user.id]
       );
-      return Response.json({ vendor });
+      if (!vendor) {
+        return Response.json({ vendor: null });
+      }
+
+      const technologies = await query(
+        `SELECT id, name, color FROM technologies WHERE vendor_id = $1 ORDER BY name`,
+        [vendor.id]
+      );
+      const contacts = await query(
+        `SELECT id, name, role, email, avatar_url FROM contacts WHERE vendor_id = $1 ORDER BY name`,
+        [vendor.id]
+      );
+
+      return Response.json({
+        vendor,
+        technologies,
+        contacts,
+      });
     } catch (err) {
       console.error("GET /api/vendors error:", err);
       return Response.json({ error: "Failed to fetch vendor" }, { status: 500 });

@@ -66,14 +66,14 @@ async function main() {
       if (u.role === "user") demoUserId = userId;
 
       if (u.role === "vendor") {
-        const vendor = await client.query<{ id: string }>(
-          `INSERT INTO vendors (owner_user_id, company_name, slug, logo_url, website, verification_status, description)
-           VALUES ($1, 'Acme Software', 'acme-software', null, 'https://acme.local', 'verified',
-                   'Enterprise software solutions for growing businesses.')
-           ON CONFLICT (slug) DO UPDATE SET owner_user_id = EXCLUDED.owner_user_id
-           RETURNING id`,
-          [userId]
-        );
+      const vendor = await client.query<{ id: string }>(
+        `INSERT INTO vendors (owner_user_id, company_name, slug, logo_url, website, verification_status, description, company_size, founded_date)
+         VALUES ($1, 'Acme Software', 'acme-software', null, 'https://acme.local', 'verified',
+                 'Enterprise software solutions for growing businesses.', '5,001–10,000', '1998')
+         ON CONFLICT (slug) DO UPDATE SET owner_user_id = EXCLUDED.owner_user_id
+         RETURNING id`,
+        [userId]
+      );
         vendorId = vendor.rows[0].id;
         await client.query(
           `INSERT INTO vendor_members (vendor_id, user_id, role, can_manage_systems, can_manage_team, can_respond_messages)
@@ -81,6 +81,38 @@ async function main() {
            ON CONFLICT (vendor_id, user_id) DO NOTHING`,
           [vendorId, userId]
         );
+
+        const techSeeds = [
+          { name: "Microsoft 365", color: "#3b82f6" },
+          { name: ".NET", color: "#9333ea" },
+          { name: "Java", color: "#d97706" },
+          { name: "AWS", color: "#f97316" },
+          { name: "React", color: "#22d3ee" },
+        ];
+        for (const t of techSeeds) {
+          await client.query(
+            `INSERT INTO technologies (vendor_id, name, color)
+             VALUES ($1, $2, $3)
+             ON CONFLICT DO NOTHING`,
+            [vendorId, t.name, t.color]
+          );
+          console.log(`technology  ${t.name}`);
+        }
+
+        const contactSeeds = [
+          { name: "Jane Smith", role: "IT Director", email: "jane.smith@company.com" },
+          { name: "Mark Johnson", role: "Software Asset Manager", email: "mark.johnson@company.com" },
+          { name: "Lisa Chen", role: "Procurement Manager", email: "lisa.chen@company.com" },
+        ];
+        for (const c of contactSeeds) {
+          await client.query(
+            `INSERT INTO contacts (vendor_id, name, role, email)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT DO NOTHING`,
+            [vendorId, c.name, c.role, c.email]
+          );
+          console.log(`contact  ${c.name}`);
+        }
 
         const crm = await client.query<{ id: string }>(
           "SELECT id FROM categories WHERE slug = 'crm' LIMIT 1"

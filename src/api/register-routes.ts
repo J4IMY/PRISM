@@ -28,6 +28,8 @@ import "@/routes/api/threads.$id.messages";
 import "@/routes/api/user.theme";
 import "@/routes/api/vendor-systems";
 import "@/routes/api/vendor-systems.$id";
+import "@/routes/api/vendor-systems.$id.media";
+import "@/routes/api/vendor-systems.$id.media.$mediaId";
 import "@/routes/api/vendor-threads";
 import "@/routes/api/vendor-threads.$id";
 import "@/routes/api/vendors";

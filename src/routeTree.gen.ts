@@ -24,7 +24,6 @@ import { Route as ModeratorIndexRouteImport } from './routes/moderator.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VendorTeamRouteImport } from './routes/vendor.team'
 import { Route as VendorInboxRouteImport } from './routes/vendor.inbox'
-import { Route as VendorCompanyRouteImport } from './routes/vendor.company'
 import { Route as SystemsSlugRouteImport } from './routes/systems.$slug'
 import { Route as ModeratorQueueRouteImport } from './routes/moderator.queue'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
@@ -38,6 +37,7 @@ import { Route as AdminModeratorsRouteImport } from './routes/admin.moderators'
 import { Route as AdminDeletionsRouteImport } from './routes/admin.deletions'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as VendorSystemsIndexRouteImport } from './routes/vendor.systems.index'
+import { Route as VendorCompanyIndexRouteImport } from './routes/vendor/company/index'
 import { Route as VendorSystemsIdRouteImport } from './routes/vendor.systems.$id'
 import { Route as ModeratorItemIdRouteImport } from './routes/moderator.item.$id'
 
@@ -116,11 +116,6 @@ const VendorInboxRoute = VendorInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => VendorRoute,
 } as any)
-const VendorCompanyRoute = VendorCompanyRouteImport.update({
-  id: '/company',
-  path: '/company',
-  getParentRoute: () => VendorRoute,
-} as any)
 const SystemsSlugRoute = SystemsSlugRouteImport.update({
   id: '/systems/$slug',
   path: '/systems/$slug',
@@ -186,6 +181,11 @@ const VendorSystemsIndexRoute = VendorSystemsIndexRouteImport.update({
   path: '/systems/',
   getParentRoute: () => VendorRoute,
 } as any)
+const VendorCompanyIndexRoute = VendorCompanyIndexRouteImport.update({
+  id: '/company/',
+  path: '/company/',
+  getParentRoute: () => VendorRoute,
+} as any)
 const VendorSystemsIdRoute = VendorSystemsIdRouteImport.update({
   id: '/systems/$id',
   path: '/systems/$id',
@@ -220,7 +220,6 @@ export interface FileRoutesByFullPath {
   '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
-  '/vendor/company': typeof VendorCompanyRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
   '/admin/': typeof AdminIndexRoute
@@ -228,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/vendor/': typeof VendorIndexRoute
   '/moderator/item/$id': typeof ModeratorItemIdRoute
   '/vendor/systems/$id': typeof VendorSystemsIdRoute
+  '/vendor/company/': typeof VendorCompanyIndexRoute
   '/vendor/systems/': typeof VendorSystemsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -250,7 +250,6 @@ export interface FileRoutesByTo {
   '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
-  '/vendor/company': typeof VendorCompanyRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
   '/admin': typeof AdminIndexRoute
@@ -258,6 +257,7 @@ export interface FileRoutesByTo {
   '/vendor': typeof VendorIndexRoute
   '/moderator/item/$id': typeof ModeratorItemIdRoute
   '/vendor/systems/$id': typeof VendorSystemsIdRoute
+  '/vendor/company': typeof VendorCompanyIndexRoute
   '/vendor/systems': typeof VendorSystemsIndexRoute
 }
 export interface FileRoutesById {
@@ -284,7 +284,6 @@ export interface FileRoutesById {
   '/auth/verify': typeof AuthVerifyRoute
   '/moderator/queue': typeof ModeratorQueueRoute
   '/systems/$slug': typeof SystemsSlugRoute
-  '/vendor/company': typeof VendorCompanyRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
   '/admin/': typeof AdminIndexRoute
@@ -292,6 +291,7 @@ export interface FileRoutesById {
   '/vendor/': typeof VendorIndexRoute
   '/moderator/item/$id': typeof ModeratorItemIdRoute
   '/vendor/systems/$id': typeof VendorSystemsIdRoute
+  '/vendor/company/': typeof VendorCompanyIndexRoute
   '/vendor/systems/': typeof VendorSystemsIndexRoute
 }
 export interface FileRouteTypes {
@@ -319,7 +319,6 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
-    | '/vendor/company'
     | '/vendor/inbox'
     | '/vendor/team'
     | '/admin/'
@@ -327,6 +326,7 @@ export interface FileRouteTypes {
     | '/vendor/'
     | '/moderator/item/$id'
     | '/vendor/systems/$id'
+    | '/vendor/company/'
     | '/vendor/systems/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -349,7 +349,6 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
-    | '/vendor/company'
     | '/vendor/inbox'
     | '/vendor/team'
     | '/admin'
@@ -357,6 +356,7 @@ export interface FileRouteTypes {
     | '/vendor'
     | '/moderator/item/$id'
     | '/vendor/systems/$id'
+    | '/vendor/company'
     | '/vendor/systems'
   id:
     | '__root__'
@@ -382,7 +382,6 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/moderator/queue'
     | '/systems/$slug'
-    | '/vendor/company'
     | '/vendor/inbox'
     | '/vendor/team'
     | '/admin/'
@@ -390,6 +389,7 @@ export interface FileRouteTypes {
     | '/vendor/'
     | '/moderator/item/$id'
     | '/vendor/systems/$id'
+    | '/vendor/company/'
     | '/vendor/systems/'
   fileRoutesById: FileRoutesById
 }
@@ -514,13 +514,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorInboxRouteImport
       parentRoute: typeof VendorRoute
     }
-    '/vendor/company': {
-      id: '/vendor/company'
-      path: '/company'
-      fullPath: '/vendor/company'
-      preLoaderRoute: typeof VendorCompanyRouteImport
-      parentRoute: typeof VendorRoute
-    }
     '/systems/$slug': {
       id: '/systems/$slug'
       path: '/systems/$slug'
@@ -612,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorSystemsIndexRouteImport
       parentRoute: typeof VendorRoute
     }
+    '/vendor/company/': {
+      id: '/vendor/company/'
+      path: '/company'
+      fullPath: '/vendor/company/'
+      preLoaderRoute: typeof VendorCompanyIndexRouteImport
+      parentRoute: typeof VendorRoute
+    }
     '/vendor/systems/$id': {
       id: '/vendor/systems/$id'
       path: '/systems/$id'
@@ -684,20 +684,20 @@ const ModeratorRouteWithChildren = ModeratorRoute._addFileChildren(
 )
 
 interface VendorRouteChildren {
-  VendorCompanyRoute: typeof VendorCompanyRoute
   VendorInboxRoute: typeof VendorInboxRoute
   VendorTeamRoute: typeof VendorTeamRoute
   VendorIndexRoute: typeof VendorIndexRoute
   VendorSystemsIdRoute: typeof VendorSystemsIdRoute
+  VendorCompanyIndexRoute: typeof VendorCompanyIndexRoute
   VendorSystemsIndexRoute: typeof VendorSystemsIndexRoute
 }
 
 const VendorRouteChildren: VendorRouteChildren = {
-  VendorCompanyRoute: VendorCompanyRoute,
   VendorInboxRoute: VendorInboxRoute,
   VendorTeamRoute: VendorTeamRoute,
   VendorIndexRoute: VendorIndexRoute,
   VendorSystemsIdRoute: VendorSystemsIdRoute,
+  VendorCompanyIndexRoute: VendorCompanyIndexRoute,
   VendorSystemsIndexRoute: VendorSystemsIndexRoute,
 }
 
