@@ -28,7 +28,7 @@ export const APIRoute = createAPIFileRoute("/api/recommendations")({
 
       for (const [slug, keywords] of Object.entries(CATEGORY_WEIGHTS)) {
         scores[slug] = keywords.filter((k) =>
-          needs.some((n) => n.includes(k) || k.includes(n))
+          needs.some((n) => n.includes(k) || k.includes(n)),
         ).length;
         if (body.industry?.toLowerCase().includes(slug)) scores[slug] += 2;
       }
@@ -58,7 +58,7 @@ export const APIRoute = createAPIFileRoute("/api/recommendations")({
          WHERE ${conditions.join(" AND ")}
          ORDER BY s.verified DESC, s.rating DESC
          LIMIT 10`,
-        params
+        params,
       );
 
       const recommendations = {
@@ -71,7 +71,7 @@ export const APIRoute = createAPIFileRoute("/api/recommendations")({
         await query(
           `INSERT INTO questionnaire_responses (user_id, answers, recommendations)
            VALUES ($1, $2, $3)`,
-          [user.id, JSON.stringify(body), JSON.stringify(recommendations)]
+          [user.id, JSON.stringify(body), JSON.stringify(recommendations)],
         );
       }
 

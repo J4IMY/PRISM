@@ -21,7 +21,7 @@ export const APIRoute = createAPIFileRoute("/api/audit-log")({
         `SELECT id, actor, action, target, details, created_at
          FROM audit_log
          ORDER BY created_at DESC
-         LIMIT 100`
+         LIMIT 100`,
       );
       return Response.json({ entries });
     } catch (err) {

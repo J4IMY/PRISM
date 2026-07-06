@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { router } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,13 +9,13 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme, useThemeMode } from '@/hooks/use-theme';
-import { api, AuthUser } from '@/lib/api';
-import { clearAuthToken } from '@/lib/auth-storage';
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme, useThemeMode } from "@/hooks/use-theme";
+import { api, AuthUser } from "@/lib/api";
+import { clearAuthToken } from "@/lib/auth-storage";
 
 export default function ProfileScreen() {
   const theme = useTheme();
@@ -35,7 +35,11 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { loadUser(); }, [loadUser]));
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser]),
+  );
 
   const handleSignOut = async () => {
     try {
@@ -45,10 +49,10 @@ export default function ProfileScreen() {
     }
     await clearAuthToken();
     setUser(null);
-    router.push('/auth/login');
+    router.push("/auth/login");
   };
 
-  const displayName = user?.name || user?.email?.split('@')[0] || 'Guest';
+  const displayName = user?.name || user?.email?.split("@")[0] || "Guest";
   const initial = displayName.charAt(0).toUpperCase();
 
   if (loading) {
@@ -66,9 +70,11 @@ export default function ProfileScreen() {
           <Text style={[styles.title, { color: theme.text }]}>Profile</Text>
         </View>
         <View style={styles.guestBox}>
-          <Text style={[styles.guestTitle, { color: theme.text }]}>Sign in to view your profile</Text>
+          <Text style={[styles.guestTitle, { color: theme.text }]}>
+            Sign in to view your profile
+          </Text>
           <Pressable
-            onPress={() => router.push('/auth/login')}
+            onPress={() => router.push("/auth/login")}
             style={[styles.btn, { backgroundColor: theme.primary }]}
           >
             <Text style={[styles.btnText, { color: theme.primaryForeground }]}>Sign in</Text>
@@ -87,7 +93,9 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.avatarRow}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <Text style={[styles.avatarInitial, { color: theme.primaryForeground }]}>{initial}</Text>
+            <Text style={[styles.avatarInitial, { color: theme.primaryForeground }]}>
+              {initial}
+            </Text>
           </View>
           <View>
             <Text style={[styles.displayName, { color: theme.text }]}>{displayName}</Text>
@@ -96,15 +104,15 @@ export default function ProfileScreen() {
         </View>
 
         <Section title="Account" theme={theme}>
-          <Field label="Name" value={user.name ?? ''} theme={theme} editable={false} />
+          <Field label="Name" value={user.name ?? ""} theme={theme} editable={false} />
           <Field label="Email" value={user.email} theme={theme} editable={false} />
           <Field label="Role" value={user.role} theme={theme} editable={false} />
         </Section>
 
         <Section title="Appearance" theme={theme}>
           <View style={[styles.themeRow, { borderColor: theme.border }]}>
-            {(['system', 'light', 'dark'] as const).map((opt) => {
-              const label = opt === 'system' ? 'System' : opt === 'light' ? 'Light' : 'Dark';
+            {(["system", "light", "dark"] as const).map((opt) => {
+              const label = opt === "system" ? "System" : opt === "light" ? "Light" : "Dark";
               const active = mode === opt;
               return (
                 <Pressable
@@ -116,7 +124,7 @@ export default function ProfileScreen() {
                   style={[
                     styles.themeOpt,
                     {
-                      backgroundColor: active ? theme.primary : 'transparent',
+                      backgroundColor: active ? theme.primary : "transparent",
                       borderRadius: Radius.sm,
                     },
                   ]}
@@ -143,11 +151,21 @@ export default function ProfileScreen() {
   );
 }
 
-function Section({ title, children, theme }: { title: string; children: React.ReactNode; theme: any }) {
+function Section({
+  title,
+  children,
+  theme,
+}: {
+  title: string;
+  children: React.ReactNode;
+  theme: any;
+}) {
   return (
     <View style={styles.section}>
       <Text style={[styles.sectionTitle, { color: theme.text }]}>{title}</Text>
-      <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View
+        style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+      >
         {children}
       </View>
     </View>
@@ -186,7 +204,15 @@ function Field({
   );
 }
 
-function OutlineButton({ label, onPress, theme }: { label: string; onPress: () => void; theme: any }) {
+function OutlineButton({
+  label,
+  onPress,
+  theme,
+}: {
+  label: string;
+  onPress: () => void;
+  theme: any;
+}) {
   return (
     <Pressable
       onPress={onPress}
@@ -207,13 +233,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
   },
-  title: { fontSize: 22, fontWeight: '700' },
-  guestBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
-  guestTitle: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  title: { fontSize: 22, fontWeight: "700" },
+  guestBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+    gap: Spacing.md,
+  },
+  guestTitle: { fontSize: 16, fontWeight: "600", textAlign: "center" },
   scroll: { padding: Spacing.md, gap: Spacing.lg, paddingBottom: Spacing.xxl },
   avatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.md,
     paddingVertical: Spacing.sm,
   },
@@ -221,14 +253,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  avatarInitial: { fontSize: 22, fontWeight: '700' },
-  displayName: { fontSize: 17, fontWeight: '700' },
+  avatarInitial: { fontSize: 22, fontWeight: "700" },
+  displayName: { fontSize: 17, fontWeight: "700" },
   email: { fontSize: 13, marginTop: 2 },
   section: { gap: Spacing.sm },
-  sectionTitle: { fontSize: 15, fontWeight: '700' },
+  sectionTitle: { fontSize: 15, fontWeight: "700" },
   sectionCard: {
     borderRadius: Radius.lg,
     borderWidth: 1,
@@ -236,7 +268,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   field: { gap: 6 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  fieldLabel: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
   fieldInput: {
     height: 44,
     borderRadius: Radius.md,
@@ -247,19 +279,19 @@ const styles = StyleSheet.create({
   btn: {
     height: 44,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: Spacing.md,
   },
-  btnText: { fontSize: 15, fontWeight: '600' },
+  btnText: { fontSize: 15, fontWeight: "600" },
   themeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 4,
     borderRadius: Radius.md,
     borderWidth: 1,
     gap: 2,
   },
-  themeOpt: { flex: 1, paddingVertical: 8, alignItems: 'center' },
-  themeOptText: { fontSize: 13, fontWeight: '600' },
+  themeOpt: { flex: 1, paddingVertical: 8, alignItems: "center" },
+  themeOptText: { fontSize: 13, fontWeight: "600" },
   bottomActions: { gap: Spacing.sm },
 });

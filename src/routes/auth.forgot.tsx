@@ -59,14 +59,22 @@ function ForgotPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Sending…" : "Send reset link"}
             </Button>
           </form>
         )}
-        <Link to="/auth/login" className="text-sm text-muted-foreground hover:underline">Back to sign in</Link>
+        <Link to="/auth/login" className="text-sm text-muted-foreground hover:underline">
+          Back to sign in
+        </Link>
       </CardContent>
     </Card>
   );

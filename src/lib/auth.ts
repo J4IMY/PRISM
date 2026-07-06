@@ -45,7 +45,7 @@ export async function createSession(userId: string, role: UserRole): Promise<str
     `INSERT INTO sessions (user_id, token_hash, expires_at)
      VALUES ($1, $2, $3)
      RETURNING id`,
-    [userId, tokenHash, expiresAt]
+    [userId, tokenHash, expiresAt],
   );
 
   if (!session) throw new Error("Failed to create session");
@@ -53,7 +53,7 @@ export async function createSession(userId: string, role: UserRole): Promise<str
   const jwtToken = jwt.sign(
     { sub: userId, sid: session.id, role } satisfies SessionPayload,
     JWT_SECRET(),
-    { expiresIn: JWT_EXPIRES() }
+    { expiresIn: JWT_EXPIRES() },
   );
 
   return jwtToken;
@@ -66,17 +66,17 @@ export async function destroySession(sessionId: string): Promise<void> {
 export async function getUserById(id: string): Promise<AuthUser | null> {
   return queryOne<AuthUser>(
     `SELECT id, email, name, role, email_verified, theme FROM users WHERE id = $1`,
-    [id]
+    [id],
   );
 }
 
-export async function getUserByEmail(email: string): Promise<
-  (AuthUser & { password_hash: string }) | null
-> {
+export async function getUserByEmail(
+  email: string,
+): Promise<(AuthUser & { password_hash: string }) | null> {
   return queryOne<AuthUser & { password_hash: string }>(
     `SELECT id, email, name, role, email_verified, theme, password_hash
      FROM users WHERE email = $1`,
-    [email.toLowerCase()]
+    [email.toLowerCase()],
   );
 }
 
@@ -85,7 +85,7 @@ export async function verifySessionToken(token: string): Promise<AuthUser | null
     const payload = jwt.verify(token, JWT_SECRET()) as SessionPayload;
     const session = await queryOne<{ id: string; expires_at: string }>(
       `SELECT id, expires_at FROM sessions WHERE id = $1`,
-      [payload.sid]
+      [payload.sid],
     );
     if (!session || new Date(session.expires_at) < new Date()) return null;
     return getUserById(payload.sub);
@@ -153,11 +153,11 @@ export async function logAudit(
   action: string,
   target: string,
   details?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   await query(
     `INSERT INTO audit_log (actor_id, actor, action, target, details, metadata)
      VALUES ($1, $2, $3, $4, $5, $6)`,
-    [actorId, actor, action, target, details ?? null, metadata ? JSON.stringify(metadata) : null]
+    [actorId, actor, action, target, details ?? null, metadata ? JSON.stringify(metadata) : null],
   );
 }

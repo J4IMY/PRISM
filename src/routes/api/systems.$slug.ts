@@ -16,7 +16,7 @@ export const APIRoute = createAPIFileRoute("/api/systems/$slug")({
         LEFT JOIN categories c ON s.category_id = c.id
         LEFT JOIN vendors v ON s.vendor_id = v.id
         WHERE s.slug = $1 AND s.status = 'active'`,
-        [slug]
+        [slug],
       );
 
       if (!system) {
@@ -27,17 +27,21 @@ export const APIRoute = createAPIFileRoute("/api/systems/$slug")({
         query(
           `SELECT feature_name, feature_value, feature_detail, category
            FROM system_features WHERE system_id = $1 ORDER BY category, feature_name`,
-          [(system as Record<string, unknown>).id]
+          [(system as Record<string, unknown>).id],
         ),
         query(
           `SELECT integration_name, integration_type, api_available
            FROM system_integrations WHERE system_id = $1`,
-          [(system as Record<string, unknown>).id]
+          [(system as Record<string, unknown>).id],
         ),
         query(
-          `SELECT name, price, billing_cycle, is_popular, features, max_seats
-           FROM pricing_plans WHERE system_id = $1 ORDER BY is_popular DESC`,
-          [(system as Record<string, unknown>).id]
+          `SELECT p.*, COALESCE(json_agg(pf.feature_name) FILTER (WHERE pf.feature_name IS NOT NULL), '[]'::json) as features
+           FROM pricing_packages p
+           LEFT JOIN package_features pf ON pf.package_id = p.id
+           WHERE p.system_id = $1
+           GROUP BY p.id
+           ORDER BY p.display_order`,
+          [(system as Record<string, unknown>).id],
         ),
         query(
           `SELECT r.rating, r.title, r.pros, r.cons, r.review_text,
@@ -45,12 +49,12 @@ export const APIRoute = createAPIFileRoute("/api/systems/$slug")({
            FROM reviews r
            WHERE r.system_id = $1 AND r.admin_status = 'approved'
            ORDER BY r.created_at DESC LIMIT 10`,
-          [(system as Record<string, unknown>).id]
+          [(system as Record<string, unknown>).id],
         ),
         query(
           `SELECT id, media_type, url, caption, sort_order
            FROM system_media WHERE system_id = $1 ORDER BY sort_order`,
-          [(system as Record<string, unknown>).id]
+          [(system as Record<string, unknown>).id],
         ),
       ]);
 

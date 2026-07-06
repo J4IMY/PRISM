@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,42 +8,42 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { api, SystemDetailResponse } from '@/lib/api';
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { api, SystemDetailResponse } from "@/lib/api";
 
 const COL_W = 130;
 const LABEL_W = 140;
 
-const SECTIONS = ['Overview', 'Packages', 'Features', 'TCO'] as const;
-type Section = typeof SECTIONS[number];
+const SECTIONS = ["Overview", "Packages", "Features", "TCO"] as const;
+type Section = (typeof SECTIONS)[number];
 
 function fmt(n: number) {
-  return '$' + n.toLocaleString();
+  return "$" + n.toLocaleString();
 }
 
 function parsePriceNum(price: string | undefined): number {
   if (!price) return 0;
-  return parseInt(price.replace(/[^0-9]/g, ''), 10) || 0;
+  return parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
 }
 
 export default function CompareScreen() {
   const theme = useTheme();
   const { ids } = useLocalSearchParams<{ ids: string }>();
-  const [section, setSection] = useState<Section>('Overview');
+  const [section, setSection] = useState<Section>("Overview");
   const [entries, setEntries] = useState<SystemDetailResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setError('');
+      setError("");
       try {
-        let systemIds = (ids ?? '').split(',').filter(Boolean);
+        let systemIds = (ids ?? "").split(",").filter(Boolean);
         if (systemIds.length < 2) {
           try {
             const { items } = await api.watchlist.list();
@@ -63,7 +63,7 @@ export default function CompareScreen() {
         if (!cancelled) setEntries(data);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Failed to load comparison');
+          setError(e instanceof Error ? e.message : "Failed to load comparison");
           setEntries([]);
         }
       } finally {
@@ -102,7 +102,7 @@ export default function CompareScreen() {
         </View>
         <View style={styles.empty}>
           <Text style={[styles.emptyTitle, { color: theme.text }]}>
-            {error || 'Select at least 2 systems to compare.'}
+            {error || "Select at least 2 systems to compare."}
           </Text>
           <Text style={[styles.emptyHint, { color: theme.mutedForeground }]}>
             Save systems to your watchlist or pass ?ids= in the URL.
@@ -151,13 +151,19 @@ export default function CompareScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View>
-            {section === 'Overview' && <OverviewSection entries={entries} />}
-            {section === 'Packages' && <PackagesSection entries={entries} />}
-            {section === 'Features' && <FeaturesSection entries={entries} featureKeys={featureKeys} />}
-            {section === 'TCO' && <TCOSection entries={entries} />}
+            {section === "Overview" && <OverviewSection entries={entries} />}
+            {section === "Packages" && <PackagesSection entries={entries} />}
+            {section === "Features" && (
+              <FeaturesSection entries={entries} featureKeys={featureKeys} />
+            )}
+            {section === "TCO" && <TCOSection entries={entries} />}
           </View>
         </ScrollView>
       </ScrollView>
@@ -205,7 +211,7 @@ function DataRow({
         styles.dataRow,
         {
           borderBottomColor: theme.border,
-          backgroundColor: highlight ? theme.backgroundElement : 'transparent',
+          backgroundColor: highlight ? theme.backgroundElement : "transparent",
         },
       ]}
     >
@@ -227,8 +233,8 @@ function Stars({ rating }: { rating: number }) {
   return (
     <View style={styles.starsRow}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Text key={i} style={{ color: i <= full ? '#F59E0B' : theme.border, fontSize: 14 }}>
-          {i <= full ? '★' : '☆'}
+        <Text key={i} style={{ color: i <= full ? "#F59E0B" : theme.border, fontSize: 14 }}>
+          {i <= full ? "★" : "☆"}
         </Text>
       ))}
       <Text style={[styles.ratingNum, { color: theme.mutedForeground }]}>{rating.toFixed(1)}</Text>
@@ -240,14 +246,14 @@ function OverviewSection({ entries }: { entries: SystemDetailResponse[] }) {
   const theme = useTheme();
   const rows: Array<{ label: string; render: (e: SystemDetailResponse) => React.ReactNode }> = [
     {
-      label: 'Category',
+      label: "Category",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.text }]}>{e.system.category_name}</Text>
       ),
     },
-    { label: 'Rating', render: (e) => <Stars rating={Number(e.system.rating)} /> },
+    { label: "Rating", render: (e) => <Stars rating={Number(e.system.rating)} /> },
     {
-      label: 'Starting price',
+      label: "Starting price",
       render: (e) => (
         <Text style={[styles.cellText, styles.cellBold, { color: theme.text }]}>
           {e.system.starting_price}
@@ -255,52 +261,62 @@ function OverviewSection({ entries }: { entries: SystemDetailResponse[] }) {
       ),
     },
     {
-      label: 'Pricing tier',
+      label: "Pricing tier",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.text }]}>{e.system.pricing_tier}</Text>
       ),
     },
     {
-      label: 'Deployment',
+      label: "Deployment",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.text }]}>{e.system.deployment_type}</Text>
       ),
     },
     {
-      label: 'Best fit',
+      label: "Best fit",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.text }]}>{e.system.target_size}</Text>
       ),
     },
     {
-      label: 'Verified',
+      label: "Verified",
       render: (e) => (
-        <Text style={{ color: e.system.verified ? theme.verified : theme.mutedForeground, fontSize: 16 }}>
-          {e.system.verified ? '✓' : '—'}
+        <Text
+          style={{
+            color: e.system.verified ? theme.verified : theme.mutedForeground,
+            fontSize: 16,
+          }}
+        >
+          {e.system.verified ? "✓" : "—"}
         </Text>
       ),
     },
     {
-      label: 'Free trial',
+      label: "Free trial",
       render: (e) => (
-        <Text style={{ color: e.system.trial_available ? theme.verified : theme.mutedForeground, fontSize: 16 }}>
-          {e.system.trial_available ? '✓' : '—'}
+        <Text
+          style={{
+            color: e.system.trial_available ? theme.verified : theme.mutedForeground,
+            fontSize: 16,
+          }}
+        >
+          {e.system.trial_available ? "✓" : "—"}
         </Text>
       ),
     },
     {
-      label: 'Compliance',
+      label: "Compliance",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.mutedForeground }]} numberOfLines={2}>
-          {(e.system.security_certifications ?? []).join(', ') || '—'}
+          {(e.system.security_certifications ?? []).join(", ") || "—"}
         </Text>
       ),
     },
     {
-      label: 'Integrations',
+      label: "Integrations",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.mutedForeground }]} numberOfLines={3}>
-          {e.integrations.map((i) => i.integration_name).join(', ') || '—'}
+          {e.integrations.map((i) => i.integration_name).join(", ") || "—"}
         </Text>
       ),
     },
@@ -333,12 +349,17 @@ function PackagesSection({ entries }: { entries: SystemDetailResponse[] }) {
           highlight={pi % 2 === 0}
           cells={entries.map((e) => {
             const pkg = e.plans[pi];
-            if (!pkg) return <Text style={[styles.cellText, { color: theme.mutedForeground }]}>—</Text>;
+            if (!pkg)
+              return <Text style={[styles.cellText, { color: theme.mutedForeground }]}>—</Text>;
             return (
               <View
                 style={[
                   styles.pkgCell,
-                  pkg.is_popular && { borderColor: theme.primary, borderWidth: 1, borderRadius: Radius.md },
+                  pkg.is_popular && {
+                    borderColor: theme.primary,
+                    borderWidth: 1,
+                    borderRadius: Radius.md,
+                  },
                 ]}
               >
                 <Text
@@ -356,7 +377,9 @@ function PackagesSection({ entries }: { entries: SystemDetailResponse[] }) {
                 </Text>
                 {pkg.is_popular && (
                   <View style={[styles.popularBadge, { backgroundColor: theme.primary }]}>
-                    <Text style={[styles.popularText, { color: theme.primaryForeground }]}>Popular</Text>
+                    <Text style={[styles.popularText, { color: theme.primaryForeground }]}>
+                      Popular
+                    </Text>
                   </View>
                 )}
               </View>
@@ -393,7 +416,7 @@ function FeaturesSection({
                   style={[
                     styles.featureDot,
                     {
-                      backgroundColor: has ? theme.verified : 'transparent',
+                      backgroundColor: has ? theme.verified : "transparent",
                       borderColor: has ? theme.verified : theme.border,
                     },
                   ]}
@@ -431,41 +454,41 @@ function TCOSection({ entries }: { entries: SystemDetailResponse[] }) {
 
   const rows: Array<{ label: string; render: (e: SystemDetailResponse) => React.ReactNode }> = [
     {
-      label: 'Per seat / mo',
+      label: "Per seat / mo",
       render: (e) => {
         const popular = e.plans.find((p) => p.is_popular) ?? e.plans[0];
         const monthly = parsePriceNum(popular?.price);
         return (
           <Text style={[styles.cellBold, styles.cellText, { color: theme.text }]}>
-            {monthly ? `$${monthly}` : 'Custom'}
+            {monthly ? `$${monthly}` : "Custom"}
           </Text>
         );
       },
     },
     {
-      label: 'Year 1 (est.)',
+      label: "Year 1 (est.)",
       render: (e) => {
         const y1 = year1For(e);
         return (
           <Text style={[styles.cellBold, styles.cellText, { color: theme.primary }]}>
-            {y1 ? fmt(y1) : '—'}
+            {y1 ? fmt(y1) : "—"}
           </Text>
         );
       },
     },
     {
-      label: 'Year 3 total (est.)',
+      label: "Year 3 total (est.)",
       render: (e) => {
         const y1 = year1For(e);
         return (
           <Text style={[styles.cellBold, styles.cellText, { color: theme.primary }]}>
-            {y1 ? fmt(Math.round(y1 * 2.9)) : '—'}
+            {y1 ? fmt(Math.round(y1 * 2.9)) : "—"}
           </Text>
         );
       },
     },
     {
-      label: 'Pricing model',
+      label: "Pricing model",
       render: (e) => (
         <Text style={[styles.cellText, { color: theme.text }]}>{e.system.pricing_tier}</Text>
       ),
@@ -475,7 +498,12 @@ function TCOSection({ entries }: { entries: SystemDetailResponse[] }) {
   return (
     <View>
       <SysHeader entries={entries} />
-      <View style={[styles.tcoCallout, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+      <View
+        style={[
+          styles.tcoCallout,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        ]}
+      >
         <View style={[styles.labelCol, { borderRightColor: theme.border }]}>
           <Text style={[styles.tcoCalloutLabel, { color: theme.text }]}>Lowest Y1 cost</Text>
         </View>
@@ -483,7 +511,7 @@ function TCOSection({ entries }: { entries: SystemDetailResponse[] }) {
           <View key={e.system.id} style={[styles.sysCol, { borderRightColor: theme.border }]}>
             {e.system.id === bestYear1Id && year1For(e) > 0 && (
               <View style={[styles.popularBadge, { backgroundColor: theme.verified }]}>
-                <Text style={[styles.popularText, { color: '#fff' }]}>Best value</Text>
+                <Text style={[styles.popularText, { color: "#fff" }]}>Best value</Text>
               </View>
             )}
           </View>
@@ -503,78 +531,101 @@ function TCOSection({ entries }: { entries: SystemDetailResponse[] }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loaderBox: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
     borderBottomWidth: 1,
     gap: Spacing.sm,
   },
   backBtn: { paddingRight: 4 },
-  backArrow: { fontSize: 32, lineHeight: 36, fontWeight: '300' },
-  headerTitle: { fontSize: 17, fontWeight: '700', flex: 1 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.sm },
-  emptyTitle: { fontSize: 16, textAlign: 'center', fontWeight: '600' },
-  emptyHint: { fontSize: 13, textAlign: 'center' },
+  backArrow: { fontSize: 32, lineHeight: 36, fontWeight: "300" },
+  headerTitle: { fontSize: 17, fontWeight: "700", flex: 1 },
+  empty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  emptyTitle: { fontSize: 16, textAlign: "center", fontWeight: "600" },
+  emptyHint: { fontSize: 13, textAlign: "center" },
   sectionScroll: { flexGrow: 0, borderBottomWidth: 1 },
-  sectionContent: { paddingHorizontal: Spacing.md, flexDirection: 'row' },
+  sectionContent: { paddingHorizontal: Spacing.md, flexDirection: "row" },
   sectionTab: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: "transparent",
     marginRight: 4,
   },
   sectionTabActive: {},
-  sectionLabel: { fontSize: 14, fontWeight: '500' },
-  sectionLabelActive: { fontWeight: '700' },
-  sysHeaderRow: { flexDirection: 'row', paddingVertical: Spacing.md },
-  labelCol: { width: LABEL_W, paddingHorizontal: Spacing.sm, borderRightWidth: 1, justifyContent: 'center' },
-  sysCol: { width: COL_W, paddingHorizontal: Spacing.sm, alignItems: 'center', borderRightWidth: 1 },
-  sysLogoBox: { width: 36, height: 36, borderRadius: Radius.md, marginBottom: 6, alignItems: 'center', justifyContent: 'center' },
-  sysLogoLetter: { fontSize: 16, fontWeight: '700' },
-  sysName: { fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 17 },
-  sysVendor: { fontSize: 11, textAlign: 'center', marginTop: 2 },
+  sectionLabel: { fontSize: 14, fontWeight: "500" },
+  sectionLabelActive: { fontWeight: "700" },
+  sysHeaderRow: { flexDirection: "row", paddingVertical: Spacing.md },
+  labelCol: {
+    width: LABEL_W,
+    paddingHorizontal: Spacing.sm,
+    borderRightWidth: 1,
+    justifyContent: "center",
+  },
+  sysCol: {
+    width: COL_W,
+    paddingHorizontal: Spacing.sm,
+    alignItems: "center",
+    borderRightWidth: 1,
+  },
+  sysLogoBox: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    marginBottom: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sysLogoLetter: { fontSize: 16, fontWeight: "700" },
+  sysName: { fontSize: 13, fontWeight: "700", textAlign: "center", lineHeight: 17 },
+  sysVendor: { fontSize: 11, textAlign: "center", marginTop: 2 },
   dataRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
     minHeight: 46,
-    alignItems: 'center',
+    alignItems: "center",
   },
   rowLabel: { fontSize: 12, lineHeight: 16 },
-  cellText: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
-  cellBold: { fontWeight: '700' },
-  starsRow: { flexDirection: 'row', alignItems: 'center', gap: 1 },
+  cellText: { fontSize: 13, lineHeight: 18, textAlign: "center" },
+  cellBold: { fontWeight: "700" },
+  starsRow: { flexDirection: "row", alignItems: "center", gap: 1 },
   ratingNum: { fontSize: 11, marginLeft: 4 },
-  pkgCell: { padding: Spacing.xs, alignItems: 'center', gap: 2, width: '100%' },
-  pkgName: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  pkgPrice: { fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  pkgBilling: { fontSize: 10, textAlign: 'center' },
+  pkgCell: { padding: Spacing.xs, alignItems: "center", gap: 2, width: "100%" },
+  pkgName: { fontSize: 12, fontWeight: "600", textAlign: "center" },
+  pkgPrice: { fontSize: 15, fontWeight: "800", textAlign: "center" },
+  pkgBilling: { fontSize: 10, textAlign: "center" },
   popularBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Radius.full,
     marginTop: 3,
   },
-  popularText: { fontSize: 9, fontWeight: '700' },
-  featureCell: { alignItems: 'center', justifyContent: 'center', width: '100%' },
+  popularText: { fontSize: 9, fontWeight: "700" },
+  featureCell: { alignItems: "center", justifyContent: "center", width: "100%" },
   featureDot: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  featureCheck: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  featureCheck: { color: "#fff", fontSize: 11, fontWeight: "700" },
   featureDash: { fontSize: 12 },
   tcoCallout: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderWidth: 1,
     marginHorizontal: 0,
     paddingVertical: Spacing.sm,
   },
-  tcoCalloutLabel: { fontSize: 12, fontWeight: '700' },
+  tcoCalloutLabel: { fontSize: 12, fontWeight: "700" },
 });

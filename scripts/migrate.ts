@@ -32,7 +32,7 @@ async function main() {
     `);
 
     const applied = await client.query<{ filename: string }>(
-      "SELECT filename FROM schema_migrations ORDER BY filename"
+      "SELECT filename FROM schema_migrations ORDER BY filename",
     );
     const appliedSet = new Set(applied.rows.map((r) => r.filename));
 
@@ -51,10 +51,7 @@ async function main() {
       await client.query("BEGIN");
       try {
         await client.query(sql);
-        await client.query(
-          "INSERT INTO schema_migrations (filename) VALUES ($1)",
-          [file]
-        );
+        await client.query("INSERT INTO schema_migrations (filename) VALUES ($1)", [file]);
         await client.query("COMMIT");
       } catch (err) {
         await client.query("ROLLBACK");

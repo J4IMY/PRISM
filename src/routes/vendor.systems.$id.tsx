@@ -3,15 +3,24 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { useCallback, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Upload, Plus, Trash2 } from "lucide-react";
-import { query, queryOne } from "@/lib/db";
+import { ChevronLeft, Upload, Plus, Trash2, GripVertical, Star, X } from "lucide-react";
+import { query, queryOne, transaction } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 type SystemRow = {
   id: string;
@@ -43,6 +52,33 @@ type MediaRow = {
   sort_order: number;
 };
 
+type PricingPackageRow = {
+  id: string;
+  system_id: string;
+  name: string;
+  description: string | null;
+  pricing_model: string;
+  currency: string;
+  base_price: number | null;
+  billing_cadence: string | null;
+  is_free: boolean;
+  contact_sales: boolean;
+  trial_available: boolean;
+  trial_duration_days: number | null;
+  minimum_seats: number | null;
+  maximum_seats: number | null;
+  is_unlimited_seats: boolean;
+  is_popular: boolean;
+  display_order: number;
+  features?: string[];
+};
+
+type PackageFeatureRow = {
+  id: string;
+  package_id: string;
+  feature_name: string;
+};
+
 type CategoryOption = {
   id: string;
   name: string;
@@ -55,22 +91,94 @@ type FeatureDraft = {
   category: string;
 };
 
+type PricingPackageDraft = {
+  id?: string;
+  key: string;
+  name: string;
+  description: string;
+  pricing_model: string;
+  currency: string;
+  base_price: string;
+  billing_cadence: string;
+  is_free: boolean;
+  contact_sales: boolean;
+  trial_available: boolean;
+  trial_duration_days: string;
+  minimum_seats: string;
+  maximum_seats: string;
+  is_unlimited_seats: boolean;
+  is_popular: boolean;
+  features: string[];
+};
+
+const PRICING_MODELS = [
+  { value: "per_user", label: "Per User / Seat" },
+  { value: "per_organization", label: "Per Organization" },
+  { value: "per_device", label: "Per Device" },
+  { value: "per_transaction", label: "Per Transaction" },
+  { value: "usage_based", label: "Usage Based" },
+  { value: "tiered_usage", label: "Tiered Usage" },
+  { value: "monthly_subscription", label: "Monthly Subscription" },
+  { value: "annual_subscription", label: "Annual Subscription" },
+  { value: "one_time", label: "One-Time Purchase" },
+  { value: "freemium", label: "Freemium" },
+  { value: "free", label: "Free" },
+  { value: "custom", label: "Custom Pricing" },
+  { value: "contact_sales", label: "Contact Sales" },
+];
+
+const CURRENCIES = ["USD", "EUR", "GBP", "KES", "ZAR", "NGN", "CAD", "AUD", "Other"];
+
+const TRIAL_DURATIONS = [
+  { value: "7", label: "7 Days" },
+  { value: "14", label: "14 Days" },
+  { value: "30", label: "30 Days" },
+  { value: "60", label: "60 Days" },
+  { value: "90", label: "90 Days" },
+];
+
+const COMMON_FEATURES = [
+  "Inventory",
+  "POS",
+  "CRM",
+  "Payroll",
+  "HR",
+  "Accounting",
+  "API",
+  "Analytics",
+  "Multi-Branch",
+  "Offline Mode",
+  "Mobile App",
+  "Custom Reports",
+];
+
+const cadenceModels = [
+  "per_user",
+  "per_organization",
+  "usage_based",
+  "monthly_subscription",
+  "annual_subscription",
+];
+const cadencedModels = [
+  "monthly_subscription",
+  "annual_subscription",
+  "per_user",
+  "per_organization",
+  "usage_based",
+];
+
 const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
-const ACCEPTED_MEDIA_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "video/mp4",
-]);
+const ACCEPTED_MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "video/mp4"]);
 
-const getSystemDetail = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: { id: string } }) => {
-    const request = getRequest();
-    const user = await getAuthUser(request);
-    if (!user) return null;
+const getSystemDetail = createServerFn({ method: "GET" }).handler(async ({ data }: any) => {
+  const id = data?.id;
+  if (!id) return null;
+  const request = getRequest();
+  const user = await getAuthUser(request);
+  if (!user) return null;
 
-    const system = await queryOne<SystemRow>(
-      `SELECT
+  const system = await queryOne<SystemRow>(
+    `SELECT
        s.id, s.name, s.slug, s.description,
        s.tagline, s.verified, s.pricing_tier,
        s.starting_price, s.deployment_type, s.status,
@@ -81,33 +189,54 @@ const getSystemDetail = createServerFn({ method: "GET" }).handler(
       WHERE s.id = $1 AND s.vendor_id = (
         SELECT vendor_id FROM vendor_members WHERE user_id = $2
       )`,
-      [data.id, user.id],
-    );
-    if (!system) return null;
+    [id, user.id],
+  );
+  if (!system) return null;
 
-    const [features, media, categories] = await Promise.all([
-      query<FeatureRow>(
-        `SELECT id, feature_name, feature_detail, category
+  const [features, media, categories, packages] = await Promise.all([
+    query<FeatureRow>(
+      `SELECT id, feature_name, feature_detail, category
          FROM system_features WHERE system_id = $1 ORDER BY category, feature_name`,
-        [data.id],
-      ),
-      query<MediaRow>(
-        `SELECT id, media_type, url, caption, sort_order
+      [id],
+    ),
+    query<MediaRow>(
+      `SELECT id, media_type, url, caption, sort_order
          FROM system_media WHERE system_id = $1 ORDER BY sort_order`,
-        [data.id],
-      ),
-      query<CategoryOption>(
-        "SELECT id, name FROM categories ORDER BY sort_order, name",
-      ),
-    ]);
+      [id],
+    ),
+    query<CategoryOption>("SELECT id, name FROM categories ORDER BY sort_order, name"),
+    query<PricingPackageRow>(
+      `SELECT * FROM pricing_packages WHERE system_id = $1 ORDER BY display_order`,
+      [id],
+    ),
+  ]);
 
-    return { system, features, media, categories };
-  },
-);
+  const packageFeatures = await query<PackageFeatureRow>(
+    `SELECT pf.id, pf.package_id, pf.feature_name
+       FROM package_features pf
+       JOIN pricing_packages pp ON pp.id = pf.package_id
+       WHERE pp.system_id = $1`,
+    [id],
+  );
+
+  const featuresByPackage = packageFeatures.reduce<Record<string, string[]>>((acc, pf) => {
+    if (!acc[pf.package_id]) acc[pf.package_id] = [];
+    acc[pf.package_id].push(pf.feature_name);
+    return acc;
+  }, {});
+
+  packages.forEach((p) => {
+    p.features = featuresByPackage[p.id] || [];
+  });
+
+  return { system, features, media, categories, packages };
+});
 
 export const Route = createFileRoute("/vendor/systems/$id")({
-  loader: async ({ params }) => {
-    const detail = await getSystemDetail({ data: { id: params.id } });
+  loader: async (args: any) => {
+    const id = args.params?.id;
+    if (!id) throw notFound();
+    const detail = await (getSystemDetail as any)({ data: { id } });
     if (!detail) throw notFound();
     return detail;
   },
@@ -124,8 +253,13 @@ function toFeatureDrafts(features: FeatureRow[]): FeatureDraft[] {
 }
 
 function VendorSystemEditPage() {
-  const { system, features: initialFeatures, media: initialMedia, categories } =
-    Route.useLoaderData();
+  const {
+    system,
+    features: initialFeatures,
+    media: initialMedia,
+    categories,
+    packages: initialPackages,
+  } = Route.useLoaderData();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(system.name);
   const [tagline, setTagline] = useState(system.tagline ?? "");
@@ -134,12 +268,35 @@ function VendorSystemEditPage() {
   const [status, setStatus] = useState(system.status);
   const [features, setFeatures] = useState<FeatureDraft[]>(() => toFeatureDrafts(initialFeatures));
   const [media, setMedia] = useState<MediaRow[]>(initialMedia);
+  const [packages, setPackages] = useState<PricingPackageDraft[]>(() =>
+    (initialPackages ?? []).map((p: PricingPackageRow) => ({
+      id: p.id,
+      key: p.id ?? crypto.randomUUID(),
+      name: p.name ?? "",
+      description: p.description ?? "",
+      pricing_model: p.pricing_model ?? "per_user",
+      currency: p.currency ?? "USD",
+      base_price: p.base_price?.toString() ?? "",
+      billing_cadence: p.billing_cadence ?? "monthly",
+      is_free: p.is_free ?? false,
+      contact_sales: p.contact_sales ?? false,
+      trial_available: p.trial_available ?? false,
+      trial_duration_days: p.trial_duration_days?.toString() ?? "",
+      minimum_seats: p.minimum_seats?.toString() ?? "",
+      maximum_seats: p.maximum_seats?.toString() ?? "",
+      is_unlimited_seats: p.is_unlimited_seats ?? false,
+      is_popular: p.is_popular ?? false,
+      features: p.features ?? [],
+    })),
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [mediaError, setMediaError] = useState("");
+  const [pricingError, setPricingError] = useState("");
+  const [expandedPackage, setExpandedPackage] = useState<string | null>(null);
 
   const syncFromResponse = useCallback(
     (data: {
@@ -180,14 +337,43 @@ function VendorSystemEditPage() {
         category: f.category.trim() || null,
         feature_value: true,
       })),
+    pricing_packages: packages.map((p) => ({
+      id: p.id,
+      name: p.name.trim(),
+      description: p.description.trim() || null,
+      pricing_model: p.pricing_model,
+      currency: p.currency,
+      base_price: p.is_free || p.contact_sales ? null : parseFloat(p.base_price) || 0,
+      billing_cadence: cadencedModels.includes(p.pricing_model) ? p.billing_cadence : null,
+      is_free: p.is_free,
+      contact_sales: p.contact_sales,
+      trial_available: p.trial_available,
+      trial_duration_days: p.trial_available ? parseInt(p.trial_duration_days) || null : null,
+      minimum_seats:
+        p.pricing_model === "per_user" && !p.is_unlimited_seats
+          ? parseInt(p.minimum_seats) || null
+          : null,
+      maximum_seats:
+        p.pricing_model === "per_user" && !p.is_unlimited_seats
+          ? parseInt(p.maximum_seats) || null
+          : null,
+      is_unlimited_seats: p.is_unlimited_seats,
+      is_popular: p.is_popular,
+    })),
   });
 
   const handleSave = async (nextStatus: "draft" | "active") => {
     if (!name.trim() || saving) return;
 
+    if (packages.some((p) => !p.name.trim() || !p.pricing_model)) {
+      setPricingError("All packages must have a name and pricing model selected.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     setSuccess("");
+    setPricingError("");
 
     try {
       const res = await fetch(`/api/vendor-systems/${system.id}`, {
@@ -302,13 +488,87 @@ function VendorSystemEditPage() {
   };
 
   const updateFeature = (key: string, field: keyof Omit<FeatureDraft, "key">, value: string) => {
-    setFeatures((prev) =>
-      prev.map((f) => (f.key === key ? { ...f, [field]: value } : f)),
-    );
+    setFeatures((prev) => prev.map((f) => (f.key === key ? { ...f, [field]: value } : f)));
   };
 
   const removeFeature = (key: string) => {
     setFeatures((prev) => prev.filter((f) => f.key !== key));
+  };
+
+  const addPackage = () => {
+    setPackages((prev) => [
+      ...prev,
+      {
+        key: crypto.randomUUID(),
+        name: "",
+        description: "",
+        pricing_model: "per_user",
+        currency: "USD",
+        base_price: "",
+        billing_cadence: "monthly",
+        is_free: false,
+        contact_sales: false,
+        trial_available: false,
+        trial_duration_days: "",
+        minimum_seats: "",
+        maximum_seats: "",
+        is_unlimited_seats: false,
+        is_popular: false,
+        features: [],
+      },
+    ]);
+  };
+
+  const updatePackage = (
+    key: string,
+    field: keyof Omit<PricingPackageDraft, "key" | "id">,
+    value: string | boolean | string[],
+  ) => {
+    setPackages((prev) => prev.map((p) => (p.key === key ? { ...p, [field]: value } : p)));
+  };
+
+  const removePackage = (key: string) => {
+    if (packages.length <= 1) return;
+    setPackages((prev) => prev.filter((p) => p.key !== key));
+  };
+
+  const movePackage = (fromIndex: number, toIndex: number) => {
+    setPackages((prev) => {
+      const newPackages = [...prev];
+      const [item] = newPackages.splice(fromIndex, 1);
+      newPackages.splice(toIndex, 0, item);
+      return newPackages;
+    });
+  };
+
+  const togglePopular = (key: string) => {
+    setPackages((prev) =>
+      prev.map((p) => ({ ...p, is_popular: p.key === key ? !p.is_popular : false })),
+    );
+  };
+
+  const handleFeatureToggle = (packageKey: string, featureName: string) => {
+    setPackages((prev) =>
+      prev.map((p) => {
+        if (p.key !== packageKey) return p;
+        const features = p.features.includes(featureName)
+          ? p.features.filter((f) => f !== featureName)
+          : [...p.features, featureName];
+        return { ...p, features };
+      }),
+    );
+  };
+
+  const addCustomFeature = (packageKey: string, customFeature: string) => {
+    if (!customFeature.trim()) return;
+    setPackages((prev) =>
+      prev.map((p) => {
+        if (p.key !== packageKey) return p;
+        const feature = customFeature.trim();
+        if (p.features.includes(feature)) return p;
+        return { ...p, features: [...p.features, feature] };
+      }),
+    );
   };
 
   return (
@@ -359,6 +619,11 @@ function VendorSystemEditPage() {
           {success}
         </div>
       )}
+      {pricingError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {pricingError}
+        </div>
+      )}
 
       <Tabs defaultValue="overview">
         <TabsList>
@@ -375,11 +640,7 @@ function VendorSystemEditPage() {
             <CardContent className="pt-6 grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="system-name">Name</Label>
-                <Input
-                  id="system-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <Input id="system-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="system-category">Category</Label>
@@ -390,7 +651,7 @@ function VendorSystemEditPage() {
                   className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">Select category…</option>
-                  {categories.map((c) => (
+                  {categories.map((c: CategoryOption) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
@@ -419,42 +680,304 @@ function VendorSystemEditPage() {
         </TabsContent>
 
         <TabsContent value="pricing">
-          <div className="space-y-3">
-            {["Starter", "Growth", "Enterprise"].map((p) => (
-              <Card key={p}>
-                <CardContent className="pt-6 grid gap-4 sm:grid-cols-4 items-end">
-                  <div>
-                    <Label>Package</Label>
-                    <Input defaultValue={p} />
-                  </div>
-                  <div>
-                    <Label>Model</Label>
-                    <select className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                      <option>Per-seat</option>
-                      <option>Flat</option>
-                      <option>Per-usage</option>
-                      <option>Tiered</option>
-                      <option>Hybrid</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label>Base price</Label>
-                    <Input type="number" defaultValue={15} />
-                  </div>
-                  <div>
-                    <Label>Cadence</Label>
-                    <select className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                      <option>Monthly</option>
-                      <option>Annual</option>
-                      <option>Custom</option>
-                    </select>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button variant="outline" className="gap-2">
+          <div className="space-y-4">
+            {packages.map((pkg, index) => {
+              const showCadence = cadencedModels.includes(pkg.pricing_model);
+              const showSeatLimits = pkg.pricing_model === "per_user";
+              const showPriceCurrency = !pkg.is_free && !pkg.contact_sales;
+              const isExpanded = expandedPackage === pkg.key;
+
+              return (
+                <Card key={pkg.key} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+                        <CardTitle className="text-base">
+                          Package {index + 1}: {pkg.name || "Untitled"}
+                        </CardTitle>
+                        {pkg.is_popular && (
+                          <Badge className="gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                            <Star className="h-3 w-3 fill-amber-500" /> Popular
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedPackage(isExpanded ? null : pkg.key)}
+                        >
+                          {isExpanded ? "Collapse" : "Expand"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePackage(pkg.key)}
+                          disabled={packages.length <= 1}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  {isExpanded && (
+                    <CardContent className="pt-0 space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div>
+                          <Label>Package Name *</Label>
+                          <Input
+                            value={pkg.name}
+                            onChange={(e) => updatePackage(pkg.key, "name", e.target.value)}
+                            placeholder="Starter"
+                          />
+                        </div>
+                        <div>
+                          <Label>Short Description (120 chars)</Label>
+                          <Input
+                            value={pkg.description}
+                            onChange={(e) => updatePackage(pkg.key, "description", e.target.value)}
+                            placeholder="Perfect for startups"
+                            maxLength={120}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 pt-6">
+                          <Button
+                            type="button"
+                            variant={pkg.is_popular ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => togglePopular(pkg.key)}
+                            className="gap-1"
+                          >
+                            <Star className="h-3 w-3" /> Most Popular
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                        <div>
+                          <Label>Pricing Model *</Label>
+                          <Select
+                            value={pkg.pricing_model}
+                            onValueChange={(v) => updatePackage(pkg.key, "pricing_model", v)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PRICING_MODELS.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                  {m.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {showPriceCurrency && (
+                          <>
+                            <div>
+                              <Label>Currency</Label>
+                              <Select
+                                value={pkg.currency}
+                                onValueChange={(v) => updatePackage(pkg.key, "currency", v)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {CURRENCIES.map((c) => (
+                                    <SelectItem key={c} value={c}>
+                                      {c}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Base Price</Label>
+                              <Input
+                                type="number"
+                                value={pkg.base_price}
+                                onChange={(e) =>
+                                  updatePackage(pkg.key, "base_price", e.target.value)
+                                }
+                                placeholder="15"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {showCadence && (
+                          <div>
+                            <Label>Billing Cadence</Label>
+                            <Select
+                              value={pkg.billing_cadence}
+                              onValueChange={(v) => updatePackage(pkg.key, "billing_cadence", v)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="annual">Annual</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-6">
+                          <Checkbox
+                            id={`free-${pkg.key}`}
+                            checked={pkg.is_free}
+                            onCheckedChange={(v) => updatePackage(pkg.key, "is_free", !!v)}
+                          />
+                          <Label htmlFor={`free-${pkg.key}`} className="text-sm">
+                            Free Plan
+                          </Label>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-6">
+                          <Checkbox
+                            id={`contact-sales-${pkg.key}`}
+                            checked={pkg.contact_sales}
+                            onCheckedChange={(v) => updatePackage(pkg.key, "contact_sales", !!v)}
+                          />
+                          <Label htmlFor={`contact-sales-${pkg.key}`} className="text-sm">
+                            Contact Sales
+                          </Label>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`trial-${pkg.key}`}
+                            checked={pkg.trial_available}
+                            onCheckedChange={(v) => updatePackage(pkg.key, "trial_available", !!v)}
+                          />
+                          <Label htmlFor={`trial-${pkg.key}`} className="text-sm">
+                            Free Trial
+                          </Label>
+                        </div>
+
+                        {pkg.trial_available && (
+                          <div>
+                            <Label>Trial Duration</Label>
+                            <Select
+                              value={pkg.trial_duration_days}
+                              onValueChange={(v) =>
+                                updatePackage(pkg.key, "trial_duration_days", v)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {TRIAL_DURATIONS.map((t) => (
+                                  <SelectItem key={t.value} value={t.value}>
+                                    {t.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {showSeatLimits && !pkg.is_unlimited_seats && (
+                          <>
+                            <div>
+                              <Label>Min Seats</Label>
+                              <Input
+                                type="number"
+                                value={pkg.minimum_seats}
+                                onChange={(e) =>
+                                  updatePackage(pkg.key, "minimum_seats", e.target.value)
+                                }
+                                placeholder="1"
+                              />
+                            </div>
+                            <div>
+                              <Label>Max Seats</Label>
+                              <Input
+                                type="number"
+                                value={pkg.maximum_seats}
+                                onChange={(e) =>
+                                  updatePackage(pkg.key, "maximum_seats", e.target.value)
+                                }
+                                placeholder="25"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 pt-6">
+                              <Checkbox
+                                id={`unlimited-${pkg.key}`}
+                                checked={pkg.is_unlimited_seats}
+                                onCheckedChange={(v) =>
+                                  updatePackage(pkg.key, "is_unlimited_seats", !!v)
+                                }
+                              />
+                              <Label htmlFor={`unlimited-${pkg.key}`} className="text-sm">
+                                Unlimited
+                              </Label>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Included Features</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {COMMON_FEATURES.map((f) => (
+                            <Badge
+                              key={f}
+                              variant={pkg.features.includes(f) ? "default" : "outline"}
+                              className="cursor-pointer"
+                              onClick={() => handleFeatureToggle(pkg.key, f)}
+                            >
+                              {pkg.features.includes(f) && (
+                                <X className="h-3 w-3 mr-1 inline-block" />
+                              )}
+                              {f}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            placeholder="Add custom feature..."
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                addCustomFeature(pkg.key, (e.target as HTMLInputElement).value);
+                                (e.target as HTMLInputElement).value = "";
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const input = document.querySelector(
+                                `input[placeholder="Add custom feature..."]`,
+                              ) as HTMLInputElement;
+                              addCustomFeature(pkg.key, input.value);
+                              input.value = "";
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+            <Button variant="outline" className="gap-2" onClick={addPackage}>
               <Plus className="h-4 w-4" />
-              Add package
+              Add Package
             </Button>
           </div>
         </TabsContent>
@@ -558,7 +1081,10 @@ function VendorSystemEditPage() {
               {media.length > 0 && (
                 <div className="grid gap-3 sm:grid-cols-4 mt-4">
                   {media.map((m) => (
-                    <div key={m.id} className="relative group aspect-video rounded-md bg-secondary overflow-hidden">
+                    <div
+                      key={m.id}
+                      className="relative group aspect-video rounded-md bg-secondary overflow-hidden"
+                    >
                       {m.media_type === "video" ? (
                         <video src={m.url} className="h-full w-full object-cover" controls />
                       ) : (

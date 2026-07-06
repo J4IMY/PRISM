@@ -18,7 +18,7 @@ const getScraperItems = createServerFn({ method: "GET" }).handler(async () => {
   }>(
     `SELECT id, name, source, confidence, age_days, status
      FROM scraper_items
-     ORDER BY created_at DESC`
+     ORDER BY created_at DESC`,
   );
 });
 

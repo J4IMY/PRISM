@@ -26,7 +26,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/google")({
     const headers = new Headers();
     headers.set(
       "Set-Cookie",
-      `prism_oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`
+      `prism_oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
     );
     headers.set("Location", `${GOOGLE_AUTH_URL}?${params.toString()}`);
 

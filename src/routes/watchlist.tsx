@@ -28,7 +28,7 @@ const getWatchlist = createServerFn({ method: "GET" }).handler(async () => {
      LEFT JOIN vendors v ON s.vendor_id = v.id
      WHERE w.user_id = $1 AND s.status = 'active'
      ORDER BY w.created_at DESC`,
-    [user.id]
+    [user.id],
   );
 });
 
@@ -50,18 +50,30 @@ function WatchlistPage() {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-semibold mb-6">Watchlist</h1>
         {items.length === 0 ? (
-          <p className="text-muted-foreground">No saved systems yet. Browse discover to add some.</p>
+          <p className="text-muted-foreground">
+            No saved systems yet. Browse discover to add some.
+          </p>
         ) : (
           <div className="grid gap-4">
             {items.map((item: Record<string, unknown>) => (
               <Card key={item.id as string}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <Link to="/systems/$slug" params={{ slug: item.slug as string }} className="font-medium hover:underline">
+                    <Link
+                      to="/systems/$slug"
+                      params={{ slug: item.slug as string }}
+                      className="font-medium hover:underline"
+                    >
                       {item.name as string}
                     </Link>
-                    <p className="text-sm text-muted-foreground">{item.vendor_name as string} · {item.category_name as string}</p>
-                    {item.verified && <Badge variant="secondary" className="mt-1">Verified</Badge>}
+                    <p className="text-sm text-muted-foreground">
+                      {item.vendor_name as string} · {item.category_name as string}
+                    </p>
+                    {item.verified && (
+                      <Badge variant="secondary" className="mt-1">
+                        Verified
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{item.starting_price as string}</span>

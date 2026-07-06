@@ -14,7 +14,7 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
       if (asVendor && (user.role === "vendor" || user.role === "admin")) {
         const member = await queryOne<{ vendor_id: string }>(
           "SELECT vendor_id FROM vendor_members WHERE user_id = $1",
-          [user.id]
+          [user.id],
         );
         if (!member) return Response.json({ threads: [] });
 
@@ -25,7 +25,7 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
            JOIN users u ON u.id = vt.user_id
            WHERE vt.vendor_id = $1
            ORDER BY vt.updated_at DESC`,
-          [member.vendor_id]
+          [member.vendor_id],
         );
         return Response.json({ threads });
       }
@@ -37,7 +37,7 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
          JOIN vendors v ON v.id = vt.vendor_id
          WHERE vt.user_id = $1
          ORDER BY vt.updated_at DESC`,
-        [user.id]
+        [user.id],
       );
       return Response.json({ threads });
     } catch (err) {
@@ -58,7 +58,10 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
     };
 
     if (!body.subject || (!body.system_id && !body.vendor_id)) {
-      return Response.json({ error: "subject and system_id or vendor_id required" }, { status: 400 });
+      return Response.json(
+        { error: "subject and system_id or vendor_id required" },
+        { status: 400 },
+      );
     }
 
     let vendorId = body.vendor_id;
@@ -71,10 +74,9 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
         is_scraped: boolean;
         is_claimed: boolean;
         name: string;
-      }>(
-        "SELECT vendor_id, is_scraped, is_claimed, name FROM systems WHERE id = $1",
-        [body.system_id]
-      );
+      }>("SELECT vendor_id, is_scraped, is_claimed, name FROM systems WHERE id = $1", [
+        body.system_id,
+      ]);
       if (!system) return Response.json({ error: "System not found" }, { status: 404 });
       vendorId = system.vendor_id ?? undefined;
       systemId = body.system_id;
@@ -84,7 +86,7 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
       if (!vendorId) {
         return Response.json(
           { error: "This system has no vendor and cannot be messaged until claimed" },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -92,7 +94,7 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
     const existing = await queryOne<{ id: string }>(
       `SELECT id FROM vendor_threads
        WHERE user_id = $1 AND vendor_id = $2 AND ($3::uuid IS NULL OR system_id = $3)`,
-      [user.id, vendorId, systemId]
+      [user.id, vendorId, systemId],
     );
     if (existing) {
       return Response.json({ thread_id: existing.id, existing: true });
@@ -102,16 +104,28 @@ export const APIRoute = createAPIFileRoute("/api/threads")({
       `INSERT INTO vendor_threads (vendor_id, system_id, user_id, subject, last_message, messaging_blocked, vendor_unread_count)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [vendorId, systemId, user.id, body.subject, body.message ?? null, messagingBlocked, body.message ? 1 : 0]
+      [
+        vendorId,
+        systemId,
+        user.id,
+        body.subject,
+        body.message ?? null,
+        messagingBlocked,
+        body.message ? 1 : 0,
+      ],
     );
 
     if (body.message && !messagingBlocked) {
-      await query(
-        `INSERT INTO messages (thread_id, sender_id, body) VALUES ($1, $2, $3)`,
-        [threads[0].id, user.id, body.message]
-      );
+      await query(`INSERT INTO messages (thread_id, sender_id, body) VALUES ($1, $2, $3)`, [
+        threads[0].id,
+        user.id,
+        body.message,
+      ]);
     }
 
-    return Response.json({ thread: threads[0], messaging_blocked: messagingBlocked }, { status: 201 });
+    return Response.json(
+      { thread: threads[0], messaging_blocked: messagingBlocked },
+      { status: 201 },
+    );
   },
 });

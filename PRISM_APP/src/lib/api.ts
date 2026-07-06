@@ -136,7 +136,7 @@ export interface WatchlistItem extends System {
 
 async function apiFetch<T>(
   path: string,
-  options: RequestInit & { params?: Record<string, string> } = {}
+  options: RequestInit & { params?: Record<string, string> } = {},
 ): Promise<T> {
   const url = new URL(path, API_BASE);
   if (options.params) {
@@ -179,8 +179,7 @@ export const api = {
         body: JSON.stringify(body),
       }),
     me: () => apiFetch<{ user: AuthUser | null }>("/api/auth/me"),
-    logout: () =>
-      apiFetch<{ success: boolean }>("/api/auth/logout", { method: "POST" }),
+    logout: () => apiFetch<{ success: boolean }>("/api/auth/logout", { method: "POST" }),
   },
 
   systems: {
@@ -211,21 +210,20 @@ export const api = {
   },
 
   search: {
-    query: (q: string) => apiFetch<{ results: System[]; query: string }>("/api/search", { params: { q } }),
+    query: (q: string) =>
+      apiFetch<{ results: System[]; query: string }>("/api/search", { params: { q } }),
   },
 
   watchlist: {
     list: () => apiFetch<{ items: WatchlistItem[] }>("/api/watchlist"),
     add: (system_id: string) =>
       apiFetch("/api/watchlist", { method: "POST", body: JSON.stringify({ system_id }) }),
-    remove: (systemId: string) =>
-      apiFetch(`/api/watchlist/${systemId}`, { method: "DELETE" }),
+    remove: (systemId: string) => apiFetch(`/api/watchlist/${systemId}`, { method: "DELETE" }),
   },
 
   threads: {
     list: () => apiFetch<{ threads: Thread[] }>("/api/threads"),
-    get: (id: string) =>
-      apiFetch<{ thread: Thread; messages: Message[] }>(`/api/threads/${id}`),
+    get: (id: string) => apiFetch<{ thread: Thread; messages: Message[] }>(`/api/threads/${id}`),
     create: (body: { system_id?: string; vendor_id?: string; subject: string; message?: string }) =>
       apiFetch("/api/threads", { method: "POST", body: JSON.stringify(body) }),
     sendMessage: (threadId: string, body: string) =>

@@ -1,11 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -40,6 +35,26 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  Database,
+  Server,
+  Cloud,
+  Cpu,
+  Layers,
+  Terminal,
+  Code,
+  GitBranch,
+  Container,
+  Zap,
+  Shield,
+  Lock,
+  Network,
+  HardDrive,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Laptop,
+  Search,
+  Triangle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/vendor/company/")({
@@ -65,6 +80,7 @@ type Vendor = {
   verification_status: string;
   company_size?: string | null;
   founded_date?: string | null;
+  industry?: string | null;
 };
 
 type Technology = {
@@ -72,6 +88,86 @@ type Technology = {
   name: string;
   color: string;
 };
+
+import { LucideIcon } from "lucide-react";
+
+const techIconMap: Record<string, LucideIcon> = {
+  postgresql: Database,
+  postgres: Database,
+  mysql: Database,
+  mongodb: Database,
+  redis: Database,
+  docker: Container,
+  kubernetes: Container,
+  aws: Cloud,
+  azure: Cloud,
+  gcp: Cloud,
+  googlecloud: Cloud,
+  react: Code,
+  vue: Code,
+  angular: Code,
+  nodejs: Terminal,
+  node: Terminal,
+  python: Terminal,
+  java: Terminal,
+  go: Terminal,
+  golang: Terminal,
+  rust: Terminal,
+  typescript: Code,
+  javascript: Code,
+  graphql: Network,
+  rest: Network,
+  api: Network,
+  linux: Monitor,
+  windows: Monitor,
+  macos: Monitor,
+  git: GitBranch,
+  github: GitBranch,
+  gitlab: GitBranch,
+  jenkins: Cpu,
+  circleci: Cpu,
+  travis: Cpu,
+  terraform: Layers,
+  ansible: Layers,
+  prometheus: Zap,
+  grafana: Zap,
+  elasticsearch: Search,
+  kafka: Zap,
+  rabbitmq: Zap,
+  nginx: Server,
+  apache: Server,
+  flutter: Smartphone,
+  reactnative: Smartphone,
+  ios: Smartphone,
+  android: Smartphone,
+  tensorflow: Cpu,
+  pytorch: Cpu,
+  ai: Cpu,
+  ml: Cpu,
+  machinelearning: Cpu,
+  blockchain: Shield,
+  ethereum: Shield,
+  web3: Shield,
+  security: Lock,
+  encryption: Lock,
+  firebase: Zap,
+  supabase: Database,
+  vercel: Triangle,
+  netlify: Triangle,
+  cloudflare: Shield,
+  sentry: Shield,
+  datadog: Zap,
+  newrelic: Zap,
+  splunk: Search,
+  elastic: Search,
+  logstash: Search,
+  kibana: Search,
+};
+
+function getTechIcon(name: string): LucideIcon | null {
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return techIconMap[normalized] ?? null;
+}
 
 type Contact = {
   id: string;
@@ -102,6 +198,9 @@ function VendorCompanyPage() {
   const [github, setGithub] = useState("");
   const [logoFileError, setLogoFileError] = useState("");
   const [verified, setVerified] = useState(false);
+  const [industry, setIndustry] = useState("");
+  const [companySize, setCompanySize] = useState("");
+  const [foundedDate, setFoundedDate] = useState("");
   const [isNew, setIsNew] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
@@ -148,9 +247,19 @@ function VendorCompanyPage() {
         setYoutube(socials.youtube ?? "");
         setGithub(socials.github ?? "");
         setVerified(vendor.verification_status === "verified");
+        setIndustry(vendor.industry ?? "");
+        setCompanySize(vendor.company_size ?? "");
+        setFoundedDate(vendor.founded_date ?? "");
         setTechnologies(data.technologies ?? []);
         setContacts(data.contacts ?? []);
-        console.log("[vendor.company] Loaded vendor:", vendor.company_name, "techs:", data.technologies?.length, "contacts:", data.contacts?.length);
+        console.log(
+          "[vendor.company] Loaded vendor:",
+          vendor.company_name,
+          "techs:",
+          data.technologies?.length,
+          "contacts:",
+          data.contacts?.length,
+        );
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : "Failed to load vendor profile";
@@ -208,12 +317,18 @@ function VendorCompanyPage() {
             logo_url: logoUrl || null,
             website: website || null,
             description: description || null,
+            industry: industry || null,
+            company_size: companySize || null,
+            founded_date: foundedDate || null,
           }
         : {
             company_name: companyName,
             logo_url: logoUrl || null,
             website: website || null,
             description: description || null,
+            industry: industry || null,
+            company_size: companySize || null,
+            founded_date: foundedDate || null,
             social_links: socialLinks,
           };
       const res = await fetch("/api/vendors", {
@@ -273,7 +388,9 @@ function VendorCompanyPage() {
                 <Building2 className="h-6 w-6 text-muted-foreground" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-muted-foreground">No company profile yet</h2>
+                <h2 className="text-lg font-semibold text-muted-foreground">
+                  No company profile yet
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Create your company profile to get discovered by buyers.
                 </p>
@@ -312,9 +429,7 @@ function VendorCompanyPage() {
                             if (logoFileInputRef.current) logoFileInputRef.current.value = "";
                           }}
                           placeholder={
-                            isUploadedLogo
-                              ? "PNG uploaded — enter a URL to replace"
-                              : "https://…"
+                            isUploadedLogo ? "PNG uploaded — enter a URL to replace" : "https://…"
                           }
                         />
                         <div>
@@ -352,6 +467,34 @@ function VendorCompanyPage() {
                           onChange={(e) => setDescription(e.target.value)}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="industry">Industry</Label>
+                        <Input
+                          id="industry"
+                          value={industry}
+                          onChange={(e) => setIndustry(e.target.value)}
+                          placeholder="e.g., Technology, Healthcare, Finance"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="company_size">Company size</Label>
+                        <Input
+                          id="company_size"
+                          value={companySize}
+                          onChange={(e) => setCompanySize(e.target.value)}
+                          placeholder="e.g., 1-10, 11-50, 51-200"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="founded_date">Founded date</Label>
+                        <Input
+                          id="founded_date"
+                          type="number"
+                          value={foundedDate}
+                          onChange={(e) => setFoundedDate(e.target.value)}
+                          placeholder="e.g., 1998"
+                        />
+                      </div>
                       <SheetFooter className="px-0">
                         <Button type="submit" disabled={saving} className="w-full">
                           {saving ? "Saving…" : "Create profile"}
@@ -384,9 +527,7 @@ function VendorCompanyPage() {
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-xl font-bold">
-                          {companyName || "Company name"}
-                        </h2>
+                        <h2 className="text-xl font-bold">{companyName || "Company name"}</h2>
                         <Badge variant="secondary" className="gap-1">
                           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                           Active
@@ -459,14 +600,9 @@ function VendorCompanyPage() {
                     <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>Edit Company Profile</SheetTitle>
-                        <SheetDescription>
-                          Update your company information below.
-                        </SheetDescription>
+                        <SheetDescription>Update your company information below.</SheetDescription>
                       </SheetHeader>
-                      <form
-                        onSubmit={handleSave}
-                        className="mt-6 space-y-4"
-                      >
+                      <form onSubmit={handleSave} className="mt-6 space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="company_name">Company name</Label>
                           <Input
@@ -484,20 +620,14 @@ function VendorCompanyPage() {
                             onChange={(e) => {
                               setLogoUrl(e.target.value);
                               setLogoFileError("");
-                              if (logoFileInputRef.current)
-                                logoFileInputRef.current.value = "";
+                              if (logoFileInputRef.current) logoFileInputRef.current.value = "";
                             }}
                             placeholder={
-                              isUploadedLogo
-                                ? "PNG uploaded — enter a URL to replace"
-                                : "https://…"
+                              isUploadedLogo ? "PNG uploaded — enter a URL to replace" : "https://…"
                             }
                           />
                           <div>
-                            <Label
-                              htmlFor="logo_file"
-                              className="text-xs text-muted-foreground"
-                            >
+                            <Label htmlFor="logo_file" className="text-xs text-muted-foreground">
                               Or upload PNG
                             </Label>
                             <Input
@@ -509,9 +639,7 @@ function VendorCompanyPage() {
                               className="mt-1.5"
                             />
                             {logoFileError && (
-                              <p className="text-sm text-red-600 mt-1">
-                                {logoFileError}
-                              </p>
+                              <p className="text-sm text-red-600 mt-1">{logoFileError}</p>
                             )}
                           </div>
                         </div>
@@ -524,13 +652,41 @@ function VendorCompanyPage() {
                             placeholder="https://…"
                           />
                         </div>
-                        <div className="space-y-2">
+<div className="space-y-2">
                           <Label htmlFor="description">Description</Label>
                           <Textarea
                             id="description"
                             rows={4}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="industry">Industry</Label>
+                          <Input
+                            id="industry"
+                            value={industry}
+                            onChange={(e) => setIndustry(e.target.value)}
+                            placeholder="e.g., Technology, Healthcare, Finance"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="company_size">Company size</Label>
+                          <Input
+                            id="company_size"
+                            value={companySize}
+                            onChange={(e) => setCompanySize(e.target.value)}
+                            placeholder="e.g., 1-10, 11-50, 51-200"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="founded_date">Founded date</Label>
+                          <Input
+                            id="founded_date"
+                            type="number"
+                            value={foundedDate}
+                            onChange={(e) => setFoundedDate(e.target.value)}
+                            placeholder="e.g., 1998"
                           />
                         </div>
                         <div className="space-y-2">
@@ -576,11 +732,7 @@ function VendorCompanyPage() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -588,9 +740,7 @@ function VendorCompanyPage() {
                       <DropdownMenuItem>View public profile</DropdownMenuItem>
                       <DropdownMenuItem>Invite team members</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
-                        Delete profile
-                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">Delete profile</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -603,21 +753,21 @@ function VendorCompanyPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Industry</p>
-                <p className="font-medium">Technology</p>
+                <p className="font-medium">{industry || "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Company size</p>
-                <p className="font-medium">5,001–10,000</p>
+                <p className="font-medium">{companySize || "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Founded</p>
-                <p className="font-medium">1998</p>
+                <p className="font-medium">{foundedDate || "—"}</p>
               </div>
             </div>
           </div>
@@ -625,22 +775,24 @@ function VendorCompanyPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">
-                  Technologies
-                </CardTitle>
+                <CardTitle className="text-base font-semibold">Technologies</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex flex-wrap gap-2">
-                  {technologies.map((tech) => (
-                    <Badge
-                      key={tech.id}
-                      variant="secondary"
-                      className="text-white border-none hover:opacity-90"
-                      style={{ backgroundColor: tech.color }}
-                    >
-                      {tech.name}
-                    </Badge>
-                  ))}
+                  {technologies.map((tech) => {
+                    const Icon = getTechIcon(tech.name);
+                    return (
+                      <Badge
+                        key={tech.id}
+                        variant="secondary"
+                        className="text-white border-none hover:opacity-90 flex items-center gap-1.5"
+                        style={{ backgroundColor: tech.color }}
+                      >
+                        {Icon && <Icon className="h-3 w-3" />}
+                        {tech.name}
+                      </Badge>
+                    );
+                  })}
                 </div>
                 <Link
                   to="/vendor/company/technologies"
@@ -654,28 +806,17 @@ function VendorCompanyPage() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold">
-                    Key Contacts
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                  >
+                  <CardTitle className="text-base font-semibold">Key Contacts</CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
                     <Plus className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-4">
                 {contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="flex items-start gap-3"
-                  >
+                  <div key={contact.id} className="flex items-start gap-3">
                     <Avatar className="h-9 w-9">
-                      {contact.avatar_url ? (
-                        <AvatarImage src={contact.avatar_url} />
-                      ) : null}
+                      {contact.avatar_url ? <AvatarImage src={contact.avatar_url} /> : null}
                       <AvatarFallback className="text-xs">
                         {contact.name
                           .split(" ")
@@ -684,15 +825,9 @@ function VendorCompanyPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm font-medium truncate">
-                        {contact.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {contact.role}
-                      </p>
-                      <p className="text-xs text-primary truncate">
-                        {contact.email}
-                      </p>
+                      <p className="text-sm font-medium truncate">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{contact.role}</p>
+                      <p className="text-xs text-primary truncate">{contact.email}</p>
                     </div>
                   </div>
                 ))}

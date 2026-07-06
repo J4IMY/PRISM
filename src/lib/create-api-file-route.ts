@@ -3,10 +3,7 @@ export type APIHandlerContext = {
   params: Record<string, string>;
 };
 
-export type APIHandlers = Record<
-  string,
-  (ctx: APIHandlerContext) => Promise<Response> | Response
->;
+export type APIHandlers = Record<string, (ctx: APIHandlerContext) => Promise<Response> | Response>;
 
 type RegisteredRoute = {
   pattern: string;
@@ -15,10 +12,7 @@ type RegisteredRoute = {
 
 const routes: RegisteredRoute[] = [];
 
-function matchPath(
-  pathname: string,
-  pattern: string,
-): Record<string, string> | null {
+function matchPath(pathname: string, pattern: string): Record<string, string> | null {
   const patternParts = pattern.split("/").filter(Boolean);
   const pathParts = pathname.split("/").filter(Boolean);
   if (patternParts.length !== pathParts.length) return null;
@@ -42,9 +36,7 @@ export function createAPIFileRoute(path: string) {
   };
 }
 
-export async function handleApiRequest(
-  request: Request,
-): Promise<Response | null> {
+export async function handleApiRequest(request: Request): Promise<Response | null> {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/")) return null;
 
@@ -54,10 +46,7 @@ export async function handleApiRequest(
 
     const handler = route.handlers[request.method];
     if (!handler) {
-      return Response.json(
-        { error: `Method ${request.method} not allowed` },
-        { status: 405 },
-      );
+      return Response.json({ error: `Method ${request.method} not allowed` }, { status: 405 });
     }
 
     return handler({ request, params });

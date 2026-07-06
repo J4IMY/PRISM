@@ -32,17 +32,21 @@ export const APIRoute = createAPIFileRoute("/api/claims")({
       is_claimed: boolean;
       website_url: string | null;
       name: string;
-    }>("SELECT id, is_scraped, is_claimed, website_url, name FROM systems WHERE id = $1", [body.system_id]);
+    }>("SELECT id, is_scraped, is_claimed, website_url, name FROM systems WHERE id = $1", [
+      body.system_id,
+    ]);
 
     if (!system) return Response.json({ error: "System not found" }, { status: 404 });
-    if (!system.is_scraped) return Response.json({ error: "System is not a scraped listing" }, { status: 400 });
-    if (system.is_claimed) return Response.json({ error: "System already claimed" }, { status: 409 });
+    if (!system.is_scraped)
+      return Response.json({ error: "System is not a scraped listing" }, { status: 400 });
+    if (system.is_claimed)
+      return Response.json({ error: "System already claimed" }, { status: 409 });
 
     const vendor = await queryOne<{ id: string; website: string | null }>(
       `SELECT v.id, v.website FROM vendors v
        JOIN vendor_members vm ON vm.vendor_id = v.id
        WHERE vm.user_id = $1 LIMIT 1`,
-      [user.id]
+      [user.id],
     );
     if (!vendor) return Response.json({ error: "Create a vendor profile first" }, { status: 400 });
 
@@ -64,18 +68,24 @@ export const APIRoute = createAPIFileRoute("/api/claims")({
       `INSERT INTO system_claims (system_id, vendor_id, user_id, claim_email, domain_verified, status)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [body.system_id, vendor.id, user.id, body.claim_email.toLowerCase(), domainMatch, domainMatch ? "verified" : "pending"]
+      [
+        body.system_id,
+        vendor.id,
+        user.id,
+        body.claim_email.toLowerCase(),
+        domainMatch,
+        domainMatch ? "verified" : "pending",
+      ],
     );
 
     if (domainMatch) {
       await query(
         `UPDATE systems SET vendor_id = $1, is_claimed = true, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [vendor.id, body.system_id]
+        [vendor.id, body.system_id],
       );
-      await query(
-        `UPDATE vendor_threads SET messaging_blocked = false WHERE system_id = $1`,
-        [body.system_id]
-      );
+      await query(`UPDATE vendor_threads SET messaging_blocked = false WHERE system_id = $1`, [
+        body.system_id,
+      ]);
       await logAudit(user.id, user.email, "claim.verified", body.system_id, system.name);
       return Response.json({ claim: claims[0], verified: true });
     }
@@ -83,7 +93,12 @@ export const APIRoute = createAPIFileRoute("/api/claims")({
     await query(
       `INSERT INTO verification_tokens (user_id, token, type, expires_at, metadata)
        VALUES ($1, $2, 'vendor_claim', $3, $4)`,
-      [user.id, token, expiresAt, JSON.stringify({ claim_id: claims[0].id, system_id: body.system_id })]
+      [
+        user.id,
+        token,
+        expiresAt,
+        JSON.stringify({ claim_id: claims[0].id, system_id: body.system_id }),
+      ],
     );
 
     const baseUrl = process.env.APP_URL || "http://localhost:5000";

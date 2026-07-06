@@ -1,6 +1,13 @@
 import { createFileRoute, Link, useRouter, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
@@ -53,7 +60,8 @@ function LoginPage() {
       <CardContent className="space-y-4">
         {google === "unavailable" && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            Google sign-in is not configured yet. Set GOOGLE_CLIENT_ID in your environment to enable it.
+            Google sign-in is not configured yet. Set GOOGLE_CLIENT_ID in your environment to enable
+            it.
           </div>
         )}
         {google === "error" && (
@@ -62,7 +70,9 @@ function LoginPage() {
           </div>
         )}
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
         )}
         <Button
           type="button"
@@ -97,7 +107,12 @@ function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Link to="/auth/forgot" className="text-xs text-muted-foreground hover:text-foreground">Forgot?</Link>
+              <Link
+                to="/auth/forgot"
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Forgot?
+              </Link>
             </div>
             <PasswordInput
               id="password"

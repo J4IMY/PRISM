@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router } from "expo-router";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,21 +9,24 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { PasswordInput } from '@/components/password-input';
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { PasswordInput } from "@/components/password-input";
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function SignupScreen() {
   const theme = useTheme();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.inner}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.inner}
+      >
         <Pressable onPress={() => router.back()} style={styles.closeBtn}>
           <Text style={[styles.closeText, { color: theme.mutedForeground }]}>✕</Text>
         </Pressable>
@@ -41,7 +44,14 @@ export default function SignupScreen() {
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.mutedForeground }]}>Email</Text>
             <TextInput
-              style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
+              style={[
+                styles.input,
+                {
+                  color: theme.text,
+                  borderColor: theme.border,
+                  backgroundColor: theme.backgroundElement,
+                },
+              ]}
               value={email}
               onChangeText={setEmail}
               placeholder="you@company.com"
@@ -73,23 +83,29 @@ export default function SignupScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.replace('/(tabs)')}
-            style={({ pressed }) => [styles.signUpBtn, { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 }]}
+            onPress={() => router.replace("/(tabs)")}
+            style={({ pressed }) => [
+              styles.signUpBtn,
+              { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
+            ]}
           >
-            <Text style={[styles.signUpText, { color: theme.primaryForeground }]}>Create account</Text>
+            <Text style={[styles.signUpText, { color: theme.primaryForeground }]}>
+              Create account
+            </Text>
           </Pressable>
 
           <Text style={[styles.terms, { color: theme.mutedForeground }]}>
-            By signing up you agree to our{' '}
-            <Text style={{ color: theme.primary }}>Terms of Service</Text>
-            {' '}and{' '}
+            By signing up you agree to our{" "}
+            <Text style={{ color: theme.primary }}>Terms of Service</Text> and{" "}
             <Text style={{ color: theme.primary }}>Privacy Policy</Text>.
           </Text>
         </View>
 
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.mutedForeground }]}>Already have an account? </Text>
-          <Pressable onPress={() => router.replace('/auth/login')}>
+          <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
+            Already have an account?{" "}
+          </Text>
+          <Pressable onPress={() => router.replace("/auth/login")}>
             <Text style={[styles.footerLink, { color: theme.primary }]}>Sign in</Text>
           </Pressable>
         </View>
@@ -101,15 +117,15 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   inner: { flex: 1, paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg },
-  closeBtn: { alignSelf: 'flex-start', padding: Spacing.xs },
+  closeBtn: { alignSelf: "flex-start", padding: Spacing.xs },
   closeText: { fontSize: 18 },
-  logoRow: { alignItems: 'center', marginTop: Spacing.xl },
-  logo: { fontSize: 28, fontWeight: '900', letterSpacing: 3 },
-  title: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: Spacing.lg },
-  subtitle: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
+  logoRow: { alignItems: "center", marginTop: Spacing.xl },
+  logo: { fontSize: 28, fontWeight: "900", letterSpacing: 3 },
+  title: { fontSize: 24, fontWeight: "800", textAlign: "center", marginTop: Spacing.lg },
+  subtitle: { fontSize: 14, textAlign: "center", marginTop: Spacing.xs },
   form: { marginTop: Spacing.xl, gap: Spacing.md },
   field: { gap: 6 },
-  label: { fontSize: 13, fontWeight: '600' },
+  label: { fontSize: 13, fontWeight: "600" },
   input: {
     height: 48,
     borderRadius: Radius.md,
@@ -120,13 +136,13 @@ const styles = StyleSheet.create({
   signUpBtn: {
     height: 50,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: Spacing.xs,
   },
-  signUpText: { fontSize: 16, fontWeight: '700' },
-  terms: { fontSize: 12, textAlign: 'center', lineHeight: 18 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xl },
+  signUpText: { fontSize: 16, fontWeight: "700" },
+  terms: { fontSize: 12, textAlign: "center", lineHeight: 18 },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: Spacing.xl },
   footerText: { fontSize: 14 },
-  footerLink: { fontSize: 14, fontWeight: '700' },
+  footerLink: { fontSize: 14, fontWeight: "700" },
 });

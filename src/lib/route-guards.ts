@@ -6,7 +6,11 @@ export function requireUser(user: AuthUser | null | undefined, redirectTo = "/au
   return user;
 }
 
-export function requireRoles(user: AuthUser | null | undefined, roles: UserRole[], redirectTo = "/") {
+export function requireRoles(
+  user: AuthUser | null | undefined,
+  roles: UserRole[],
+  redirectTo = "/",
+) {
   const u = requireUser(user);
   if (!roles.includes(u.role)) throw redirect({ to: redirectTo });
   return u;

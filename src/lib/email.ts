@@ -105,7 +105,7 @@ export async function sendEmail(options: EmailOptions, label = "email"): Promise
 export async function sendVerificationEmail(
   email: string,
   verificationUrl: string,
-  name?: string
+  name?: string,
 ): Promise<void> {
   const appName = process.env.APP_NAME || "PRISM";
   const greeting = name ? `Hi ${name}` : "Hi there";
@@ -160,6 +160,6 @@ If you didn't create this account, ignore this email.
       `.trim(),
       html,
     },
-    "verification"
+    "verification",
   );
 }

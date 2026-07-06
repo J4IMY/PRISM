@@ -10,7 +10,7 @@ export const APIRoute = createAPIFileRoute("/api/watchlist/$systemId")({
     try {
       const rows = await query(
         "DELETE FROM watchlist WHERE user_id = $1 AND system_id = $2 RETURNING id",
-        [user.id, params.systemId]
+        [user.id, params.systemId],
       );
       if (rows.length === 0) {
         return Response.json({ error: "Not in watchlist" }, { status: 404 });

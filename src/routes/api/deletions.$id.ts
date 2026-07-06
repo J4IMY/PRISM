@@ -12,7 +12,7 @@ export type DeletionRequest = {
 export const APIRoute = createAPIFileRoute("/api/deletions/$id")({
   PATCH: async ({ params, request }) => {
     try {
-      const body = await request.json() as any;
+      const body = (await request.json()) as any;
       const { status } = body;
 
       const requests = await query<DeletionRequest>(
@@ -20,7 +20,7 @@ export const APIRoute = createAPIFileRoute("/api/deletions/$id")({
          SET status = $1, updated_at = CURRENT_TIMESTAMP
          WHERE id = $2
          RETURNING id, email, requested_at, sla_days_left, status`,
-        [status, params.id]
+        [status, params.id],
       );
 
       if (requests.length === 0) {

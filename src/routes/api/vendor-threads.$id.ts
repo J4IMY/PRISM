@@ -18,7 +18,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-threads/$id")({
         `SELECT id, vendor_id, subject, last_message, unread_count, updated_at, created_at
          FROM vendor_threads
          WHERE id = $1`,
-        [params.id]
+        [params.id],
       );
 
       if (threads.length === 0) {
@@ -34,7 +34,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-threads/$id")({
 
   PATCH: async ({ params, request }) => {
     try {
-      const body = await request.json() as any;
+      const body = (await request.json()) as any;
       const { last_message, unread_count } = body;
 
       let sql = `UPDATE vendor_threads SET updated_at = CURRENT_TIMESTAMP`;

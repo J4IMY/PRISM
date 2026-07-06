@@ -1,6 +1,15 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Search, Heart, User, LayoutDashboard, ShieldCheck, GavelIcon, LogOut, MessageSquare } from "lucide-react";
+import {
+  Search,
+  Heart,
+  User,
+  LayoutDashboard,
+  ShieldCheck,
+  GavelIcon,
+  LogOut,
+  MessageSquare,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/lib/auth-client";
 import type { AuthUser } from "@/lib/auth";
@@ -26,29 +35,54 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           <span>PRISM</span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
-          <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+          <Link
+            to="/"
+            activeOptions={{ exact: true }}
+            activeProps={{ className: "text-foreground" }}
+            className="hover:text-foreground inline-flex items-center gap-1"
+          >
             <Search className="h-4 w-4" /> Discover
           </Link>
-          <Link to="/chats" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+          <Link
+            to="/chats"
+            activeProps={{ className: "text-foreground" }}
+            className="hover:text-foreground inline-flex items-center gap-1"
+          >
             <MessageSquare className="h-4 w-4" /> Messages
           </Link>
           {user && (
-            <Link to="/watchlist" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+            <Link
+              to="/watchlist"
+              activeProps={{ className: "text-foreground" }}
+              className="hover:text-foreground inline-flex items-center gap-1"
+            >
               <Heart className="h-4 w-4" /> Watchlist
             </Link>
           )}
           {showVendor && (
-            <Link to="/vendor" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+            <Link
+              to="/vendor"
+              activeProps={{ className: "text-foreground" }}
+              className="hover:text-foreground inline-flex items-center gap-1"
+            >
               <LayoutDashboard className="h-4 w-4" /> Vendor
             </Link>
           )}
           {showAdmin && (
-            <Link to="/admin" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+            <Link
+              to="/admin"
+              activeProps={{ className: "text-foreground" }}
+              className="hover:text-foreground inline-flex items-center gap-1"
+            >
               <ShieldCheck className="h-4 w-4" /> Admin
             </Link>
           )}
           {showModerator && (
-            <Link to="/moderator" activeProps={{ className: "text-foreground" }} className="hover:text-foreground inline-flex items-center gap-1">
+            <Link
+              to="/moderator"
+              activeProps={{ className: "text-foreground" }}
+              className="hover:text-foreground inline-flex items-center gap-1"
+            >
               <GavelIcon className="h-4 w-4" /> Moderator
             </Link>
           )}
@@ -57,7 +91,9 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           <ThemeToggle />
           {user ? (
             <>
-              <span className="hidden sm:inline text-sm text-muted-foreground">{user.name ?? user.email}</span>
+              <span className="hidden sm:inline text-sm text-muted-foreground">
+                {user.name ?? user.email}
+              </span>
               <Button asChild variant="outline" size="icon">
                 <Link to="/profile" aria-label="Profile">
                   <User className="h-4 w-4" />

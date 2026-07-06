@@ -70,7 +70,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient; user: AuthUser | null }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+  user: AuthUser | null;
+}>()({
   beforeLoad: async () => {
     const user = await getSessionUser();
     return { user };

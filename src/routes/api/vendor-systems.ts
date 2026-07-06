@@ -3,13 +3,16 @@ import { query, queryOne } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 
 function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 async function getVendorIdForUser(userId: string): Promise<string | null> {
   const row = await queryOne<{ vendor_id: string }>(
     "SELECT vendor_id FROM vendor_members WHERE user_id = $1 LIMIT 1",
-    [userId]
+    [userId],
   );
   return row?.vendor_id ?? null;
 }
@@ -28,7 +31,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems")({
        LEFT JOIN categories c ON c.id = s.category_id
        WHERE s.vendor_id = $1
        ORDER BY s.updated_at DESC`,
-      [vendorId]
+      [vendorId],
     );
     return Response.json({ systems });
   },
@@ -39,7 +42,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems")({
 
     const member = await queryOne<{ vendor_id: string; can_manage_systems: boolean }>(
       `SELECT vendor_id, can_manage_systems FROM vendor_members WHERE user_id = $1`,
-      [user.id]
+      [user.id],
     );
     if (!member?.can_manage_systems && user.role !== "admin") {
       return Response.json({ error: "Not authorized" }, { status: 403 });
@@ -85,7 +88,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems")({
         body.logo_url ?? null,
         body.website_url ?? null,
         body.status ?? "draft",
-      ]
+      ],
     );
 
     return Response.json({ system: systems[0] }, { status: 201 });

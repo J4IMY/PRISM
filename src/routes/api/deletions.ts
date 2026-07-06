@@ -15,7 +15,7 @@ export const APIRoute = createAPIFileRoute("/api/deletions")({
       const requests = await query<DeletionRequest>(
         `SELECT id, email, requested_at, sla_days_left, status
          FROM deletion_requests
-         ORDER BY requested_at DESC`
+         ORDER BY requested_at DESC`,
       );
       return Response.json({ requests });
     } catch (err) {
@@ -26,14 +26,14 @@ export const APIRoute = createAPIFileRoute("/api/deletions")({
 
   POST: async ({ request }) => {
     try {
-      const body = await request.json() as any;
+      const body = (await request.json()) as any;
       const { email, requested_at, sla_days_left, status } = body;
 
       const [req] = await query<DeletionRequest>(
         `INSERT INTO deletion_requests (email, requested_at, sla_days_left, status)
          VALUES ($1, $2, $3, $4)
          RETURNING id, email, requested_at, sla_days_left, status`,
-        [email, requested_at, sla_days_left ?? 30, status ?? "pending"]
+        [email, requested_at, sla_days_left ?? 30, status ?? "pending"],
       );
 
       return Response.json({ request: req }, { status: 201 });

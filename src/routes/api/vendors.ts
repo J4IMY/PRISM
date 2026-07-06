@@ -20,7 +20,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
          JOIN vendor_members vm ON vm.vendor_id = v.id
          WHERE vm.user_id = $1
          LIMIT 1`,
-        [user.id]
+        [user.id],
       );
       if (!vendor) {
         return Response.json({ vendor: null });
@@ -28,11 +28,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
 
       const technologies = await query(
         `SELECT id, name, color FROM technologies WHERE vendor_id = $1 ORDER BY name`,
-        [vendor.id]
+        [vendor.id],
       );
       const contacts = await query(
         `SELECT id, name, role, email, avatar_url FROM contacts WHERE vendor_id = $1 ORDER BY name`,
-        [vendor.id]
+        [vendor.id],
       );
 
       return Response.json({
@@ -64,7 +64,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
 
       const existing = await queryOne(
         "SELECT v.id FROM vendors v JOIN vendor_members vm ON vm.vendor_id = v.id WHERE vm.user_id = $1",
-        [user.id]
+        [user.id],
       );
       if (existing) {
         return Response.json({ error: "You already have a vendor profile" }, { status: 409 });
@@ -78,20 +78,33 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
         `INSERT INTO vendors (owner_user_id, company_name, slug, logo_url, website, description)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [user.id, body.company_name, slug, body.logo_url ?? null, body.website ?? null, body.description ?? null]
+        [
+          user.id,
+          body.company_name,
+          slug,
+          body.logo_url ?? null,
+          body.website ?? null,
+          body.description ?? null,
+        ],
       );
 
       await query(
         `INSERT INTO vendor_members (vendor_id, user_id, role, can_manage_systems, can_manage_team, can_respond_messages)
          VALUES ($1, $2, 'owner', true, true, true)`,
-        [vendors[0].id, user.id]
+        [vendors[0].id, user.id],
       );
 
       if (user.role === "user") {
         await query("UPDATE users SET role = 'vendor' WHERE id = $1", [user.id]);
       }
 
-      await logAudit(user.id, user.email, "vendor.create", vendors[0].id as string, body.company_name);
+      await logAudit(
+        user.id,
+        user.email,
+        "vendor.create",
+        vendors[0].id as string,
+        body.company_name,
+      );
       return Response.json({ vendor: vendors[0] }, { status: 201 });
     } catch (err) {
       console.error("POST /api/vendors error:", err);
@@ -108,7 +121,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
       const member = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
         `SELECT vendor_id, can_manage_team FROM vendor_members
          WHERE user_id = $1 AND role IN ('owner', 'admin')`,
-        [user.id]
+        [user.id],
       );
       if (!member && user.role !== "admin") {
         return Response.json({ error: "Not authorized to update vendor" }, { status: 403 });
@@ -122,11 +135,20 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
       const fields: string[] = [];
       const params: unknown[] = [];
       let idx = 1;
-      const allowed = ["company_name", "logo_url", "website", "description", "social_links", "video_links"];
+      const allowed = [
+        "company_name",
+        "logo_url",
+        "website",
+        "description",
+        "social_links",
+        "video_links",
+      ];
       for (const key of allowed) {
         if (body[key] !== undefined) {
           fields.push(`${key} = $${idx++}`);
-          params.push(key === "social_links" || key === "video_links" ? JSON.stringify(body[key]) : body[key]);
+          params.push(
+            key === "social_links" || key === "video_links" ? JSON.stringify(body[key]) : body[key],
+          );
         }
       }
       if (fields.length === 0) {
@@ -137,7 +159,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
 
       const vendors = await query(
         `UPDATE vendors SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`,
-        params
+        params,
       );
       return Response.json({ vendor: vendors[0] });
     } catch (err) {

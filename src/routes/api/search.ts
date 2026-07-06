@@ -21,7 +21,7 @@ export const APIRoute = createAPIFileRoute("/api/search")({
            AND (s.name ILIKE $1 OR s.tagline ILIKE $1 OR s.description ILIKE $1)
          ORDER BY s.verified DESC, s.rating DESC
          LIMIT 20`,
-        [`%${q}%`]
+        [`%${q}%`],
       );
       return Response.json({ results, query: q });
     } catch (err) {

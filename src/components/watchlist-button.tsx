@@ -71,7 +71,13 @@ export function WatchlistButton({
       );
     }
     return (
-      <Button variant="ghost" size="icon" aria-label="Sign in to save" className={className} asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Sign in to save"
+        className={className}
+        asChild
+      >
         <Link to="/auth/login">
           <Heart className="h-4 w-4" />
         </Link>

@@ -37,7 +37,10 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
       const { email, password, name, vendorApplication } = body;
 
       if (!email || !password) {
-        return Response.json({ success: false, error: "Email and password are required" }, { status: 400 });
+        return Response.json(
+          { success: false, error: "Email and password are required" },
+          { status: 400 },
+        );
       }
       if (!validateEmail(email)) {
         return Response.json({ success: false, error: "Invalid email format" }, { status: 400 });
@@ -45,19 +48,27 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
 
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        return Response.json({ success: false, error: passwordValidation.message }, { status: 400 });
+        return Response.json(
+          { success: false, error: passwordValidation.message },
+          { status: 400 },
+        );
       }
 
       if (vendorApplication && !isCompanyEmail(email)) {
-        return Response.json({ success: false, error: COMPANY_EMAIL_REQUIRED_MESSAGE }, { status: 400 });
+        return Response.json(
+          { success: false, error: COMPANY_EMAIL_REQUIRED_MESSAGE },
+          { status: 400 },
+        );
       }
 
-      const existing = await query<{ id: string }>(
-        "SELECT id FROM users WHERE email = $1",
-        [email.toLowerCase()]
-      );
+      const existing = await query<{ id: string }>("SELECT id FROM users WHERE email = $1", [
+        email.toLowerCase(),
+      ]);
       if (existing.length > 0) {
-        return Response.json({ success: false, error: "Email already registered" }, { status: 409 });
+        return Response.json(
+          { success: false, error: "Email already registered" },
+          { status: 409 },
+        );
       }
 
       const passwordHash = await hashPassword(password);
@@ -66,7 +77,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
         `INSERT INTO users (email, password_hash, name, role, vendor_application)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, email, name`,
-        [email.toLowerCase(), passwordHash, name || null, role, !!vendorApplication]
+        [email.toLowerCase(), passwordHash, name || null, role, !!vendorApplication],
       );
       const user = users[0];
 
@@ -75,7 +86,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
       await query(
         `INSERT INTO verification_tokens (user_id, token, type, expires_at)
          VALUES ($1, $2, 'email_verification', $3)`,
-        [user.id, token, expiresAt]
+        [user.id, token, expiresAt],
       );
 
       const baseUrl = process.env.APP_URL || "http://localhost:5000";

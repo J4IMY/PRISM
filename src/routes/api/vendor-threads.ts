@@ -38,14 +38,14 @@ export const APIRoute = createAPIFileRoute("/api/vendor-threads")({
 
   POST: async ({ request }) => {
     try {
-      const body = await request.json() as any;
+      const body = (await request.json()) as any;
       const { vendor_id, subject, last_message } = body;
 
       const threads = await query<VendorThread>(
         `INSERT INTO vendor_threads (vendor_id, subject, last_message)
          VALUES ($1, $2, $3)
          RETURNING id, vendor_id, subject, last_message, unread_count, updated_at, created_at`,
-        [vendor_id, subject, last_message]
+        [vendor_id, subject, last_message],
       );
 
       return Response.json({ thread: threads[0] }, { status: 201 });

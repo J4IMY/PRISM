@@ -12,7 +12,7 @@ interface ScraperActionsProps {
 
 async function patchScraper(
   id: string,
-  body: { status?: string; publish?: boolean }
+  body: { status?: string; publish?: boolean },
 ): Promise<{ error?: string }> {
   const res = await fetch(`/api/scraper/${id}`, {
     method: "PATCH",
@@ -47,7 +47,7 @@ export function ScraperActions({
         ? "Published to catalog"
         : action === "approve"
           ? "Item approved"
-          : "Item rejected"
+          : "Item rejected",
     );
     onUpdated?.();
     await router.invalidate();

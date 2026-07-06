@@ -40,7 +40,7 @@ app.get("/api/categories", async (req, res) => {
        FROM categories c
        LEFT JOIN systems s ON s.category_id = c.id AND s.status = 'active'
        GROUP BY c.id
-       ORDER BY c.sort_order, c.name`
+       ORDER BY c.sort_order, c.name`,
     );
     res.json({ categories });
   } catch (err) {
@@ -64,7 +64,9 @@ app.get("/api/systems", async (req, res) => {
     params.push(category);
   }
   if (q && q.length >= 2) {
-    conditions.push(`(s.name ILIKE $${idx} OR s.tagline ILIKE $${idx} OR s.description ILIKE $${idx})`);
+    conditions.push(
+      `(s.name ILIKE $${idx} OR s.tagline ILIKE $${idx} OR s.description ILIKE $${idx})`,
+    );
     params.push(`%${q}%`);
     idx++;
   }
@@ -93,7 +95,7 @@ app.get("/api/systems", async (req, res) => {
        WHERE ${conditions.join(" AND ")}
        ORDER BY s.verified DESC, s.rating DESC, s.review_count DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
-      params
+      params,
     );
     res.json({ systems, count: systems.length, offset, limit });
   } catch (err) {
@@ -116,7 +118,7 @@ app.get("/api/systems/:slug", async (req, res) => {
        LEFT JOIN categories c ON s.category_id = c.id
        LEFT JOIN vendors v ON s.vendor_id = v.id
        WHERE s.slug = $1 AND s.status = 'active'`,
-      [slug]
+      [slug],
     );
 
     if (!system) {
@@ -127,17 +129,17 @@ app.get("/api/systems/:slug", async (req, res) => {
       query(
         `SELECT feature_name, feature_value, feature_detail, category
          FROM system_features WHERE system_id = $1 ORDER BY category, feature_name`,
-        [system.id]
+        [system.id],
       ),
       query(
         `SELECT integration_name, integration_type, api_available
          FROM system_integrations WHERE system_id = $1`,
-        [system.id]
+        [system.id],
       ),
       query(
         `SELECT name, price, billing_cycle, is_popular, features, max_seats
          FROM pricing_plans WHERE system_id = $1 ORDER BY is_popular DESC`,
-        [system.id]
+        [system.id],
       ),
       query(
         `SELECT r.rating, r.title, r.pros, r.cons, r.review_text,
@@ -145,7 +147,7 @@ app.get("/api/systems/:slug", async (req, res) => {
          FROM reviews r
          WHERE r.system_id = $1 AND r.admin_status = 'approved'
          ORDER BY r.created_at DESC LIMIT 10`,
-        [system.id]
+        [system.id],
       ),
     ]);
 
@@ -173,7 +175,7 @@ app.get("/api/search", async (req, res) => {
          AND (s.name ILIKE $1 OR s.tagline ILIKE $1 OR s.description ILIKE $1)
        ORDER BY s.verified DESC, s.rating DESC
        LIMIT 20`,
-      [`%${q}%`]
+      [`%${q}%`],
     );
     res.json({ results, query: q });
   } catch (err) {

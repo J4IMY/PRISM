@@ -90,7 +90,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/google/callback")({
         if (!existing[0].email_verified) {
           await query(
             "UPDATE users SET email_verified = true, email_verified_at = CURRENT_TIMESTAMP WHERE id = $1",
-            [userId]
+            [userId],
           );
         }
       } else {
@@ -99,7 +99,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/google/callback")({
           `INSERT INTO users (email, password_hash, name, role, email_verified, email_verified_at)
            VALUES ($1, $2, $3, 'user', true, CURRENT_TIMESTAMP)
            RETURNING id, role`,
-          [email, placeholderHash, profile.name ?? null]
+          [email, placeholderHash, profile.name ?? null],
         );
         userId = created[0].id;
         role = created[0].role;

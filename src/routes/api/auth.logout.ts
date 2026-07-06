@@ -8,11 +8,18 @@ export const APIRoute = createAPIFileRoute("/api/auth/logout")({
       const auth = request.headers.get("authorization");
       const cookie = request.headers.get("cookie") ?? "";
       const cookieMatch = cookie.match(/prism_session=([^;]+)/);
-      const token = auth?.startsWith("Bearer ") ? auth.slice(7) : cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+      const token = auth?.startsWith("Bearer ")
+        ? auth.slice(7)
+        : cookieMatch
+          ? decodeURIComponent(cookieMatch[1])
+          : null;
 
       if (token) {
         try {
-          const payload = jwt.verify(token, process.env.JWT_SECRET || "dev-secret-change-me") as SessionPayload;
+          const payload = jwt.verify(
+            token,
+            process.env.JWT_SECRET || "dev-secret-change-me",
+          ) as SessionPayload;
           await destroySession(payload.sid);
         } catch {
           // ignore invalid token

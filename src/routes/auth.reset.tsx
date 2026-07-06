@@ -42,13 +42,20 @@ function ResetPage() {
       </CardHeader>
       <CardContent className="space-y-4">
         {done ? (
-          <Button asChild className="w-full"><Link to="/auth/login">Sign in</Link></Button>
+          <Button asChild className="w-full">
+            <Link to="/auth/login">Sign in</Link>
+          </Button>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="space-y-2">
               <Label htmlFor="password">New password</Label>
-              <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading || !token}>
               {loading ? "Updating…" : "Update password"}

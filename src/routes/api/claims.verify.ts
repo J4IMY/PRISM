@@ -19,7 +19,7 @@ export const APIRoute = createAPIFileRoute("/api/claims/verify")({
     }>(
       `SELECT id, user_id, expires_at, used_at, metadata FROM verification_tokens
        WHERE token = $1 AND type = 'vendor_claim'`,
-      [body.token]
+      [body.token],
     );
 
     if (!record) return Response.json({ error: "Invalid token" }, { status: 404 });
@@ -30,24 +30,29 @@ export const APIRoute = createAPIFileRoute("/api/claims/verify")({
 
     const claimId = record.metadata?.claim_id;
     const systemId = record.metadata?.system_id;
-    if (!claimId || !systemId) return Response.json({ error: "Invalid claim data" }, { status: 400 });
+    if (!claimId || !systemId)
+      return Response.json({ error: "Invalid claim data" }, { status: 400 });
 
     const claim = await queryOne<{ vendor_id: string }>(
       "SELECT vendor_id FROM system_claims WHERE id = $1",
-      [claimId]
+      [claimId],
     );
     if (!claim) return Response.json({ error: "Claim not found" }, { status: 404 });
 
     await query(
       `UPDATE system_claims SET domain_verified = true, status = 'verified', verified_at = CURRENT_TIMESTAMP WHERE id = $1`,
-      [claimId]
+      [claimId],
     );
     await query(
       `UPDATE systems SET vendor_id = $1, is_claimed = true, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-      [claim.vendor_id, systemId]
+      [claim.vendor_id, systemId],
     );
-    await query(`UPDATE vendor_threads SET messaging_blocked = false WHERE system_id = $1`, [systemId]);
-    await query(`UPDATE verification_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1`, [record.id]);
+    await query(`UPDATE vendor_threads SET messaging_blocked = false WHERE system_id = $1`, [
+      systemId,
+    ]);
+    await query(`UPDATE verification_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1`, [
+      record.id,
+    ]);
 
     await logAudit(user.id, user.email, "claim.verified", systemId);
 

@@ -15,7 +15,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/forgot")({
 
       const user = await queryOne<{ id: string; email: string }>(
         "SELECT id, email FROM users WHERE email = $1",
-        [email]
+        [email],
       );
 
       let devResetUrl: string | undefined;
@@ -27,7 +27,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/forgot")({
         await query(
           `INSERT INTO verification_tokens (user_id, token, type, expires_at)
            VALUES ($1, $2, 'password_reset', $3)`,
-          [user.id, token, expiresAt]
+          [user.id, token, expiresAt],
         );
 
         const baseUrl = process.env.APP_URL || "http://localhost:5000";
@@ -38,7 +38,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/forgot")({
             subject: "Reset your PRISM password",
             text: `Reset your password: ${resetUrl}\n\nThis link expires in 1 hour.`,
           },
-          "password reset"
+          "password reset",
         );
         if (isDevEnvironment() && useConsoleMailer()) {
           devResetUrl = resetUrl;

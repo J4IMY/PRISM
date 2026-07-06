@@ -41,7 +41,7 @@ const getChats = createServerFn({ method: "GET" }).handler(async () => {
 
   const member = await queryOne<{ vendor_id: string }>(
     "SELECT vendor_id FROM vendor_members WHERE user_id = $1 LIMIT 1",
-    [user.id]
+    [user.id],
   );
 
   if (member && (user.role === "vendor" || user.role === "admin")) {
@@ -55,7 +55,7 @@ const getChats = createServerFn({ method: "GET" }).handler(async () => {
        JOIN users u ON u.id = vt.user_id
        WHERE vt.vendor_id = $1
        ORDER BY vt.updated_at DESC`,
-      [member.vendor_id]
+      [member.vendor_id],
     );
     return { threads, asVendor: true, userId: user.id };
   }
@@ -70,7 +70,7 @@ const getChats = createServerFn({ method: "GET" }).handler(async () => {
      JOIN vendors v ON v.id = vt.vendor_id
      WHERE vt.user_id = $1
      ORDER BY vt.updated_at DESC`,
-    [user.id]
+    [user.id],
   );
   return { threads, asVendor: false, userId: user.id };
 });
@@ -88,7 +88,9 @@ function ChatsPage() {
   const { user } = Route.useRouteContext();
   const { thread: threadFromSearch } = Route.useSearch();
   const initialThreadId =
-    (threadFromSearch && threads.some((t) => t.id === threadFromSearch) ? threadFromSearch : null) ??
+    (threadFromSearch && threads.some((t) => t.id === threadFromSearch)
+      ? threadFromSearch
+      : null) ??
     threads[0]?.id ??
     null;
   const [selectedId, setSelectedId] = useState<string | null>(initialThreadId);
@@ -180,7 +182,9 @@ function ChatsPage() {
         {!user ? (
           <Card>
             <CardContent className="py-12 text-center space-y-4">
-              <p className="text-muted-foreground">Sign in to view and send messages with vendors.</p>
+              <p className="text-muted-foreground">
+                Sign in to view and send messages with vendors.
+              </p>
               <div className="flex justify-center gap-2">
                 <Button asChild>
                   <Link to="/auth/login">Sign in</Link>
@@ -222,18 +226,24 @@ function ChatsPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-sm truncate">
-                        {asVendor ? (t.user_name ?? t.user_email ?? t.subject) : (t.vendor_name ?? t.subject)}
+                        {asVendor
+                          ? (t.user_name ?? t.user_email ?? t.subject)
+                          : (t.vendor_name ?? t.subject)}
                       </span>
                       {unreadFor(t) > 0 && <Badge>{unreadFor(t)}</Badge>}
                     </div>
-                    <p className="text-xs font-medium text-foreground/80 mt-0.5 truncate">{t.subject}</p>
+                    <p className="text-xs font-medium text-foreground/80 mt-0.5 truncate">
+                      {t.subject}
+                    </p>
                     {t.system_name && (
                       <p className="text-[11px] text-muted-foreground truncate">{t.system_name}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {t.last_message ?? "No messages yet"}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{formatTime(t.updated_at)} ago</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {formatTime(t.updated_at)} ago
+                    </p>
                   </button>
                 ))}
               </CardContent>
@@ -260,7 +270,9 @@ function ChatsPage() {
                       {loadingMessages ? (
                         <p className="text-sm text-muted-foreground">Loading messages…</p>
                       ) : messages.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No messages in this thread yet.</p>
+                        <p className="text-sm text-muted-foreground">
+                          No messages in this thread yet.
+                        </p>
                       ) : (
                         messages.map((m) => (
                           <Msg
@@ -281,7 +293,10 @@ function ChatsPage() {
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                         disabled={selected.messaging_blocked || sending}
                       />
-                      <Button onClick={handleSend} disabled={!reply.trim() || selected.messaging_blocked || sending}>
+                      <Button
+                        onClick={handleSend}
+                        disabled={!reply.trim() || selected.messaging_blocked || sending}
+                      >
                         Send
                       </Button>
                     </div>

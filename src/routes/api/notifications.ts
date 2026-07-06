@@ -11,7 +11,7 @@ export const APIRoute = createAPIFileRoute("/api/notifications")({
       `SELECT id, title, body, type, link, read_at, created_at
        FROM notifications WHERE user_id = $1
        ORDER BY created_at DESC LIMIT 50`,
-      [user.id]
+      [user.id],
     );
     const unread = notifications.filter((n) => !(n as { read_at: string | null }).read_at).length;
     return Response.json({ notifications, unread });
@@ -25,13 +25,13 @@ export const APIRoute = createAPIFileRoute("/api/notifications")({
     if (body.mark_all) {
       await query(
         "UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND read_at IS NULL",
-        [user.id]
+        [user.id],
       );
     } else if (body.ids?.length) {
       await query(
         `UPDATE notifications SET read_at = CURRENT_TIMESTAMP
          WHERE user_id = $1 AND id = ANY($2::uuid[])`,
-        [user.id, body.ids]
+        [user.id, body.ids],
       );
     }
     return Response.json({ success: true });

@@ -9,7 +9,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
 
 export async function login(
   email: string,
-  password: string
+  password: string,
 ): Promise<{ user: AuthUser; error?: string; redirectTo?: string }> {
   const res = await fetch("/api/auth/login", {
     method: "POST",

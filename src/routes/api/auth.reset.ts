@@ -23,7 +23,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/reset")({
       }>(
         `SELECT id, user_id, expires_at, used_at FROM verification_tokens
          WHERE token = $1 AND type = 'password_reset'`,
-        [token]
+        [token],
       );
 
       if (!record) {
@@ -37,11 +37,13 @@ export const APIRoute = createAPIFileRoute("/api/auth/reset")({
       }
 
       const passwordHash = await hashPassword(password);
-      await query("UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [
-        passwordHash,
-        record.user_id,
+      await query(
+        "UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+        [passwordHash, record.user_id],
+      );
+      await query("UPDATE verification_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1", [
+        record.id,
       ]);
-      await query("UPDATE verification_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1", [record.id]);
       await query("DELETE FROM sessions WHERE user_id = $1", [record.user_id]);
 
       return Response.json({ success: true, message: "Password updated. You can now sign in." });

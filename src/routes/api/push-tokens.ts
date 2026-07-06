@@ -24,7 +24,7 @@ export const APIRoute = createAPIFileRoute("/api/push-tokens")({
          VALUES ($1, $2, $3)
          ON CONFLICT (user_id, token) DO UPDATE SET platform = $3, updated_at = CURRENT_TIMESTAMP
          RETURNING id, token, platform, created_at`,
-        [user.id, token, platform]
+        [user.id, token, platform],
       );
 
       return Response.json({ push_token: row }, { status: 201 });

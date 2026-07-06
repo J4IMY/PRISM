@@ -1,9 +1,9 @@
-import { SymbolView } from 'expo-symbols';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
+import { SymbolView } from "expo-symbols";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, TextInput, TextInputProps, View } from "react-native";
 
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 type PasswordInputProps = TextInputProps;
 
@@ -29,14 +29,14 @@ export function PasswordInput({ style, ...props }: PasswordInputProps) {
       <Pressable
         onPress={() => setVisible((v) => !v)}
         style={styles.toggle}
-        accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+        accessibilityLabel={visible ? "Hide password" : "Show password"}
         accessibilityRole="button"
       >
         <SymbolView
           name={{
-            ios: visible ? 'eye.slash' : 'eye',
-            android: visible ? 'visibility_off' : 'visibility',
-            web: visible ? 'visibility_off' : 'visibility',
+            ios: visible ? "eye.slash" : "eye",
+            android: visible ? "visibility_off" : "visibility",
+            web: visible ? "visibility_off" : "visibility",
           }}
           size={20}
           tintColor={theme.mutedForeground}
@@ -47,7 +47,7 @@ export function PasswordInput({ style, ...props }: PasswordInputProps) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { position: 'relative' },
+  wrapper: { position: "relative" },
   input: {
     height: 48,
     borderRadius: Radius.md,
@@ -57,11 +57,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   toggle: {
-    position: 'absolute',
+    position: "absolute",
     right: Spacing.sm,
     top: 0,
     bottom: 0,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: Spacing.xs,
   },
 });

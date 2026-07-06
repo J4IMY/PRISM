@@ -18,7 +18,7 @@ const getSystems = createServerFn({ method: "GET" }).handler(async () => {
      LEFT JOIN vendors v ON s.vendor_id = v.id
      WHERE s.status = 'active'
      ORDER BY s.verified DESC, s.rating DESC
-     LIMIT 5`
+     LIMIT 5`,
   );
 });
 
@@ -38,8 +38,24 @@ function ComparePage() {
     ["Pricing tier", (s) => s.pricing_tier || "—"],
     ["Deployment", (s) => s.deployment_type || "—"],
     ["Starting price", (s) => s.starting_price || "—"],
-    ["Free trial", (s) => s.trial_available ? <Check className="h-4 w-4 text-primary" /> : <Minus className="h-4 w-4 text-muted-foreground" />],
-    ["Verified", (s) => s.verified ? <Check className="h-4 w-4 text-primary" /> : <Minus className="h-4 w-4 text-muted-foreground" />],
+    [
+      "Free trial",
+      (s) =>
+        s.trial_available ? (
+          <Check className="h-4 w-4 text-primary" />
+        ) : (
+          <Minus className="h-4 w-4 text-muted-foreground" />
+        ),
+    ],
+    [
+      "Verified",
+      (s) =>
+        s.verified ? (
+          <Check className="h-4 w-4 text-primary" />
+        ) : (
+          <Minus className="h-4 w-4 text-muted-foreground" />
+        ),
+    ],
     ["Est. 3yr TCO", () => "$182,400"],
   ];
 
@@ -48,26 +64,36 @@ function ComparePage() {
       <SiteHeader />
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-semibold mb-6">Compare systems</h1>
-        <Card><CardContent className="pt-6 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 pr-4 font-medium text-muted-foreground">Attribute</th>
-                {systems.map((s) => (
-                  <th key={s.id} className="text-left py-3 pr-4 font-semibold">{s.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(([label, getter]) => (
-                <tr key={label} className="border-b border-border last:border-0">
-                  <td className="py-2 pr-4 text-muted-foreground">{label}</td>
-                  {systems.map((s) => <td key={s.id} className="py-2 pr-4">{getter(s)}</td>)}
+        <Card>
+          <CardContent className="pt-6 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 pr-4 font-medium text-muted-foreground">
+                    Attribute
+                  </th>
+                  {systems.map((s) => (
+                    <th key={s.id} className="text-left py-3 pr-4 font-semibold">
+                      {s.name}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent></Card>
+              </thead>
+              <tbody>
+                {rows.map(([label, getter]) => (
+                  <tr key={label} className="border-b border-border last:border-0">
+                    <td className="py-2 pr-4 text-muted-foreground">{label}</td>
+                    {systems.map((s) => (
+                      <td key={s.id} className="py-2 pr-4">
+                        {getter(s)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

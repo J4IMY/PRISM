@@ -29,7 +29,10 @@ export const APIRoute = createAPIFileRoute("/api/auth/login")({
       }
 
       if (!user.email_verified) {
-        return Response.json({ error: "Please verify your email before signing in" }, { status: 403 });
+        return Response.json(
+          { error: "Please verify your email before signing in" },
+          { status: 403 },
+        );
       }
 
       const token = await createSession(user.id, user.role as UserRole);
@@ -46,7 +49,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/login")({
       try {
         const vendorFlags = await query<{ vendor_application: boolean }>(
           "SELECT vendor_application FROM users WHERE id = $1",
-          [user.id]
+          [user.id],
         );
         if (vendorFlags[0]?.vendor_application) {
           redirectTo = "/vendor/company";
@@ -65,9 +68,10 @@ export const APIRoute = createAPIFileRoute("/api/auth/login")({
       return new Response(
         JSON.stringify({ user: authUser, token: isMobile ? token : undefined, redirectTo }),
         {
-        status: 200,
-        headers,
-      });
+          status: 200,
+          headers,
+        },
+      );
     } catch (error) {
       console.error("Login error:", error);
       return Response.json({ error: "Login failed" }, { status: 500 });

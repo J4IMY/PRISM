@@ -27,32 +27,65 @@ function ProfilePage() {
         <h1 className="text-2xl font-semibold">Profile & Settings</h1>
 
         <Card>
-          <CardHeader><CardTitle>Account</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-4">
-            <div><Label>Name</Label><Input defaultValue={user?.name ?? ""} readOnly /></div>
-            <div><Label>Email</Label><Input type="email" defaultValue={user?.email ?? ""} readOnly /></div>
-            <div><Label>Role</Label><Input defaultValue={user?.role ?? ""} readOnly /></div>
+            <div>
+              <Label>Name</Label>
+              <Input defaultValue={user?.name ?? ""} readOnly />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" defaultValue={user?.email ?? ""} readOnly />
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Input defaultValue={user?.role ?? ""} readOnly />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Appearance</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+          </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Theme</p>
               <p className="text-xs text-muted-foreground">Current: {theme}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant={theme === "light" ? "default" : "outline"} size="sm" onClick={() => setTheme("light")}>Light</Button>
-              <Button variant={theme === "dark" ? "default" : "outline"} size="sm" onClick={() => setTheme("dark")}>Dark</Button>
-              <Button variant={theme === "system" ? "default" : "outline"} size="sm" onClick={() => setTheme("system")}>System</Button>
+              <Button
+                variant={theme === "light" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTheme("light")}
+              >
+                Light
+              </Button>
+              <Button
+                variant={theme === "dark" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTheme("dark")}
+              >
+                Dark
+              </Button>
+              <Button
+                variant={theme === "system" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTheme("system")}
+              >
+                System
+              </Button>
               <ThemeToggle />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Preferences</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Preferences</CardTitle>
+          </CardHeader>
           <CardContent>
             <Button asChild variant="outline">
               <Link to="/settings">More settings</Link>

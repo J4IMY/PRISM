@@ -20,7 +20,9 @@ export const APIRoute = createAPIFileRoute("/api/systems")({
       params.push(category);
     }
     if (search) {
-      conditions.push(`(s.name ILIKE $${paramIdx} OR s.tagline ILIKE $${paramIdx} OR s.description ILIKE $${paramIdx})`);
+      conditions.push(
+        `(s.name ILIKE $${paramIdx} OR s.tagline ILIKE $${paramIdx} OR s.description ILIKE $${paramIdx})`,
+      );
       params.push(`%${search}%`);
       paramIdx++;
     }
@@ -28,7 +30,10 @@ export const APIRoute = createAPIFileRoute("/api/systems")({
       conditions.push(`s.verified = true`);
     }
     if (idsParam) {
-      const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean);
+      const ids = idsParam
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
       if (ids.length > 0) {
         conditions.push(`s.id = ANY($${paramIdx++}::uuid[])`);
         params.push(ids);

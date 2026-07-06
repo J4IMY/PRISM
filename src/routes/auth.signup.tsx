@@ -1,6 +1,13 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
@@ -73,7 +80,9 @@ function SignupPage() {
           )}
         </CardContent>
         <CardFooter>
-          <Button asChild className="w-full"><Link to="/auth/login">Go to Login</Link></Button>
+          <Button asChild className="w-full">
+            <Link to="/auth/login">Go to Login</Link>
+          </Button>
         </CardFooter>
       </Card>
     );
@@ -90,7 +99,11 @@ function SignupPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name (Optional)</Label>
@@ -126,7 +139,12 @@ function SignupPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <PasswordInput
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Creating Account..." : "Create account"}
@@ -134,7 +152,10 @@ function SignupPage() {
         </form>
       </CardContent>
       <CardFooter className="justify-center text-sm text-muted-foreground">
-        Already have an account? <Link to="/auth/login" className="ml-1 text-foreground hover:underline">Sign in</Link>
+        Already have an account?{" "}
+        <Link to="/auth/login" className="ml-1 text-foreground hover:underline">
+          Sign in
+        </Link>
       </CardFooter>
     </Card>
   );

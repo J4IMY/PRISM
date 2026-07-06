@@ -21,7 +21,7 @@ export const APIRoute = createAPIFileRoute("/api/watchlist")({
          LEFT JOIN vendors v ON s.vendor_id = v.id
          WHERE w.user_id = $1 AND s.status = 'active'
          ORDER BY w.created_at DESC`,
-        [user.id]
+        [user.id],
       );
       return Response.json({ items });
     } catch (err) {
@@ -45,7 +45,7 @@ export const APIRoute = createAPIFileRoute("/api/watchlist")({
          VALUES ($1, $2)
          ON CONFLICT (user_id, system_id) DO UPDATE SET created_at = watchlist.created_at
          RETURNING id, system_id, created_at`,
-        [user.id, body.system_id]
+        [user.id, body.system_id],
       );
       return Response.json({ item }, { status: 201 });
     } catch (err) {

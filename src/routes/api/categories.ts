@@ -10,7 +10,7 @@ export const APIRoute = createAPIFileRoute("/api/categories")({
          FROM categories c
          LEFT JOIN systems s ON s.category_id = c.id AND s.status = 'active'
          GROUP BY c.id
-         ORDER BY c.sort_order, c.name`
+         ORDER BY c.sort_order, c.name`,
       );
       return Response.json({ categories });
     } catch (err) {

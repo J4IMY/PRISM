@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ApiState<T> {
   data: T | null;
@@ -8,7 +8,7 @@ interface ApiState<T> {
 
 export function useApi<T>(
   fetcher: () => Promise<T>,
-  deps: unknown[] = []
+  deps: unknown[] = [],
 ): ApiState<T> & { refetch: () => void } {
   const [state, setState] = useState<ApiState<T>>({
     data: null,
@@ -19,7 +19,7 @@ export function useApi<T>(
   const mountedRef = useRef(true);
 
   const load = useCallback(async () => {
-    setState(s => ({ ...s, loading: true, error: null }));
+    setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const data = await fetcher();
       if (mountedRef.current) {
@@ -35,7 +35,9 @@ export function useApi<T>(
   useEffect(() => {
     mountedRef.current = true;
     load();
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, [load]);
 
   return { ...state, refetch: load };

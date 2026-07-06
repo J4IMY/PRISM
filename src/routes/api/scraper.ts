@@ -23,7 +23,10 @@ function checkScraperKey(request: Request): boolean {
 }
 
 function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export const APIRoute = createAPIFileRoute("/api/scraper")({
@@ -36,7 +39,7 @@ export const APIRoute = createAPIFileRoute("/api/scraper")({
         `SELECT id, name, source, source_url, confidence, age_days, status,
                 payload, system_id, created_at, updated_at
          FROM scraper_items
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       );
       return Response.json({ items });
     } catch (err) {
@@ -75,7 +78,7 @@ export const APIRoute = createAPIFileRoute("/api/scraper")({
           body.confidence ?? 0,
           body.age_days ?? 0,
           JSON.stringify(body.payload ?? {}),
-        ]
+        ],
       );
 
       await logAudit(null, "scraper", "scraper.submit", item.id, body.name, body.payload);

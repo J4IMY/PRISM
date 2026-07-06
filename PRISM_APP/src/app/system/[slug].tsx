@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Video, ResizeMode } from 'expo-av';
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { Video, ResizeMode } from "expo-av";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,32 +10,29 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { useApi } from '@/hooks/use-api';
-import { api, SystemFeature, PricingPlan, SystemIntegration, Review, SystemMedia } from '@/lib/api';
-import { getAuthToken } from '@/lib/auth-storage';
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { useApi } from "@/hooks/use-api";
+import { api, SystemFeature, PricingPlan, SystemIntegration, Review, SystemMedia } from "@/lib/api";
+import { getAuthToken } from "@/lib/auth-storage";
 
-const TABS = ['Overview', 'Pricing', 'Features', 'TCO', 'Media', 'Reviews'] as const;
-type Tab = typeof TABS[number];
+const TABS = ["Overview", "Pricing", "Features", "TCO", "Media", "Reviews"] as const;
+type Tab = (typeof TABS)[number];
 
 export default function SystemDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const theme = useTheme();
-  const [tab, setTab] = useState<Tab>('Overview');
+  const [tab, setTab] = useState<Tab>("Overview");
   const [watchlisted, setWatchlisted] = useState(false);
   const [watchlistLoading, setWatchlistLoading] = useState(false);
-  const [seats, setSeats] = useState('50');
-  const [term, setTerm] = useState('3');
-  const [escalation, setEscalation] = useState('5');
-  const [discount, setDiscount] = useState('10');
+  const [seats, setSeats] = useState("50");
+  const [term, setTerm] = useState("3");
+  const [escalation, setEscalation] = useState("5");
+  const [discount, setDiscount] = useState("10");
 
-  const { data, loading, error } = useApi(
-    () => api.systems.get(slug ?? ''),
-    [slug]
-  );
+  const { data, loading, error } = useApi(() => api.systems.get(slug ?? ""), [slug]);
 
   const system = data?.system;
   const features = data?.features ?? [];
@@ -62,7 +59,7 @@ export default function SystemDetailScreen() {
     if (!system) return;
     const token = await getAuthToken();
     if (!token) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
     setWatchlistLoading(true);
@@ -81,12 +78,13 @@ export default function SystemDetailScreen() {
     }
   }, [system, watchlisted]);
 
-  const basePrice = plans.find(p => p.is_popular)?.price ?? '$0';
-  const basePriceNum = parseInt(basePrice.replace(/[^0-9]/g, '')) || 0;
+  const basePrice = plans.find((p) => p.is_popular)?.price ?? "$0";
+  const basePriceNum = parseInt(basePrice.replace(/[^0-9]/g, "")) || 0;
   const tcoYear1 = parseInt(seats) * basePriceNum * 12 * (1 - parseInt(discount) / 100);
   const tcoYear2 = tcoYear1 * (1 + parseInt(escalation) / 100);
   const tcoYear3 = tcoYear2 * (1 + parseInt(escalation) / 100);
-  const tcoTotal = tcoYear1 + (parseInt(term) >= 2 ? tcoYear2 : 0) + (parseInt(term) >= 3 ? tcoYear3 : 0);
+  const tcoTotal =
+    tcoYear1 + (parseInt(term) >= 2 ? tcoYear2 : 0) + (parseInt(term) >= 3 ? tcoYear3 : 0);
 
   if (loading) {
     return (
@@ -115,9 +113,12 @@ export default function SystemDetailScreen() {
         </View>
         <View style={styles.loaderBox}>
           <Text style={[styles.errorText, { color: theme.mutedForeground }]}>
-            {error ?? 'System not found'}
+            {error ?? "System not found"}
           </Text>
-          <Pressable onPress={() => router.back()} style={[styles.backLink, { borderColor: theme.border }]}>
+          <Pressable
+            onPress={() => router.back()}
+            style={[styles.backLink, { borderColor: theme.border }]}
+          >
             <Text style={[styles.backLinkText, { color: theme.text }]}>Go back</Text>
           </Pressable>
         </View>
@@ -126,7 +127,7 @@ export default function SystemDetailScreen() {
   }
 
   const featuresByCategory = features.reduce<Record<string, SystemFeature[]>>((acc, f) => {
-    const cat = f.category ?? 'General';
+    const cat = f.category ?? "General";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(f);
     return acc;
@@ -142,8 +143,10 @@ export default function SystemDetailScreen() {
           {system.name}
         </Text>
         <Pressable onPress={toggleWatchlist} hitSlop={8} disabled={watchlistLoading}>
-          <Text style={[styles.heartBtn, { color: watchlisted ? '#E53E3E' : theme.mutedForeground }]}>
-            {watchlisted ? '♥' : '♡'}
+          <Text
+            style={[styles.heartBtn, { color: watchlisted ? "#E53E3E" : theme.mutedForeground }]}
+          >
+            {watchlisted ? "♥" : "♡"}
           </Text>
         </Pressable>
       </View>
@@ -170,7 +173,9 @@ export default function SystemDetailScreen() {
         </View>
 
         <View style={styles.ratingRow}>
-          <Text style={[styles.rating, { color: theme.text }]}>★ {Number(system.rating).toFixed(1)}</Text>
+          <Text style={[styles.rating, { color: theme.text }]}>
+            ★ {Number(system.rating).toFixed(1)}
+          </Text>
           <Text style={[styles.reviewCount, { color: theme.mutedForeground }]}>
             ({system.review_count} reviews)
           </Text>
@@ -185,11 +190,13 @@ export default function SystemDetailScreen() {
             style={[styles.ctaBtn, { borderColor: theme.border, flex: 1 }]}
           >
             <Text style={[styles.ctaBtnText, { color: theme.text }]}>
-              {watchlisted ? '♥ Saved' : '♡ Watchlist'}
+              {watchlisted ? "♥ Saved" : "♡ Watchlist"}
             </Text>
           </Pressable>
           <Pressable style={[styles.ctaBtn, { backgroundColor: theme.primary, flex: 1 }]}>
-            <Text style={[styles.ctaBtnText, { color: theme.primaryForeground }]}>Message vendor</Text>
+            <Text style={[styles.ctaBtnText, { color: theme.primaryForeground }]}>
+              Message vendor
+            </Text>
           </Pressable>
         </View>
 
@@ -200,7 +207,7 @@ export default function SystemDetailScreen() {
           style={styles.tabScroll}
           contentContainerStyle={styles.tabContent}
         >
-          {TABS.map(t => {
+          {TABS.map((t) => {
             const active = t === tab;
             return (
               <Pressable
@@ -209,12 +216,17 @@ export default function SystemDetailScreen() {
                 style={[
                   styles.tabChip,
                   {
-                    backgroundColor: active ? theme.primary : 'transparent',
+                    backgroundColor: active ? theme.primary : "transparent",
                     borderColor: active ? theme.primary : theme.border,
                   },
                 ]}
               >
-                <Text style={[styles.tabLabel, { color: active ? theme.primaryForeground : theme.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    { color: active ? theme.primaryForeground : theme.textSecondary },
+                  ]}
+                >
                   {t}
                 </Text>
               </Pressable>
@@ -224,17 +236,27 @@ export default function SystemDetailScreen() {
 
         <View style={styles.tabBody}>
           {/* OVERVIEW */}
-          {tab === 'Overview' && (
+          {tab === "Overview" && (
             <>
               <Card theme={theme}>
                 <SectionTitle title="About" theme={theme} />
-                <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>{system.description}</Text>
+                <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                  {system.description}
+                </Text>
               </Card>
 
-              <InfoRow label="Starting price" value={system.starting_price ?? 'Contact sales'} theme={theme} />
+              <InfoRow
+                label="Starting price"
+                value={system.starting_price ?? "Contact sales"}
+                theme={theme}
+              />
               <InfoRow label="Deployment" value={system.deployment_type} theme={theme} />
               <InfoRow label="Best fit" value={system.target_size} theme={theme} />
-              <InfoRow label="Rating" value={`${Number(system.rating).toFixed(1)} / 5`} theme={theme} />
+              <InfoRow
+                label="Rating"
+                value={`${Number(system.rating).toFixed(1)} / 5`}
+                theme={theme}
+              />
               {system.trial_available && (
                 <InfoRow label="Free trial" value="Available" theme={theme} />
               )}
@@ -244,7 +266,10 @@ export default function SystemDetailScreen() {
                   <SectionTitle title="Compliance" theme={theme} />
                   <View style={styles.chipRow}>
                     {(system.security_certifications ?? []).map((c: string) => (
-                      <View key={c} style={[styles.chip, { backgroundColor: theme.backgroundElement }]}>
+                      <View
+                        key={c}
+                        style={[styles.chip, { backgroundColor: theme.backgroundElement }]}
+                      >
                         <Text style={[styles.chipText, { color: theme.text }]}>{c}</Text>
                       </View>
                     ))}
@@ -257,8 +282,13 @@ export default function SystemDetailScreen() {
                   <SectionTitle title="Integrations" theme={theme} />
                   <View style={styles.chipRow}>
                     {integrations.map((i: SystemIntegration) => (
-                      <View key={i.integration_name} style={[styles.chip, { backgroundColor: theme.backgroundElement }]}>
-                        <Text style={[styles.chipText, { color: theme.text }]}>{i.integration_name}</Text>
+                      <View
+                        key={i.integration_name}
+                        style={[styles.chip, { backgroundColor: theme.backgroundElement }]}
+                      >
+                        <Text style={[styles.chipText, { color: theme.text }]}>
+                          {i.integration_name}
+                        </Text>
                       </View>
                     ))}
                   </View>
@@ -268,25 +298,33 @@ export default function SystemDetailScreen() {
           )}
 
           {/* PRICING */}
-          {tab === 'Pricing' && (
+          {tab === "Pricing" && (
             <>
               {plans.length === 0 ? (
                 <Card theme={theme}>
-                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>Contact vendor for pricing.</Text>
+                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                    Contact vendor for pricing.
+                  </Text>
                 </Card>
               ) : (
                 plans.map((plan: PricingPlan) => (
                   <Card key={plan.name} theme={theme}>
                     {plan.is_popular && (
                       <View style={[styles.popularBadge, { backgroundColor: theme.primary }]}>
-                        <Text style={[styles.popularText, { color: theme.primaryForeground }]}>Most popular</Text>
+                        <Text style={[styles.popularText, { color: theme.primaryForeground }]}>
+                          Most popular
+                        </Text>
                       </View>
                     )}
                     <View style={styles.planHeader}>
                       <Text style={[styles.planName, { color: theme.text }]}>{plan.name}</Text>
                       <View style={styles.planPrice}>
-                        <Text style={[styles.planPriceMain, { color: theme.text }]}>{plan.price}</Text>
-                        <Text style={[styles.planPriceSub, { color: theme.mutedForeground }]}>{plan.billing_cycle}</Text>
+                        <Text style={[styles.planPriceMain, { color: theme.text }]}>
+                          {plan.price}
+                        </Text>
+                        <Text style={[styles.planPriceSub, { color: theme.mutedForeground }]}>
+                          {plan.billing_cycle}
+                        </Text>
                       </View>
                     </View>
                     <View style={[styles.divider, { backgroundColor: theme.border }]} />
@@ -296,14 +334,23 @@ export default function SystemDetailScreen() {
                         <Text style={[styles.featureText, { color: theme.text }]}>{f}</Text>
                       </View>
                     ))}
-                    <Pressable style={[styles.planBtn, plan.price === 'Custom'
-                      ? { borderWidth: 1, borderColor: theme.border }
-                      : { backgroundColor: theme.primary }
-                    ]}>
-                      <Text style={[styles.planBtnText, {
-                        color: plan.price === 'Custom' ? theme.text : theme.primaryForeground
-                      }]}>
-                        {plan.price === 'Custom' ? 'Contact sales' : 'Get started'}
+                    <Pressable
+                      style={[
+                        styles.planBtn,
+                        plan.price === "Custom"
+                          ? { borderWidth: 1, borderColor: theme.border }
+                          : { backgroundColor: theme.primary },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.planBtnText,
+                          {
+                            color: plan.price === "Custom" ? theme.text : theme.primaryForeground,
+                          },
+                        ]}
+                      >
+                        {plan.price === "Custom" ? "Contact sales" : "Get started"}
                       </Text>
                     </Pressable>
                   </Card>
@@ -313,7 +360,7 @@ export default function SystemDetailScreen() {
           )}
 
           {/* FEATURES */}
-          {tab === 'Features' && (
+          {tab === "Features" && (
             <>
               {Object.entries(featuresByCategory).map(([category, catFeatures]) => (
                 <Card key={category} theme={theme}>
@@ -321,11 +368,18 @@ export default function SystemDetailScreen() {
                   {catFeatures.map((f: SystemFeature, i: number) => (
                     <View key={f.feature_name}>
                       <View style={styles.featureMatrixRow}>
-                        <Text style={[styles.featureMatrixName, { color: theme.text }]}>{f.feature_name}</Text>
-                        <Text style={[styles.featureMatrixVal, {
-                          color: f.feature_value ? theme.verified : theme.mutedForeground
-                        }]}>
-                          {f.feature_value ? '✓' : '—'}
+                        <Text style={[styles.featureMatrixName, { color: theme.text }]}>
+                          {f.feature_name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.featureMatrixVal,
+                            {
+                              color: f.feature_value ? theme.verified : theme.mutedForeground,
+                            },
+                          ]}
+                        >
+                          {f.feature_value ? "✓" : "—"}
                         </Text>
                       </View>
                       {i < catFeatures.length - 1 && (
@@ -339,14 +393,29 @@ export default function SystemDetailScreen() {
           )}
 
           {/* TCO */}
-          {tab === 'TCO' && (
+          {tab === "TCO" && (
             <>
               <Card theme={theme}>
                 <SectionTitle title="TCO Inputs" theme={theme} />
                 <TcoInput label="Number of seats" value={seats} onChange={setSeats} theme={theme} />
-                <TcoInput label="Term length (years)" value={term} onChange={setTerm} theme={theme} />
-                <TcoInput label="Annual price escalation %" value={escalation} onChange={setEscalation} theme={theme} />
-                <TcoInput label="Discount %" value={discount} onChange={setDiscount} theme={theme} />
+                <TcoInput
+                  label="Term length (years)"
+                  value={term}
+                  onChange={setTerm}
+                  theme={theme}
+                />
+                <TcoInput
+                  label="Annual price escalation %"
+                  value={escalation}
+                  onChange={setEscalation}
+                  theme={theme}
+                />
+                <TcoInput
+                  label="Discount %"
+                  value={discount}
+                  onChange={setDiscount}
+                  theme={theme}
+                />
                 {basePriceNum === 0 && (
                   <Text style={[styles.tcoNote, { color: theme.mutedForeground }]}>
                     Custom pricing — TCO uses your inputs. Update base price manually below.
@@ -360,25 +429,31 @@ export default function SystemDetailScreen() {
                 <Text style={[styles.tcoTotal, { color: theme.primaryForeground }]}>
                   ${Math.round(tcoTotal).toLocaleString()}
                 </Text>
-                <View style={[styles.divider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
+                <View style={[styles.divider, { backgroundColor: "rgba(255,255,255,0.2)" }]} />
                 <TcoRow label="Year 1" value={tcoYear1} color={theme.primaryForeground} />
-                {parseInt(term) >= 2 && <TcoRow label="Year 2" value={tcoYear2} color={theme.primaryForeground} />}
-                {parseInt(term) >= 3 && <TcoRow label="Year 3" value={tcoYear3} color={theme.primaryForeground} />}
+                {parseInt(term) >= 2 && (
+                  <TcoRow label="Year 2" value={tcoYear2} color={theme.primaryForeground} />
+                )}
+                {parseInt(term) >= 3 && (
+                  <TcoRow label="Year 3" value={tcoYear3} color={theme.primaryForeground} />
+                )}
               </Card>
             </>
           )}
 
           {/* MEDIA */}
-          {tab === 'Media' && (
+          {tab === "Media" && (
             <>
               {media.length === 0 ? (
                 <Card theme={theme}>
-                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>No media available.</Text>
+                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                    No media available.
+                  </Text>
                 </Card>
               ) : (
                 media.map((m: SystemMedia) => (
                   <Card key={m.id} theme={theme}>
-                    {m.media_type === 'video' ? (
+                    {m.media_type === "video" ? (
                       <Video
                         source={{ uri: m.url }}
                         style={styles.videoPlayer}
@@ -386,14 +461,21 @@ export default function SystemDetailScreen() {
                         resizeMode={ResizeMode.CONTAIN}
                       />
                     ) : (
-                      <View style={[styles.mediaPlaceholder, { backgroundColor: theme.backgroundElement }]}>
+                      <View
+                        style={[
+                          styles.mediaPlaceholder,
+                          { backgroundColor: theme.backgroundElement },
+                        ]}
+                      >
                         <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
                           {m.media_type}: {m.url}
                         </Text>
                       </View>
                     )}
                     {m.caption ? (
-                      <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>{m.caption}</Text>
+                      <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                        {m.caption}
+                      </Text>
                     ) : null}
                   </Card>
                 ))
@@ -402,11 +484,13 @@ export default function SystemDetailScreen() {
           )}
 
           {/* REVIEWS */}
-          {tab === 'Reviews' && (
+          {tab === "Reviews" && (
             <>
               {reviews.length === 0 ? (
                 <Card theme={theme}>
-                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>No reviews yet.</Text>
+                  <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                    No reviews yet.
+                  </Text>
                 </Card>
               ) : (
                 reviews.map((r: Review, i: number) => (
@@ -415,17 +499,24 @@ export default function SystemDetailScreen() {
                       <View style={styles.reviewMeta}>
                         <Text style={[styles.reviewTitle, { color: theme.text }]}>{r.title}</Text>
                         {r.is_verified_customer && (
-                          <Text style={[styles.reviewVerified, { color: theme.verified }]}>✓ Verified customer</Text>
+                          <Text style={[styles.reviewVerified, { color: theme.verified }]}>
+                            ✓ Verified customer
+                          </Text>
                         )}
                       </View>
                       <View style={styles.reviewRating}>
                         <Text style={[styles.reviewStars, { color: theme.primary }]}>
-                          {'★'.repeat(Math.round(r.rating))}{'☆'.repeat(5 - Math.round(r.rating))}
+                          {"★".repeat(Math.round(r.rating))}
+                          {"☆".repeat(5 - Math.round(r.rating))}
                         </Text>
-                        <Text style={[styles.reviewRatingNum, { color: theme.mutedForeground }]}>{Number(r.rating).toFixed(1)}</Text>
+                        <Text style={[styles.reviewRatingNum, { color: theme.mutedForeground }]}>
+                          {Number(r.rating).toFixed(1)}
+                        </Text>
                       </View>
                     </View>
-                    <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>{r.review_text}</Text>
+                    <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                      {r.review_text}
+                    </Text>
                     {r.pros && (
                       <View style={styles.proConRow}>
                         <Text style={[styles.proLabel, { color: theme.verified }]}>Pros</Text>
@@ -434,7 +525,7 @@ export default function SystemDetailScreen() {
                     )}
                     {r.cons && (
                       <View style={styles.proConRow}>
-                        <Text style={[styles.conLabel, { color: '#E53E3E' }]}>Cons</Text>
+                        <Text style={[styles.conLabel, { color: "#E53E3E" }]}>Cons</Text>
                         <Text style={[styles.proConText, { color: theme.text }]}>{r.cons}</Text>
                       </View>
                     )}
@@ -451,7 +542,12 @@ export default function SystemDetailScreen() {
 
 function Card({ children, theme, bg }: { children: React.ReactNode; theme: any; bg?: string }) {
   return (
-    <View style={[styles.card, { backgroundColor: bg ?? theme.card, borderColor: bg ? 'transparent' : theme.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: bg ?? theme.card, borderColor: bg ? "transparent" : theme.border },
+      ]}
+    >
       {children}
     </View>
   );
@@ -470,12 +566,29 @@ function InfoRow({ label, value, theme }: { label: string; value: string; theme:
   );
 }
 
-function TcoInput({ label, value, onChange, theme }: { label: string; value: string; onChange: (v: string) => void; theme: any }) {
+function TcoInput({
+  label,
+  value,
+  onChange,
+  theme,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  theme: any;
+}) {
   return (
     <View style={styles.tcoField}>
       <Text style={[styles.tcoFieldLabel, { color: theme.mutedForeground }]}>{label}</Text>
       <TextInput
-        style={[styles.tcoFieldInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
+        style={[
+          styles.tcoFieldInput,
+          {
+            color: theme.text,
+            borderColor: theme.border,
+            backgroundColor: theme.backgroundElement,
+          },
+        ]}
         value={value}
         onChangeText={onChange}
         keyboardType="numeric"
@@ -495,8 +608,8 @@ function TcoRow({ label, value, color }: { label: string; value: number; color: 
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
-  errorText: { fontSize: 14, textAlign: 'center' },
+  loaderBox: { flex: 1, alignItems: "center", justifyContent: "center", gap: Spacing.md },
+  errorText: { fontSize: 14, textAlign: "center" },
   backLink: {
     marginTop: Spacing.sm,
     paddingHorizontal: Spacing.md,
@@ -504,22 +617,22 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
   },
-  backLinkText: { fontSize: 14, fontWeight: '600' },
+  backLinkText: { fontSize: 14, fontWeight: "600" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
     borderBottomWidth: 1,
     gap: Spacing.sm,
   },
   backBtn: { padding: 2 },
-  backArrow: { fontSize: 28, lineHeight: 32, fontWeight: '300' },
-  headerTitle: { flex: 1, fontSize: 16, fontWeight: '700' },
+  backArrow: { fontSize: 28, lineHeight: 32, fontWeight: "300" },
+  headerTitle: { flex: 1, fontSize: 16, fontWeight: "700" },
   heartBtn: { fontSize: 22 },
   hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.md,
     padding: Spacing.md,
     paddingBottom: Spacing.xs,
@@ -528,27 +641,32 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  logoLetter: { fontSize: 24, fontWeight: '700' },
+  logoLetter: { fontSize: 24, fontWeight: "700" },
   heroText: { flex: 1 },
-  systemName: { fontSize: 20, fontWeight: '800' },
+  systemName: { fontSize: 20, fontWeight: "800" },
   systemVendor: { fontSize: 13, marginTop: 3 },
   verifiedBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: Radius.sm },
-  verifiedText: { fontSize: 12, fontWeight: '700' },
+  verifiedText: { fontSize: 12, fontWeight: "700" },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.sm,
   },
-  rating: { fontSize: 14, fontWeight: '700' },
+  rating: { fontSize: 14, fontWeight: "700" },
   reviewCount: { fontSize: 13 },
-  tagline: { fontSize: 14, lineHeight: 20, paddingHorizontal: Spacing.md, paddingBottom: Spacing.md },
+  tagline: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+  },
   ctaRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.sm,
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
@@ -556,17 +674,17 @@ const styles = StyleSheet.create({
   ctaBtn: {
     height: 44,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
   },
-  ctaBtnText: { fontSize: 14, fontWeight: '700' },
+  ctaBtnText: { fontSize: 14, fontWeight: "700" },
   tabScroll: { flexGrow: 0 },
   tabContent: {
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
     gap: Spacing.xs,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   tabChip: {
     paddingHorizontal: 14,
@@ -575,7 +693,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginRight: Spacing.xs,
   },
-  tabLabel: { fontSize: 13, fontWeight: '600' },
+  tabLabel: { fontSize: 13, fontWeight: "600" },
   tabBody: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xxl, gap: Spacing.sm },
   card: {
     borderRadius: Radius.lg,
@@ -583,77 +701,107 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: Spacing.sm,
   },
-  sectionTitle: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.5 },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    opacity: 0.5,
+  },
   bodyText: { fontSize: 14, lineHeight: 21 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs },
   chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full },
-  chipText: { fontSize: 12, fontWeight: '600' },
+  chipText: { fontSize: 12, fontWeight: "600" },
   divider: { height: 1, marginVertical: Spacing.xs },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
   },
   infoLabel: { fontSize: 13 },
-  infoValue: { fontSize: 13, fontWeight: '700' },
+  infoValue: { fontSize: 13, fontWeight: "700" },
   popularBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radius.sm,
     marginBottom: 4,
   },
-  popularText: { fontSize: 11, fontWeight: '700' },
+  popularText: { fontSize: 11, fontWeight: "700" },
   planHeader: { gap: 4 },
-  planName: { fontSize: 18, fontWeight: '700' },
-  planPrice: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  planPriceMain: { fontSize: 28, fontWeight: '800' },
+  planName: { fontSize: 18, fontWeight: "700" },
+  planPrice: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  planPriceMain: { fontSize: 28, fontWeight: "800" },
   planPriceSub: { fontSize: 13 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  checkmark: { fontSize: 14, fontWeight: '700' },
+  featureRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  checkmark: { fontSize: 14, fontWeight: "700" },
   featureText: { fontSize: 14 },
   planBtn: {
     height: 44,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: Spacing.sm,
   },
-  planBtnText: { fontSize: 15, fontWeight: '700' },
-  featureMatrixRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.sm },
+  planBtnText: { fontSize: 15, fontWeight: "700" },
+  featureMatrixRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.sm,
+  },
   featureMatrixName: { fontSize: 14 },
-  featureMatrixVal: { fontSize: 14, fontWeight: '700' },
+  featureMatrixVal: { fontSize: 14, fontWeight: "700" },
   tcoField: { gap: 6 },
-  tcoFieldLabel: { fontSize: 12, fontWeight: '600' },
+  tcoFieldLabel: { fontSize: 12, fontWeight: "600" },
   tcoFieldInput: {
     height: 44,
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.md,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   tcoNote: { fontSize: 12, lineHeight: 17, opacity: 0.7 },
-  tcoLabel: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tcoTotal: { fontSize: 40, fontWeight: '800' },
-  tcoBreakRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  tcoLabel: { fontSize: 13, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
+  tcoTotal: { fontSize: 40, fontWeight: "800" },
+  tcoBreakRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   tcoBreakLabel: { fontSize: 14 },
-  tcoBreakVal: { fontSize: 14, fontWeight: '700' },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  tcoBreakVal: { fontSize: 14, fontWeight: "700" },
+  reviewHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   reviewMeta: { flex: 1, gap: 3 },
-  reviewTitle: { fontSize: 15, fontWeight: '700' },
-  reviewVerified: { fontSize: 11, fontWeight: '600' },
-  reviewRating: { alignItems: 'flex-end', gap: 2 },
+  reviewTitle: { fontSize: 15, fontWeight: "700" },
+  reviewVerified: { fontSize: 11, fontWeight: "600" },
+  reviewRating: { alignItems: "flex-end", gap: 2 },
   reviewStars: { fontSize: 13 },
   reviewRatingNum: { fontSize: 12 },
-  proConRow: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start' },
-  proLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2, width: 32 },
-  conLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2, width: 32 },
+  proConRow: { flexDirection: "row", gap: Spacing.sm, alignItems: "flex-start" },
+  proLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 2,
+    width: 32,
+  },
+  conLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 2,
+    width: 32,
+  },
   proConText: { flex: 1, fontSize: 13, lineHeight: 18 },
-  videoPlayer: { width: '100%', height: 200, borderRadius: Radius.md, backgroundColor: '#000' },
-  mediaPlaceholder: { width: '100%', minHeight: 120, borderRadius: Radius.md, padding: Spacing.md, justifyContent: 'center' },
+  videoPlayer: { width: "100%", height: 200, borderRadius: Radius.md, backgroundColor: "#000" },
+  mediaPlaceholder: {
+    width: "100%",
+    minHeight: 120,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    justifyContent: "center",
+  },
 });
