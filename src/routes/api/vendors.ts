@@ -56,6 +56,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
         logo_url?: string;
         website?: string;
         description?: string;
+        industry?: string;
+        company_size?: string;
+        founded_date?: string;
+        location?: string;
+        location_label?: string;
       };
 
       if (!body.company_name) {
@@ -75,8 +80,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
       if (slugConflict) slug = `${slug}-${Date.now()}`;
 
       const vendors = await query(
-        `INSERT INTO vendors (owner_user_id, company_name, slug, logo_url, website, description)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO vendors (
+           owner_user_id, company_name, slug, logo_url, website, description,
+           industry, company_size, founded_date, location, location_label
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING *`,
         [
           user.id,
@@ -85,6 +93,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
           body.logo_url ?? null,
           body.website ?? null,
           body.description ?? null,
+          body.industry ?? null,
+          body.company_size ?? null,
+          body.founded_date ?? null,
+          body.location ?? null,
+          body.location_label ?? null,
         ],
       );
 
@@ -140,6 +153,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
         "logo_url",
         "website",
         "description",
+        "industry",
+        "company_size",
+        "founded_date",
+        "location",
+        "location_label",
         "social_links",
         "video_links",
       ];

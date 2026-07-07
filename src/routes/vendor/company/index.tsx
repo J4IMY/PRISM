@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  Trash2,
   Database,
   Server,
   Cloud,
@@ -81,6 +82,8 @@ type Vendor = {
   company_size?: string | null;
   founded_date?: string | null;
   industry?: string | null;
+  location?: string | null;
+  location_label?: string | null;
 };
 
 type Technology = {
@@ -201,11 +204,103 @@ function VendorCompanyPage() {
   const [industry, setIndustry] = useState("");
   const [companySize, setCompanySize] = useState("");
   const [foundedDate, setFoundedDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationLabel, setLocationLabel] = useState("");
   const [isNew, setIsNew] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [contactSheetOpen, setContactSheetOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [contactName, setContactName] = useState("");
+  const [contactRole, setContactRole] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactAvatarUrl, setContactAvatarUrl] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
+  const [contactError, setContactError] = useState("");
+
+  const openAddContact = () => {
+    setEditingContact(null);
+    setContactName("");
+    setContactRole("");
+    setContactEmail("");
+    setContactAvatarUrl("");
+    setContactError("");
+    setContactSheetOpen(true);
+  };
+
+  const openEditContact = (contact: Contact) => {
+    setEditingContact(contact);
+    setContactName(contact.name);
+    setContactRole(contact.role);
+    setContactEmail(contact.email);
+    setContactAvatarUrl(contact.avatar_url ?? "");
+    setContactError("");
+    setContactSheetOpen(true);
+  };
+
+  const handleSaveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactSaving(true);
+    setContactError("");
+    try {
+      const payload = {
+        name: contactName.trim(),
+        role: contactRole.trim(),
+        email: contactEmail.trim(),
+        avatar_url: contactAvatarUrl.trim() || null,
+      };
+      if (!payload.name || !payload.role || !payload.email) {
+        setContactError("Name, role, and email are required.");
+        return;
+      }
+      const url = editingContact
+        ? `/api/vendor/contacts/${editingContact.id}`
+        : "/api/vendor/contacts";
+      const res = await fetch(url, {
+        method: editingContact ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setContactError(data.error ?? "Failed to save contact");
+        return;
+      }
+      const saved = data.contact as Contact;
+      setContacts((prev) =>
+        editingContact
+          ? prev.map((c) => (c.id === saved.id ? saved : c))
+          : [...prev, saved],
+      );
+      setContactSheetOpen(false);
+    } catch {
+      setContactError("Failed to save contact");
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const handleDeleteContact = async (contact: Contact) => {
+    if (!confirm(`Delete ${contact.name}?`)) return;
+    try {
+      const res = await fetch(`/api/vendor/contacts/${contact.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to delete contact");
+        return;
+      }
+      setContacts((prev) => prev.filter((c) => c.id !== contact.id));
+    } catch {
+      setError("Failed to delete contact");
+    }
+  };
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -250,6 +345,8 @@ function VendorCompanyPage() {
         setIndustry(vendor.industry ?? "");
         setCompanySize(vendor.company_size ?? "");
         setFoundedDate(vendor.founded_date ?? "");
+        setLocation(vendor.location ?? "");
+        setLocationLabel(vendor.location_label ?? "");
         setTechnologies(data.technologies ?? []);
         setContacts(data.contacts ?? []);
         console.log(
@@ -320,6 +417,8 @@ function VendorCompanyPage() {
             industry: industry || null,
             company_size: companySize || null,
             founded_date: foundedDate || null,
+            location: location || null,
+            location_label: locationLabel || null,
           }
         : {
             company_name: companyName,
@@ -329,6 +428,8 @@ function VendorCompanyPage() {
             industry: industry || null,
             company_size: companySize || null,
             founded_date: foundedDate || null,
+            location: location || null,
+            location_label: locationLabel || null,
             social_links: socialLinks,
           };
       const res = await fetch("/api/vendors", {
@@ -485,21 +586,39 @@ function VendorCompanyPage() {
                           placeholder="e.g., 1-10, 11-50, 51-200"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="founded_date">Founded date</Label>
-                        <Input
-                          id="founded_date"
-                          type="number"
-                          value={foundedDate}
-                          onChange={(e) => setFoundedDate(e.target.value)}
-                          placeholder="e.g., 1998"
-                        />
-                      </div>
-                      <SheetFooter className="px-0">
-                        <Button type="submit" disabled={saving} className="w-full">
-                          {saving ? "Saving…" : "Create profile"}
-                        </Button>
-                      </SheetFooter>
+                       <div className="space-y-2">
+                         <Label htmlFor="founded_date">Founded date</Label>
+                         <Input
+                           id="founded_date"
+                           type="number"
+                           value={foundedDate}
+                           onChange={(e) => setFoundedDate(e.target.value)}
+                           placeholder="e.g., 1998"
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="location">Exact location</Label>
+                         <Input
+                           id="location"
+                           value={location}
+                           onChange={(e) => setLocation(e.target.value)}
+                           placeholder="e.g., 123 Market St, San Francisco, CA"
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="location_label">Display name (city or area)</Label>
+                         <Input
+                           id="location_label"
+                           value={locationLabel}
+                           onChange={(e) => setLocationLabel(e.target.value)}
+                           placeholder="e.g., San Francisco, CA"
+                         />
+                       </div>
+                       <SheetFooter className="px-0">
+                         <Button type="submit" disabled={saving} className="w-full">
+                           {saving ? "Saving…" : "Create profile"}
+                         </Button>
+                       </SheetFooter>
                     </form>
                   </SheetContent>
                 </Sheet>
@@ -534,13 +653,24 @@ function VendorCompanyPage() {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                        <a
-                          href="#"
-                          className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <MapPin className="h-3.5 w-3.5" />
-                          San Francisco, CA
-                        </a>
+                        {location || locationLabel ? (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                              location || locationLabel,
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <MapPin className="h-3.5 w-3.5" />
+                            {locationLabel || location}
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                            <MapPin className="h-3.5 w-3.5" />
+                            No location
+                          </span>
+                        )}
                         {website ? (
                           <a
                             href={website}
@@ -690,6 +820,27 @@ function VendorCompanyPage() {
                           />
                         </div>
                         <div className="space-y-2">
+                          <Label htmlFor="location">Exact location</Label>
+                          <Input
+                            id="location"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="e.g., 123 Market St, San Francisco, CA"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="location_label">Display name (city or area)</Label>
+                          <Input
+                            id="location_label"
+                            value={locationLabel}
+                            onChange={(e) => setLocationLabel(e.target.value)}
+                            placeholder="e.g., San Francisco, CA"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Shown publicly; the link opens the exact location above.
+                          </p>
+                        </div>
+                        <div className="space-y-2">
                           <Label htmlFor="linkedin">LinkedIn</Label>
                           <Input
                             id="linkedin"
@@ -749,22 +900,22 @@ function VendorCompanyPage() {
           </Card>
 
           <div className="grid gap-6 sm:grid-cols-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-start gap-2 text-sm">
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Industry</p>
                 <p className="font-medium">{industry || "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-start gap-2 text-sm">
+              <Users className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Company size</p>
                 <p className="font-medium">{companySize || "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-start gap-2 text-sm">
+              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Founded</p>
                 <p className="font-medium">{foundedDate || "—"}</p>
@@ -807,30 +958,131 @@ function VendorCompanyPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-semibold">Key Contacts</CardTitle>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={openAddContact}
+                    aria-label="Add contact"
+                  >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-4">
-                {contacts.map((contact) => (
-                  <div key={contact.id} className="flex items-start gap-3">
-                    <Avatar className="h-9 w-9">
-                      {contact.avatar_url ? <AvatarImage src={contact.avatar_url} /> : null}
-                      <AvatarFallback className="text-xs">
-                        {contact.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm font-medium truncate">{contact.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{contact.role}</p>
-                      <p className="text-xs text-primary truncate">{contact.email}</p>
+                {contacts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No contacts yet. Add key people buyers should know.
+                  </p>
+                ) : (
+                  contacts.map((contact) => (
+                    <div key={contact.id} className="flex items-start gap-3">
+                      <Avatar className="h-9 w-9">
+                        {contact.avatar_url ? <AvatarImage src={contact.avatar_url} /> : null}
+                        <AvatarFallback className="text-xs">
+                          {contact.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="text-sm font-medium truncate">{contact.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{contact.role}</p>
+                        <p className="text-xs text-primary truncate">{contact.email}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => openEditContact(contact)}
+                          aria-label="Edit contact"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-red-600"
+                          onClick={() => handleDeleteContact(contact)}
+                          aria-label="Delete contact"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
+                <Sheet open={contactSheetOpen} onOpenChange={setContactSheetOpen}>
+                  <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>
+                        {editingContact ? "Edit Contact" : "Add Contact"}
+                      </SheetTitle>
+                      <SheetDescription>
+                        {editingContact
+                          ? "Update the contact details below."
+                          : "Add a key contact for your company."}
+                      </SheetDescription>
+                    </SheetHeader>
+                    {contactError && (
+                      <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        {contactError}
+                      </div>
+                    )}
+                    <form onSubmit={handleSaveContact} className="mt-6 space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_name">Name</Label>
+                        <Input
+                          id="contact_name"
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_role">Role</Label>
+                        <Input
+                          id="contact_role"
+                          value={contactRole}
+                          onChange={(e) => setContactRole(e.target.value)}
+                          placeholder="e.g., CEO, Sales Lead"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_email">Email</Label>
+                        <Input
+                          id="contact_email"
+                          type="email"
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          placeholder="name@company.com"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact_avatar">Avatar URL</Label>
+                        <Input
+                          id="contact_avatar"
+                          value={contactAvatarUrl}
+                          onChange={(e) => setContactAvatarUrl(e.target.value)}
+                          placeholder="https://…"
+                        />
+                      </div>
+                      <SheetFooter className="px-0">
+                        <Button type="submit" disabled={contactSaving} className="w-full">
+                          {contactSaving
+                            ? "Saving…"
+                            : editingContact
+                              ? "Save changes"
+                              : "Add contact"}
+                        </Button>
+                      </SheetFooter>
+                    </form>
+                  </SheetContent>
+                </Sheet>
                 <Link
                   to="/vendor/company/contacts"
                   className="inline-block mt-2 text-xs font-medium text-primary hover:underline"

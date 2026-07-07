@@ -1,0 +1,2 @@
+ALTER TABLE vendors
+  ADD COLUMN IF NOT EXISTS location TEXT;

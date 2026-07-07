@@ -33,6 +33,8 @@ import "@/routes/api/vendor-systems.$id.media.$mediaId";
 import "@/routes/api/vendor-threads";
 import "@/routes/api/vendor-threads.$id";
 import "@/routes/api/vendors";
+import "@/routes/api/vendor.contacts";
+import "@/routes/api/vendor.contacts.$id";
 import "@/routes/api/vendors.team";
 import "@/routes/api/vendors.team.accept";
 import "@/routes/api/watchlist";
