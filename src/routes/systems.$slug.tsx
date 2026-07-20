@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, ShieldCheck, ExternalLink, Check, Minus, Star } from "lucide-react";
+import { MessageSquare, ShieldCheck, ExternalLink, Check, Minus, Star, Clock } from "lucide-react";
 import { query, queryOne } from "@/lib/db";
 import { WatchlistButton } from "@/components/watchlist-button";
 
@@ -42,6 +42,16 @@ type PricingPackage = {
   features: string[];
 };
 
+type Review = {
+  rating: number;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
+  review_text: string | null;
+  is_verified_customer: boolean;
+  created_at: string;
+};
+
 const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any) => {
   const slug = data?.slug;
   if (!slug) return null;
@@ -61,7 +71,7 @@ const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any
   );
   if (!system) return null;
 
-  const [media, packages] = await Promise.all([
+  const [media, packages, reviews] = await Promise.all([
     query<{ id: string; media_type: string; url: string; caption: string | null }>(
       "SELECT id, media_type, url, caption FROM system_media WHERE system_id = $1 ORDER BY sort_order",
       [system.id],
@@ -78,9 +88,17 @@ const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any
        ORDER BY p.display_order`,
       [system.id],
     ),
+    query<Review>(
+      `SELECT r.rating, r.title, r.pros, r.cons, r.review_text,
+              r.is_verified_customer, r.created_at
+       FROM reviews r
+       WHERE r.system_id = $1 AND r.admin_status = 'approved'
+       ORDER BY r.created_at DESC`,
+      [system.id],
+    ),
   ]);
 
-  return { system, media, packages };
+  return { system, media, packages, reviews };
 });
 
 export const Route = createFileRoute("/systems/$slug")({
@@ -100,7 +118,12 @@ export const Route = createFileRoute("/systems/$slug")({
 });
 
 function SystemDetailPage() {
-  const { system, media, packages: initialPackages } = Route.useLoaderData();
+  const {
+    system,
+    media,
+    packages: initialPackages,
+    reviews: initialReviews,
+  } = Route.useLoaderData();
   const { user } = Route.useRouteContext();
   const router = useRouter();
   const [messageOpen, setMessageOpen] = useState(false);
@@ -108,6 +131,16 @@ function SystemDetailPage() {
   const [messageError, setMessageError] = useState("");
   const [messageSending, setMessageSending] = useState(false);
   const [packages] = useState<PricingPackage[]>(initialPackages ?? []);
+  const [reviews] = useState<Review[]>(initialReviews ?? []);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewPros, setReviewPros] = useState("");
+  const [reviewCons, setReviewCons] = useState("");
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
 
   const handleMessageVendor = async () => {
     if (!messageBody.trim() || messageSending) return;
@@ -142,6 +175,42 @@ function SystemDetailPage() {
       setMessageError(e instanceof Error ? e.message : "Failed to start conversation");
     } finally {
       setMessageSending(false);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!reviewRating || reviewSubmitting) return;
+    setReviewSubmitting(true);
+    setReviewError("");
+    try {
+      const res = await fetch(`/api/systems/${system.slug}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          rating: reviewRating,
+          title: reviewTitle.trim() || undefined,
+          pros: reviewPros.trim() || undefined,
+          cons: reviewCons.trim() || undefined,
+          review_text: reviewText.trim() || undefined,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to submit review");
+      setReviewSuccess("Thank you! Your review has been published.");
+      setReviewRating(0);
+      setReviewTitle("");
+      setReviewPros("");
+      setReviewCons("");
+      setReviewText("");
+      setTimeout(() => {
+        setReviewOpen(false);
+        setReviewSuccess("");
+      }, 2000);
+    } catch (e) {
+      setReviewError(e instanceof Error ? e.message : "Failed to submit review");
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -217,13 +286,95 @@ function SystemDetailPage() {
           </DialogContent>
         </Dialog>
 
+        <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Write a review</DialogTitle>
+              <DialogDescription>
+                Share your experience with {system.name}. Your review will be published immediately.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Rating</Label>
+                <div className="flex items-center gap-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="text-2xl bg-transparent border-none p-0 cursor-pointer"
+                    >
+                      <Star
+                        className={`h-6 w-6 ${
+                          star <= reviewRating
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="review-title">Title</Label>
+                <Input
+                  id="review-title"
+                  value={reviewTitle}
+                  onChange={(e) => setReviewTitle(e.target.value)}
+                  placeholder="Summarize your experience"
+                />
+              </div>
+              <div>
+                <Label htmlFor="review-pros">Pros</Label>
+                <Textarea
+                  id="review-pros"
+                  value={reviewPros}
+                  onChange={(e) => setReviewPros(e.target.value)}
+                  placeholder="What did you like?"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="review-cons">Cons</Label>
+                <Textarea
+                  id="review-cons"
+                  value={reviewCons}
+                  onChange={(e) => setReviewCons(e.target.value)}
+                  placeholder="What could be improved?"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="review-text">Review</Label>
+                <Textarea
+                  id="review-text"
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Tell us more about your experience"
+                  rows={4}
+                />
+              </div>
+              {reviewError && <p className="text-sm text-destructive">{reviewError}</p>}
+              {reviewSuccess && <p className="text-sm text-green-600">{reviewSuccess}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReviewOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleReviewSubmit} disabled={!reviewRating || reviewSubmitting}>
+                {reviewSubmitting ? "Submitting…" : "Submit review"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing</TabsTrigger>
             <TabsTrigger value="features">Features</TabsTrigger>
+            <TabsTrigger value="pricing">Pricing</TabsTrigger>
             <TabsTrigger value="tco">TCO Calculator</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
           </TabsList>
 
@@ -234,19 +385,83 @@ function SystemDetailPage() {
                 <p>Deployed via {system.deployment_type?.toLowerCase() || "cloud"}.</p>
               </CardContent>
             </Card>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <InfoCard
-                label="Security"
-                value={system.security_certifications?.join(", ") || "None listed"}
-              />
-              <InfoCard
-                label="Features"
-                value={
-                  `${system.has_api ? "API, " : ""}${system.has_mobile_app ? "Mobile, " : ""}${system.has_ai_features ? "AI" : ""}` ||
-                  "Standard"
-                }
-              />
-              <InfoCard label="Starting price" value={system.starting_price} />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Reviews</h3>
+                  <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>
+                    Write a review
+                  </Button>
+                </div>
+                {reviews.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No reviews yet. Be the first to review.
+                  </p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {reviews.map((r, i) => (
+                      <Card key={i} className="h-full">
+                        <CardContent className="pt-6 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            {"★".repeat(Math.round(r.rating))}
+                            {"☆".repeat(5 - Math.round(r.rating))}
+                          </div>
+                          {r.is_verified_customer && (
+                            <span className="text-xs text-muted-foreground">Verified customer</span>
+                          )}
+                        </div>
+                        {r.title && <p className="font-medium text-sm">{r.title}</p>}
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          {r.pros && (
+                            <p>
+                              <span className="font-medium text-foreground">Pros:</span> {r.pros}
+                            </p>
+                          )}
+                          {r.cons && (
+                            <p>
+                              <span className="font-medium text-foreground">Cons:</span> {r.cons}
+                            </p>
+                          )}
+                        </div>
+                        {r.review_text && (
+                          <p className="text-sm line-clamp-4">{r.review_text}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">Media</h3>
+              {media.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  {media.map((m) => (
+                    <div
+                      key={m.id}
+                      className="aspect-video rounded-lg bg-secondary overflow-hidden"
+                    >
+                      {m.media_type === "video" ? (
+                        <video src={m.url} className="h-full w-full object-cover" controls />
+                      ) : (
+                        <img
+                          src={m.url}
+                          alt={m.caption ?? m.id}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="aspect-video rounded-lg bg-secondary" />
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -286,9 +501,10 @@ function SystemDetailPage() {
                         )}
                       </div>
                       {pkg.trial_available && (
-                        <p className="text-xs text-muted-foreground">
+                        <Badge variant="secondary" className="gap-1 w-fit">
+                          <Clock className="h-3 w-3" />
                           {pkg.trial_duration_days}-day free trial
-                        </p>
+                        </Badge>
                       )}
                       {pkg.is_unlimited_seats && (
                         <p className="text-xs text-muted-foreground">Unlimited seats</p>
@@ -324,34 +540,27 @@ function SystemDetailPage() {
           </TabsContent>
 
           <TabsContent value="features">
-            <Card>
-              <CardContent className="pt-6">
-                <table className="w-full text-sm">
-                  <tbody>
-                    {[
-                      ["Single sign-on (SSO)", true, true, true],
-                      ["Audit log", false, true, true],
-                      ["Custom roles", false, true, true],
-                      ["SLA 99.99%", false, false, true],
-                      ["On-prem deployment", false, false, true],
-                    ].map(([name, ...vals]) => (
-                      <tr key={name as string} className="border-b border-border last:border-0">
-                        <td className="py-2 pr-4 font-medium">{name as string}</td>
-                        {vals.map((v, i) => (
-                          <td key={i} className="py-2 text-center">
-                            {v ? (
-                              <Check className="inline h-4 w-4 text-primary" />
-                            ) : (
-                              <Minus className="inline h-4 w-4 text-muted-foreground" />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+            {(() => {
+              const allFeatures = Array.from(
+                new Set(packages.flatMap((pkg) => pkg.features)),
+              ).sort();
+              return allFeatures.length > 0 ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <ul className="space-y-2">
+                      {allFeatures.map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ) : (
+                <p className="text-sm text-muted-foreground">No features linked to packages yet.</p>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="tco">
@@ -406,32 +615,6 @@ function SystemDetailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="media">
-            {media.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {media.map((m) => (
-                  <div key={m.id} className="aspect-video rounded-lg bg-secondary overflow-hidden">
-                    {m.media_type === "video" ? (
-                      <video src={m.url} className="h-full w-full object-cover" controls />
-                    ) : (
-                      <img
-                        src={m.url}
-                        alt={m.caption ?? m.id}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="aspect-video rounded-lg bg-secondary" />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
           <TabsContent value="links">
             <Card>
               <CardContent className="pt-6 space-y-2">
@@ -452,16 +635,5 @@ function SystemDetailPage() {
         </Tabs>
       </main>
     </div>
-  );
-}
-
-function InfoCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 font-medium">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

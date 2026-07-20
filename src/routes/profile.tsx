@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/components/theme-provider";
 import { requireRoles } from "@/lib/route-guards";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: ({ context }) => {
@@ -19,6 +20,31 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const { user } = Route.useRouteContext();
   const { theme, setTheme } = useTheme();
+  const [name, setName] = useState(user?.name ?? "");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const isPrivileged = user && ["admin", "moderator", "vendor"].includes(user.role);
+
+  const handleSaveName = async () => {
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; name?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to update name");
+      setMessage("Name updated");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Failed to update name");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,16 +59,28 @@ function ProfilePage() {
           <CardContent className="space-y-4">
             <div>
               <Label>Name</Label>
-              <Input defaultValue={user?.name ?? ""} readOnly />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={saving}
+                />
+                <Button onClick={handleSaveName} disabled={saving}>
+                  {saving ? "Saving…" : "Save"}
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Email</Label>
               <Input type="email" defaultValue={user?.email ?? ""} readOnly />
             </div>
-            <div>
-              <Label>Role</Label>
-              <Input defaultValue={user?.role ?? ""} readOnly />
-            </div>
+            {isPrivileged && (
+              <div>
+                <Label>Role</Label>
+                <Input defaultValue={user?.role ?? ""} readOnly />
+              </div>
+            )}
+            {message && <p className="text-sm text-muted-foreground">{message}</p>}
           </CardContent>
         </Card>
 

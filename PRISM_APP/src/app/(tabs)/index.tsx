@@ -3,6 +3,7 @@ import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -95,7 +96,11 @@ export default function DiscoverScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <Text style={[styles.logo, { color: theme.primary }]}>PRISM</Text>
+        <Image
+          source={require("@/assets/images/prism_logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={styles.heroRow}>
@@ -287,7 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  logo: { fontSize: 20, fontWeight: "800", letterSpacing: 2 },
+  logo: { width: 32, height: 32 },
   searchRow: {
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,

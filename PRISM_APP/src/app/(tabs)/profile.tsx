@@ -22,12 +22,16 @@ export default function ProfileScreen() {
   const { mode, setMode } = useThemeMode();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingName, setEditingName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameMessage, setNameMessage] = useState("");
 
   const loadUser = useCallback(async () => {
     setLoading(true);
     try {
       const { user: me } = await api.auth.me();
       setUser(me);
+      setEditingName(me?.name ?? "");
     } catch {
       setUser(null);
     } finally {
@@ -40,6 +44,20 @@ export default function ProfileScreen() {
       loadUser();
     }, [loadUser]),
   );
+
+  const handleSaveName = async () => {
+    setSavingName(true);
+    setNameMessage("");
+    try {
+      const data = await api.profile.updateName(editingName);
+      setUser((prev) => (prev ? { ...prev, name: data.name } : prev));
+      setNameMessage("Name updated");
+    } catch (e) {
+      setNameMessage(e instanceof Error ? e.message : "Failed to update name");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -54,6 +72,7 @@ export default function ProfileScreen() {
 
   const displayName = user?.name || user?.email?.split("@")[0] || "Guest";
   const initial = displayName.charAt(0).toUpperCase();
+  const isPrivileged = user ? ["admin", "moderator", "vendor"].includes(user.role) : false;
 
   if (loading) {
     return (

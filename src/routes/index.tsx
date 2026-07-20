@@ -82,8 +82,11 @@ const getSystems = createServerFn({ method: "GET" }).handler(async ({ data }: { 
   return query<SystemRow>(
     `SELECT
        s.id, s.name, s.slug, s.tagline,
-       s.pricing_tier, s.starting_price, s.verified,
-       s.trial_available, s.rating, s.review_count,
+       s.pricing_tier, s.starting_price,
+       (v.id IS NOT NULL) AS verified,
+       s.trial_available,
+       COALESCE(AVG(r.rating) FILTER (WHERE r.admin_status = 'approved'), 0) AS rating,
+       COUNT(r.id) FILTER (WHERE r.admin_status = 'approved')::int AS review_count,
        s.has_api, s.has_mobile_app, s.has_ai_features,
        s.deployment_type, s.target_size,
        s.security_certifications,
@@ -92,7 +95,9 @@ const getSystems = createServerFn({ method: "GET" }).handler(async ({ data }: { 
       FROM systems s
       LEFT JOIN categories c ON s.category_id = c.id
       LEFT JOIN vendors v ON s.vendor_id = v.id
+      LEFT JOIN reviews r ON r.system_id = s.id
       ${where}
+      GROUP BY s.id, c.name, v.id, v.company_name
       ORDER BY s.verified DESC, s.rating DESC, s.review_count DESC`,
     params,
   );

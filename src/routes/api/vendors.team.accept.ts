@@ -1,6 +1,7 @@
 import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import { query, queryOne } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { permissionsForRole, TEAM_ROLES } from "@/lib/team-roles";
 
 export const APIRoute = createAPIFileRoute("/api/vendors/team/accept")({
   POST: async ({ request }) => {
@@ -33,11 +34,23 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team/accept")({
       return Response.json({ error: "Invite email does not match your account" }, { status: 403 });
     }
 
+    const role = TEAM_ROLES.includes(invite.role as (typeof TEAM_ROLES)[number])
+      ? invite.role
+      : "support";
+    const perms = permissionsForRole(role);
+
     await query(
-      `INSERT INTO vendor_members (vendor_id, user_id, role, can_respond_messages)
-       VALUES ($1, $2, $3, true)
+      `INSERT INTO vendor_members (vendor_id, user_id, role, can_manage_systems, can_manage_team, can_respond_messages)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (vendor_id, user_id) DO NOTHING`,
-      [invite.vendor_id, user.id, invite.role],
+      [
+        invite.vendor_id,
+        user.id,
+        role,
+        perms.can_manage_systems,
+        perms.can_manage_team,
+        perms.can_respond_messages,
+      ],
     );
     await query("UPDATE vendor_invites SET status = 'accepted' WHERE id = $1", [invite.id]);
     if (user.role === "user") {

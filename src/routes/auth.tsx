@@ -10,7 +10,7 @@ function AuthLayout() {
       <header className="border-b border-border">
         <div className="container mx-auto flex h-14 items-center px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-block h-6 w-6 rounded bg-primary" />
+            <img src="/prism_logo.png" alt="PRISM" className="h-6 w-6 rounded object-contain" />
             <span>PRISM</span>
           </Link>
         </div>

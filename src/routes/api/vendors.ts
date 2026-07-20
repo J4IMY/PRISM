@@ -103,7 +103,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
 
       await query(
         `INSERT INTO vendor_members (vendor_id, user_id, role, can_manage_systems, can_manage_team, can_respond_messages)
-         VALUES ($1, $2, 'owner', true, true, true)`,
+         VALUES ($1, $2, 'dev', true, true, true)`,
         [vendors[0].id, user.id],
       );
 
@@ -133,7 +133,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors")({
       const body = (await request.json()) as Record<string, unknown>;
       const member = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
         `SELECT vendor_id, can_manage_team FROM vendor_members
-         WHERE user_id = $1 AND role IN ('owner', 'admin')`,
+         WHERE user_id = $1 AND role IN ('dev', 'sales', 'support')`,
         [user.id],
       );
       if (!member && user.role !== "admin") {

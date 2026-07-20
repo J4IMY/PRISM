@@ -247,6 +247,14 @@ export const api = {
       apiFetch("/api/user/theme", { method: "PATCH", body: JSON.stringify({ theme }) }),
   },
 
+  profile: {
+    updateName: (name: string) =>
+      apiFetch<{ name: string }>("/api/user/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+      }),
+  },
+
   notifications: {
     list: () => apiFetch<{ notifications: unknown[]; unread: number }>("/api/notifications"),
   },

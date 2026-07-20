@@ -36,27 +36,10 @@ import {
   ChevronUp,
   Plus,
   Trash2,
-  Database,
-  Server,
-  Cloud,
-  Cpu,
-  Layers,
-  Terminal,
-  Code,
-  GitBranch,
-  Container,
-  Zap,
-  Shield,
-  Lock,
-  Network,
-  HardDrive,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Laptop,
-  Search,
-  Triangle,
+  X,
+  Check,
 } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export const Route = createFileRoute("/vendor/company/")({
   component: VendorCompanyPage,
@@ -92,85 +75,141 @@ type Technology = {
   color: string;
 };
 
-import { LucideIcon } from "lucide-react";
-
-const techIconMap: Record<string, LucideIcon> = {
-  postgresql: Database,
-  postgres: Database,
-  mysql: Database,
-  mongodb: Database,
-  redis: Database,
-  docker: Container,
-  kubernetes: Container,
-  aws: Cloud,
-  azure: Cloud,
-  gcp: Cloud,
-  googlecloud: Cloud,
-  react: Code,
-  vue: Code,
-  angular: Code,
-  nodejs: Terminal,
-  node: Terminal,
-  python: Terminal,
-  java: Terminal,
-  go: Terminal,
-  golang: Terminal,
-  rust: Terminal,
-  typescript: Code,
-  javascript: Code,
-  graphql: Network,
-  rest: Network,
-  api: Network,
-  linux: Monitor,
-  windows: Monitor,
-  macos: Monitor,
-  git: GitBranch,
-  github: GitBranch,
-  gitlab: GitBranch,
-  jenkins: Cpu,
-  circleci: Cpu,
-  travis: Cpu,
-  terraform: Layers,
-  ansible: Layers,
-  prometheus: Zap,
-  grafana: Zap,
-  elasticsearch: Search,
-  kafka: Zap,
-  rabbitmq: Zap,
-  nginx: Server,
-  apache: Server,
-  flutter: Smartphone,
-  reactnative: Smartphone,
-  ios: Smartphone,
-  android: Smartphone,
-  tensorflow: Cpu,
-  pytorch: Cpu,
-  ai: Cpu,
-  ml: Cpu,
-  machinelearning: Cpu,
-  blockchain: Shield,
-  ethereum: Shield,
-  web3: Shield,
-  security: Lock,
-  encryption: Lock,
-  firebase: Zap,
-  supabase: Database,
-  vercel: Triangle,
-  netlify: Triangle,
-  cloudflare: Shield,
-  sentry: Shield,
-  datadog: Zap,
-  newrelic: Zap,
-  splunk: Search,
-  elastic: Search,
-  logstash: Search,
-  kibana: Search,
+const techIconMap: Record<string, string> = {
+  postgresql: "simple-icons:postgresql",
+  postgres: "simple-icons:postgresql",
+  mysql: "simple-icons:mysql",
+  mongodb: "simple-icons:mongodb",
+  redis: "simple-icons:redis",
+  docker: "simple-icons:docker",
+  kubernetes: "simple-icons:kubernetes",
+  aws: "simple-icons:amazonaws",
+  amazonaws: "simple-icons:amazonaws",
+  azure: "simple-icons:microsoftazure",
+  gcp: "simple-icons:googlecloud",
+  googlecloud: "simple-icons:googlecloud",
+  react: "simple-icons:react",
+  vue: "simple-icons:vuedotjs",
+  angular: "simple-icons:angular",
+  nodejs: "simple-icons:nodedotjs",
+  node: "simple-icons:nodedotjs",
+  python: "simple-icons:python",
+  java: "simple-icons:openjdk",
+  go: "simple-icons:go",
+  golang: "simple-icons:go",
+  rust: "simple-icons:rust",
+  typescript: "simple-icons:typescript",
+  javascript: "simple-icons:javascript",
+  graphql: "simple-icons:graphql",
+  rest: "mdi:api",
+  api: "mdi:api",
+  linux: "simple-icons:linux",
+  windows: "mdi:microsoft-windows",
+  macos: "simple-icons:apple",
+  git: "simple-icons:git",
+  github: "simple-icons:github",
+  gitlab: "simple-icons:gitlab",
+  jenkins: "simple-icons:jenkins",
+  circleci: "simple-icons:circleci",
+  travis: "simple-icons:travisci",
+  terraform: "simple-icons:terraform",
+  ansible: "simple-icons:ansible",
+  prometheus: "simple-icons:prometheus",
+  grafana: "simple-icons:grafana",
+  elasticsearch: "simple-icons:elasticsearch",
+  kafka: "simple-icons:apachekafka",
+  rabbitmq: "simple-icons:rabbitmq",
+  nginx: "simple-icons:nginx",
+  apache: "simple-icons:apache",
+  flutter: "simple-icons:flutter",
+  reactnative: "simple-icons:react",
+  ios: "simple-icons:apple",
+  android: "simple-icons:android",
+  tensorflow: "simple-icons:tensorflow",
+  pytorch: "simple-icons:pytorch",
+  ai: "mdi:brain",
+  ml: "mdi:brain",
+  machinelearning: "mdi:brain",
+  blockchain: "mdi:link-variant",
+  ethereum: "simple-icons:ethereum",
+  web3: "mdi:web",
+  security: "mdi:shield-lock",
+  encryption: "mdi:lock",
+  firebase: "simple-icons:firebase",
+  supabase: "simple-icons:supabase",
+  vercel: "simple-icons:vercel",
+  netlify: "simple-icons:netlify",
+  cloudflare: "simple-icons:cloudflare",
+  sentry: "simple-icons:sentry",
+  datadog: "simple-icons:datadog",
+  newrelic: "simple-icons:newrelic",
+  splunk: "simple-icons:splunk",
+  elastic: "simple-icons:elasticsearch",
+  logstash: "simple-icons:logstash",
+  kibana: "simple-icons:kibana",
 };
 
-function getTechIcon(name: string): LucideIcon | null {
+function getTechIconName(name: string): string | null {
   const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
   return techIconMap[normalized] ?? null;
 }
+
+type TechCatalogItem = { key: string; label: string; icon: string; color: string };
+
+const TECH_CATALOG: TechCatalogItem[] = [
+  { key: "postgresql", label: "PostgreSQL", icon: "simple-icons:postgresql", color: "#336791" },
+  { key: "mysql", label: "MySQL", icon: "simple-icons:mysql", color: "#4479a1" },
+  { key: "mongodb", label: "MongoDB", icon: "simple-icons:mongodb", color: "#13aa52" },
+  { key: "redis", label: "Redis", icon: "simple-icons:redis", color: "#d82c20" },
+  { key: "docker", label: "Docker", icon: "simple-icons:docker", color: "#2496ed" },
+  { key: "kubernetes", label: "Kubernetes", icon: "simple-icons:kubernetes", color: "#326ce5" },
+  { key: "aws", label: "AWS", icon: "simple-icons:amazonaws", color: "#ff9900" },
+  { key: "azure", label: "Azure", icon: "simple-icons:microsoftazure", color: "#0078d4" },
+  { key: "gcp", label: "Google Cloud", icon: "simple-icons:googlecloud", color: "#ea4335" },
+  { key: "react", label: "React", icon: "simple-icons:react", color: "#61dafb" },
+  { key: "vue", label: "Vue", icon: "simple-icons:vuedotjs", color: "#42b883" },
+  { key: "angular", label: "Angular", icon: "simple-icons:angular", color: "#dd0031" },
+  { key: "nodejs", label: "Node.js", icon: "simple-icons:nodedotjs", color: "#3c873a" },
+  { key: "python", label: "Python", icon: "simple-icons:python", color: "#3776ab" },
+  { key: "java", label: "Java", icon: "simple-icons:openjdk", color: "#f89820" },
+  { key: "go", label: "Go", icon: "simple-icons:go", color: "#00add8" },
+  { key: "rust", label: "Rust", icon: "simple-icons:rust", color: "#dea584" },
+  { key: "typescript", label: "TypeScript", icon: "simple-icons:typescript", color: "#3178c6" },
+  { key: "javascript", label: "JavaScript", icon: "simple-icons:javascript", color: "#f7df1e" },
+  { key: "graphql", label: "GraphQL", icon: "simple-icons:graphql", color: "#e10098" },
+  { key: "linux", label: "Linux", icon: "simple-icons:linux", color: "#1793d1" },
+  { key: "git", label: "Git", icon: "simple-icons:git", color: "#f05032" },
+  { key: "github", label: "GitHub", icon: "simple-icons:github", color: "#24292e" },
+  { key: "gitlab", label: "GitLab", icon: "simple-icons:gitlab", color: "#fc6d26" },
+  { key: "terraform", label: "Terraform", icon: "simple-icons:terraform", color: "#7b42bc" },
+  { key: "ansible", label: "Ansible", icon: "simple-icons:ansible", color: "#ee0000" },
+  { key: "prometheus", label: "Prometheus", icon: "simple-icons:prometheus", color: "#e6522c" },
+  { key: "grafana", label: "Grafana", icon: "simple-icons:grafana", color: "#f46800" },
+  {
+    key: "elasticsearch",
+    label: "Elasticsearch",
+    icon: "simple-icons:elasticsearch",
+    color: "#fec514",
+  },
+  { key: "kafka", label: "Kafka", icon: "simple-icons:apachekafka", color: "#231f20" },
+  { key: "nginx", label: "Nginx", icon: "simple-icons:nginx", color: "#009639" },
+  { key: "apache", label: "Apache", icon: "simple-icons:apache", color: "#d22128" },
+  { key: "flutter", label: "Flutter", icon: "simple-icons:flutter", color: "#02569b" },
+  { key: "reactnative", label: "React Native", icon: "simple-icons:react", color: "#61dafb" },
+  { key: "ios", label: "iOS", icon: "simple-icons:apple", color: "#555555" },
+  { key: "android", label: "Android", icon: "simple-icons:android", color: "#3ddc84" },
+  { key: "tensorflow", label: "TensorFlow", icon: "simple-icons:tensorflow", color: "#ff6f00" },
+  { key: "pytorch", label: "PyTorch", icon: "simple-icons:pytorch", color: "#ee4c2c" },
+  { key: "ai", label: "AI", icon: "mdi:brain", color: "#6b7280" },
+  { key: "security", label: "Security", icon: "mdi:shield-lock", color: "#6b7280" },
+  { key: "firebase", label: "Firebase", icon: "simple-icons:firebase", color: "#ffca28" },
+  { key: "supabase", label: "Supabase", icon: "simple-icons:supabase", color: "#3ecf8e" },
+  { key: "vercel", label: "Vercel", icon: "simple-icons:vercel", color: "#000000" },
+  { key: "cloudflare", label: "Cloudflare", icon: "simple-icons:cloudflare", color: "#f38020" },
+  { key: "sentry", label: "Sentry", icon: "simple-icons:sentry", color: "#362d59" },
+  { key: "datadog", label: "Datadog", icon: "simple-icons:datadog", color: "#632ca6" },
+  { key: "splunk", label: "Splunk", icon: "simple-icons:splunk", color: "#000000" },
+];
 
 type Contact = {
   id: string;
@@ -220,6 +259,52 @@ function VendorCompanyPage() {
   const [contactAvatarUrl, setContactAvatarUrl] = useState("");
   const [contactSaving, setContactSaving] = useState(false);
   const [contactError, setContactError] = useState("");
+
+  const [techSheetOpen, setTechSheetOpen] = useState(false);
+  const [techSaving, setTechSaving] = useState(false);
+  const [techError, setTechError] = useState("");
+  const [techSearch, setTechSearch] = useState("");
+
+  const handleAddTechnology = async (item: TechCatalogItem) => {
+    setTechError("");
+    setTechSaving(true);
+    try {
+      const res = await fetch("/api/vendor/technologies", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: item.label, color: item.color }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTechError(data.error ?? "Failed to add technology");
+        return;
+      }
+      const saved = data.technology as Technology;
+      setTechnologies((prev) => (prev.some((t) => t.id === saved.id) ? prev : [...prev, saved]));
+    } catch {
+      setTechError("Failed to add technology");
+    } finally {
+      setTechSaving(false);
+    }
+  };
+
+  const handleDeleteTechnology = async (tech: Technology) => {
+    try {
+      const res = await fetch(`/api/vendor/technologies?id=${encodeURIComponent(tech.id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to remove technology");
+        return;
+      }
+      setTechnologies((prev) => prev.filter((t) => t.id !== tech.id));
+    } catch {
+      setError("Failed to remove technology");
+    }
+  };
 
   const openAddContact = () => {
     setEditingContact(null);
@@ -272,9 +357,7 @@ function VendorCompanyPage() {
       }
       const saved = data.contact as Contact;
       setContacts((prev) =>
-        editingContact
-          ? prev.map((c) => (c.id === saved.id ? saved : c))
-          : [...prev, saved],
+        editingContact ? prev.map((c) => (c.id === saved.id ? saved : c)) : [...prev, saved],
       );
       setContactSheetOpen(false);
     } catch {
@@ -586,39 +669,39 @@ function VendorCompanyPage() {
                           placeholder="e.g., 1-10, 11-50, 51-200"
                         />
                       </div>
-                       <div className="space-y-2">
-                         <Label htmlFor="founded_date">Founded date</Label>
-                         <Input
-                           id="founded_date"
-                           type="number"
-                           value={foundedDate}
-                           onChange={(e) => setFoundedDate(e.target.value)}
-                           placeholder="e.g., 1998"
-                         />
-                       </div>
-                       <div className="space-y-2">
-                         <Label htmlFor="location">Exact location</Label>
-                         <Input
-                           id="location"
-                           value={location}
-                           onChange={(e) => setLocation(e.target.value)}
-                           placeholder="e.g., 123 Market St, San Francisco, CA"
-                         />
-                       </div>
-                       <div className="space-y-2">
-                         <Label htmlFor="location_label">Display name (city or area)</Label>
-                         <Input
-                           id="location_label"
-                           value={locationLabel}
-                           onChange={(e) => setLocationLabel(e.target.value)}
-                           placeholder="e.g., San Francisco, CA"
-                         />
-                       </div>
-                       <SheetFooter className="px-0">
-                         <Button type="submit" disabled={saving} className="w-full">
-                           {saving ? "Saving…" : "Create profile"}
-                         </Button>
-                       </SheetFooter>
+                      <div className="space-y-2">
+                        <Label htmlFor="founded_date">Founded date</Label>
+                        <Input
+                          id="founded_date"
+                          type="number"
+                          value={foundedDate}
+                          onChange={(e) => setFoundedDate(e.target.value)}
+                          placeholder="e.g., 1998"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Exact location</Label>
+                        <Input
+                          id="location"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="e.g., 123 Market St, San Francisco, CA"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location_label">Display name (city or area)</Label>
+                        <Input
+                          id="location_label"
+                          value={locationLabel}
+                          onChange={(e) => setLocationLabel(e.target.value)}
+                          placeholder="e.g., San Francisco, CA"
+                        />
+                      </div>
+                      <SheetFooter className="px-0">
+                        <Button type="submit" disabled={saving} className="w-full">
+                          {saving ? "Saving…" : "Create profile"}
+                        </Button>
+                      </SheetFooter>
                     </form>
                   </SheetContent>
                 </Sheet>
@@ -782,7 +865,7 @@ function VendorCompanyPage() {
                             placeholder="https://…"
                           />
                         </div>
-<div className="space-y-2">
+                        <div className="space-y-2">
                           <Label htmlFor="description">Description</Label>
                           <Textarea
                             id="description"
@@ -881,6 +964,99 @@ function VendorCompanyPage() {
                     </SheetContent>
                   </Sheet>
 
+                  <Sheet
+                    open={techSheetOpen}
+                    onOpenChange={(open) => {
+                      setTechSheetOpen(open);
+                      if (!open) setTechSearch("");
+                    }}
+                  >
+                    <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                      <SheetHeader>
+                        <SheetTitle>Edit technologies</SheetTitle>
+                        <SheetDescription>
+                          Select the technologies your company uses.
+                        </SheetDescription>
+                      </SheetHeader>
+                      {techError && (
+                        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                          {techError}
+                        </div>
+                      )}
+                      <div className="mt-6 space-y-3">
+                        {technologies.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            No technologies selected yet.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {technologies.map((tech) => {
+                              const iconName = getTechIconName(tech.name);
+                              return (
+                                <Badge
+                                  key={tech.id}
+                                  variant="secondary"
+                                  className="text-white border-none flex items-center gap-1.5 pr-1"
+                                  style={{ backgroundColor: tech.color }}
+                                >
+                                  {iconName && <Icon icon={iconName} className="h-3 w-3" />}
+                                  {tech.name}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTechnology(tech)}
+                                    className="ml-0.5 rounded-full hover:bg-black/20 p-0.5"
+                                    aria-label={`Remove ${tech.name}`}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <Separator />
+
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Add a technology
+                        </p>
+                        <Input
+                          value={techSearch}
+                          onChange={(e) => setTechSearch(e.target.value)}
+                          placeholder="Search technologies…"
+                          className="mb-1"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          {TECH_CATALOG.filter((item) =>
+                            item.label.toLowerCase().includes(techSearch.trim().toLowerCase()),
+                          ).map((item) => {
+                            const added = technologies.some(
+                              (t) => t.name.toLowerCase() === item.label.toLowerCase(),
+                            );
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                disabled={added || techSaving}
+                                onClick={() => handleAddTechnology(item)}
+                                className="flex items-center gap-2 rounded-md border border-border px-2 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <span
+                                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-white"
+                                  style={{ backgroundColor: item.color }}
+                                >
+                                  <Icon icon={item.icon} className="h-3.5 w-3.5" />
+                                </span>
+                                {item.label}
+                                {added && <Check className="ml-auto h-3.5 w-3.5 text-green-600" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -926,31 +1102,48 @@ function VendorCompanyPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Technologies</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold">Technologies</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      setTechError("");
+                      setTechSheetOpen(true);
+                    }}
+                    aria-label="Edit technologies"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex flex-wrap gap-2">
-                  {technologies.map((tech) => {
-                    const Icon = getTechIcon(tech.name);
-                    return (
-                      <Badge
-                        key={tech.id}
-                        variant="secondary"
-                        className="text-white border-none hover:opacity-90 flex items-center gap-1.5"
-                        style={{ backgroundColor: tech.color }}
-                      >
-                        {Icon && <Icon className="h-3 w-3" />}
-                        {tech.name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-                <Link
-                  to="/vendor/company/technologies"
-                  className="inline-block mt-4 text-xs font-medium text-primary hover:underline"
-                >
-                  View All Technologies
-                </Link>
+                {technologies.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No technologies added yet. Click the pencil to add some.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {technologies.map((tech) => {
+                      const iconName = getTechIconName(tech.name);
+                      return (
+                        <div
+                          key={tech.id}
+                          className="flex items-center gap-2 rounded-lg border border-border p-2"
+                        >
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white"
+                            style={{ backgroundColor: tech.color }}
+                          >
+                            {iconName && <Icon icon={iconName} className="h-4 w-4" />}
+                          </span>
+                          <span className="truncate text-sm font-medium">{tech.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1017,9 +1210,7 @@ function VendorCompanyPage() {
                 <Sheet open={contactSheetOpen} onOpenChange={setContactSheetOpen}>
                   <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                     <SheetHeader>
-                      <SheetTitle>
-                        {editingContact ? "Edit Contact" : "Add Contact"}
-                      </SheetTitle>
+                      <SheetTitle>{editingContact ? "Edit Contact" : "Add Contact"}</SheetTitle>
                       <SheetDescription>
                         {editingContact
                           ? "Update the contact details below."

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Upload, Plus, Trash2, GripVertical, Star, X } from "lucide-react";
+import { ChevronLeft, Upload, Plus, Trash2, GripVertical, Star, X, Check } from "lucide-react";
 import { query, queryOne, transaction } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -359,6 +359,7 @@ function VendorSystemEditPage() {
           : null,
       is_unlimited_seats: p.is_unlimited_seats,
       is_popular: p.is_popular,
+      features: p.features,
     })),
   });
 
@@ -628,8 +629,8 @@ function VendorSystemEditPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="links">Links</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
@@ -867,24 +868,16 @@ function VendorSystemEditPage() {
 
                         {pkg.trial_available && (
                           <div>
-                            <Label>Trial Duration</Label>
-                            <Select
+                            <Label>Trial Duration (days)</Label>
+                            <Input
+                              type="number"
+                              min="1"
                               value={pkg.trial_duration_days}
-                              onValueChange={(v) =>
-                                updatePackage(pkg.key, "trial_duration_days", v)
+                              onChange={(e) =>
+                                updatePackage(pkg.key, "trial_duration_days", e.target.value)
                               }
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {TRIAL_DURATIONS.map((t) => (
-                                  <SelectItem key={t.value} value={t.value}>
-                                    {t.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              placeholder="14"
+                            />
                           </div>
                         )}
 
@@ -983,63 +976,25 @@ function VendorSystemEditPage() {
         </TabsContent>
 
         <TabsContent value="features">
-          <Card>
-            <CardContent className="pt-6 space-y-3">
-              {features.length === 0 && (
-                <p className="text-sm text-muted-foreground">No features yet. Add one below.</p>
-              )}
-              {features.map((f) => (
-                <div
-                  key={f.key}
-                  className="flex flex-col gap-3 border-b border-border pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-start"
-                >
-                  <div className="flex-1 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor={`feature-name-${f.key}`}>Feature name</Label>
-                      <Input
-                        id={`feature-name-${f.key}`}
-                        value={f.feature_name}
-                        onChange={(e) => updateFeature(f.key, "feature_name", e.target.value)}
-                        placeholder="Single sign-on"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`feature-category-${f.key}`}>Group</Label>
-                      <Input
-                        id={`feature-category-${f.key}`}
-                        value={f.category}
-                        onChange={(e) => updateFeature(f.key, "category", e.target.value)}
-                        placeholder="Security"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Label htmlFor={`feature-detail-${f.key}`}>Detail</Label>
-                      <Input
-                        id={`feature-detail-${f.key}`}
-                        value={f.feature_detail}
-                        onChange={(e) => updateFeature(f.key, "feature_detail", e.target.value)}
-                        placeholder="Available on Growth and Enterprise"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() => removeFeature(f.key)}
-                    aria-label="Remove feature"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" className="gap-2" onClick={addFeature}>
-                <Plus className="h-4 w-4" />
-                Add feature
-              </Button>
-            </CardContent>
-          </Card>
+          {(() => {
+            const allFeatures = Array.from(new Set(packages.flatMap((pkg) => pkg.features))).sort();
+            return allFeatures.length > 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <ul className="space-y-2">
+                    {allFeatures.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ) : (
+              <p className="text-sm text-muted-foreground">No features linked to packages yet.</p>
+            );
+          })()}
         </TabsContent>
 
         <TabsContent value="media">

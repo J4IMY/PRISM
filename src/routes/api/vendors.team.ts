@@ -9,11 +9,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team")({
     const user = await requireRole(request, "vendor", "admin");
     if (user instanceof Response) return user;
 
-    const member = await queryOne<{ vendor_id: string }>(
-      "SELECT vendor_id FROM vendor_members WHERE user_id = $1",
+    const member = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
+      "SELECT vendor_id, can_manage_team FROM vendor_members WHERE user_id = $1",
       [user.id],
     );
-    if (!member) return Response.json({ members: [], invites: [] });
+    if (!member) return Response.json({ members: [], invites: [], canManageTeam: false });
 
     const [members, invites] = await Promise.all([
       query(
@@ -33,7 +33,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team")({
       ),
     ]);
 
-    return Response.json({ members, invites });
+    return Response.json({
+      members,
+      invites,
+      canManageTeam: !!member.can_manage_team || user.role === "admin",
+    });
   },
 
   POST: async ({ request }) => {
@@ -45,7 +49,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team")({
 
     const member = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
       `SELECT vendor_id, can_manage_team FROM vendor_members
-       WHERE user_id = $1 AND role IN ('owner', 'admin')`,
+        WHERE user_id = $1 AND role IN ('dev', 'sales', 'support')`,
       [user.id],
     );
     if (!member?.can_manage_team && user.role !== "admin") {

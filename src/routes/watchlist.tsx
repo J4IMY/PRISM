@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,8 +42,21 @@ export const Route = createFileRoute("/watchlist")({
 });
 
 function WatchlistPage() {
-  const { items } = Route.useLoaderData();
+  const initialItems = Route.useLoaderData();
+  const [items, setItems] = useState(initialItems.items);
   const { user } = Route.useRouteContext();
+
+  const handleRemove = async (watchlistId: string, systemId: string) => {
+    const res = await fetch(`/api/watchlist/${systemId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) {
+      setItems((prev) =>
+        prev.filter((item: Record<string, unknown>) => item.watchlist_id !== watchlistId),
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +91,12 @@ function WatchlistPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{item.starting_price as string}</span>
-                    <Button variant="ghost" size="icon" aria-label="Remove">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remove"
+                      onClick={() => handleRemove(item.watchlist_id as string, item.id as string)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

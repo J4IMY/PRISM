@@ -2,10 +2,13 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -52,7 +55,11 @@ export default function LoginScreen() {
         </Pressable>
 
         <View style={styles.logoRow}>
-          <Text style={[styles.logo, { color: theme.primary }]}>PRISM</Text>
+          <Image
+            source={require("@/assets/images/prism_logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={[styles.title, { color: theme.text }]}>Sign in to your account</Text>
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   closeBtn: { alignSelf: "flex-start", padding: Spacing.xs },
   closeText: { fontSize: 18 },
   logoRow: { alignItems: "center", marginTop: Spacing.xl },
-  logo: { fontSize: 28, fontWeight: "900", letterSpacing: 3 },
+  logo: { width: 48, height: 48 },
   title: { fontSize: 24, fontWeight: "800", textAlign: "center", marginTop: Spacing.lg },
   subtitle: { fontSize: 14, textAlign: "center", marginTop: Spacing.xs },
   error: { textAlign: "center", marginTop: Spacing.md, fontSize: 14 },

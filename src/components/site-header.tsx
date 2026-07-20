@@ -31,7 +31,7 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur">
       <div className="container mx-auto flex h-14 items-center gap-6 px-4">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <span className="inline-block h-6 w-6 rounded bg-primary" />
+          <img src="/prism_logo.png" alt="PRISM" className="h-6 w-6 rounded object-contain" />
           <span>PRISM</span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
