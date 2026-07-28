@@ -1,0 +1,2 @@
+ALTER TABLE systems
+  ADD COLUMN IF NOT EXISTS icon TEXT;

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — Discover (Mobile)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    header {
+      position: sticky; top: 0; z-index: 40;
+      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .nav { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px; }
+    .logo { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 16px; }
+    .logo img { width: 20px; height: 20px; border-radius: 4px; }
+    .nav-actions { margin-left: auto; display: flex; gap: 6px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
+    }
+    .container { padding: 16px; }
+    h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
+    .subtitle { color: #64748b; margin: 0 0 20px; font-size: 14px; }
+
+    .search-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+    .search-bar input {
+      flex: 1; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px;
+      font-family: inherit; font-size: 14px;
+    }
+    .btn {
+      padding: 10px 14px; border: none; border-radius: 8px; font-family: inherit;
+      font-size: 14px; font-weight: 600; cursor: pointer; background: #0f172a; color: white;
+    }
+    .btn-secondary {
+      background: #f1f5f9; color: #0f172a;
+    }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    .chip-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+    .chip {
+      white-space: nowrap; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 999px;
+      background: white; font-size: 13px; font-weight: 500;
+    }
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px;
+      background: white; margin-bottom: 12px;
+    }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px; background: #f1f5f9;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; margin: 0; }
+    .card-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .badge {
+      display: inline-flex; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      background: #f1f5f9; color: #475569; margin-top: 8px;
+    }
+    .assessment-cta {
+      width: 100%; margin-top: 8px; padding: 12px; border: none; border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #0f172a; color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="logo">
+        <img src="prism_logo.png" alt="PRISM">
+        <span>PRISM</span>
+      </div>
+      <div class="nav-actions">
+        <button class="icon-btn">🌙</button>
+        <button class="icon-btn">👤</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Discover the right software for your stack</h1>
+    <p class="subtitle">Compare pricing, features, and total cost of ownership across verified vendors.</p>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Search CRM, ERP, helpdesk…">
+      <button class="btn">Search</button>
+    </div>
+    <button class="assessment-cta" title="Get personalized recommendations based on your business needs">
+      ✨ Feature Assessment
+    </button>
+
+    <div class="chip-list">
+      <div class="chip">All</div>
+      <div class="chip">ERP</div>
+      <div class="chip">CRM</div>
+      <div class="chip">HRM</div>
+      <div class="chip">POS</div>
+      <div class="chip">Accounting</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Acme CRM Pro</div>
+          <div class="card-meta">CRM • $29/mo</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px;">Powerful CRM for growing sales teams.</p>
+      <div class="badge">Most Popular</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">💬</div>
+        <div>
+          <div class="card-title">HelpDesk X</div>
+          <div class="card-meta">Help Desk • $49/mo</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px;">Customer support platform with AI.</p>
+      <div class="badge">Verified</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📦</div>
+        <div>
+          <div class="card-title">Skynet</div>
+          <div class="card-meta">Inventory • KES 20,000/mo</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px;">Real-time inventory and analytics.</p>
+      <div class="badge">Popular</div>
+    </div>
+  </main>
+</body>
+</html>

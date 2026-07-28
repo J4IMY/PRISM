@@ -9,6 +9,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string | null;
+  username: string | null;
   role: UserRole;
   email_verified: boolean;
   theme: string;
@@ -65,7 +66,7 @@ export async function destroySession(sessionId: string): Promise<void> {
 
 export async function getUserById(id: string): Promise<AuthUser | null> {
   return queryOne<AuthUser>(
-    `SELECT id, email, name, role, email_verified, theme FROM users WHERE id = $1`,
+    `SELECT id, email, name, username, role, email_verified, theme FROM users WHERE id = $1`,
     [id],
   );
 }
@@ -74,7 +75,7 @@ export async function getUserByEmail(
   email: string,
 ): Promise<(AuthUser & { password_hash: string }) | null> {
   return queryOne<AuthUser & { password_hash: string }>(
-    `SELECT id, email, name, role, email_verified, theme, password_hash
+    `SELECT id, email, name, username, role, email_verified, theme, password_hash
      FROM users WHERE email = $1`,
     [email.toLowerCase()],
   );

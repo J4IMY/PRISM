@@ -43,7 +43,13 @@ function LoginPage() {
         return;
       }
       await router.invalidate();
-      router.navigate({ to: result.redirectTo ?? "/" });
+      const needsAssessment = localStorage.getItem("needs_assessment") === "true";
+      if (needsAssessment) {
+        localStorage.removeItem("needs_assessment");
+        router.navigate({ to: "/assessment" });
+      } else {
+        router.navigate({ to: result.redirectTo ?? "/" });
+      }
     } catch {
       setError("An unexpected error occurred");
     } finally {

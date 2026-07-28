@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — TCO Calculator (Mobile)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    header {
+      position: sticky; top: 0; z-index: 40;
+      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .nav { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px; }
+    .logo { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 16px; }
+    .logo img { width: 20px; height: 20px; border-radius: 4px; }
+    .nav-actions { margin-left: auto; display: flex; gap: 6px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
+    }
+    .container { padding: 16px; }
+    h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
+    .subtitle { color: #64748b; margin: 0 0 20px; font-size: 14px; }
+
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px;
+      background: white; margin-bottom: 16px;
+    }
+    .card-header { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label { font-size: 14px; font-weight: 500; }
+    .field input, .field select {
+      padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px;
+      font-family: inherit; font-size: 14px;
+    }
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #0f172a; color: white;
+    }
+    .badge {
+      display: inline-flex; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      background: #f1f5f9; color: #475569;
+    }
+
+    .package-grid {
+      display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px;
+    }
+    .package-card {
+      border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px;
+      background: white; opacity: 1;
+    }
+    .package-card.disabled { opacity: 0.5; }
+    .package-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .package-meta { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+
+    .result-card {
+      border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px;
+      background: white;
+    }
+    .summary-item { margin-bottom: 12px; }
+    .summary-item label { font-size: 12px; color: #64748b; display: block; }
+    .summary-item div { font-size: 14px; font-weight: 600; margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    th, td { padding: 10px 6px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    td { text-align: right; }
+    td:first-child { text-align: left; }
+    tfoot td { font-weight: 600; border-top: 2px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="logo">
+        <img src="prism_logo.png" alt="PRISM">
+        <span>PRISM</span>
+      </div>
+      <div class="nav-actions">
+        <button class="icon-btn">🌙</button>
+        <button class="icon-btn">👤</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>TCO Calculator</h1>
+    <p class="subtitle">Estimate your total cost of ownership across packages with annual escalation</p>
+
+    <div class="card">
+      <div class="field">
+        <label>System</label>
+        <select><option>Select system…</option><option>Skynet</option></select>
+      </div>
+      <div class="field">
+        <label>Years (1-10)</label>
+        <input type="number" value="3">
+      </div>
+      <div class="field">
+        <label>Annual Escalation (%)</label>
+        <input type="number" value="5">
+      </div>
+      <button class="btn">Calculate Total TCO</button>
+
+      <div class="package-grid">
+        <div class="package-card">
+          <div class="package-title">basic <span class="badge">Popular</span></div>
+          <div class="package-meta">usage based • KES 20,000 / monthly</div>
+          <div class="field">
+            <label>Usage Units</label>
+            <input type="number" value="10">
+          </div>
+        </div>
+        <div class="package-card disabled">
+          <div class="package-title">Starter</div>
+          <div class="package-meta">free • Free</div>
+          <p style="font-size:12px;color:#64748b;margin:0;">Free package</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="card-header">Skynet — 3-Year Combined Projection</div>
+      <div class="summary-item"><label>System</label><div>Skynet</div></div>
+      <div class="summary-item"><label>Packages</label><div>1</div></div>
+      <div class="summary-item"><label>Escalation</label><div>5% / year</div></div>
+      <div class="summary-item"><label>Total Projected Cost</label><div>KES 760,000</div></div>
+
+      <table>
+        <thead>
+          <tr><th>Year</th><th style="text-align:right">Base Cost</th><th style="text-align:right">Escalation</th><th style="text-align:right">Total</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Year 1</td><td>KES 240,000</td><td>+0</td><td>KES 240,000</td></tr>
+          <tr><td>Year 2</td><td>KES 240,000</td><td>+12,000</td><td>KES 252,000</td></tr>
+          <tr><td>Year 3</td><td>KES 240,000</td><td>+12,600</td><td>KES 252,600</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Total</td><td>KES 720,000</td><td>+24,600</td><td>KES 744,600</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

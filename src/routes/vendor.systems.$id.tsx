@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Upload, Plus, Trash2, GripVertical, Star, X, Check } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { query, queryOne, transaction } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +36,9 @@ type SystemRow = {
   status: string;
   category_id: string | null;
   category_name: string | null;
+  icon: string | null;
+  implementation_cost: string | null;
+  requirements: string | null;
 };
 
 type FeatureRow = {
@@ -167,6 +171,34 @@ const cadencedModels = [
   "usage_based",
 ];
 
+const SYSTEM_ICON_OPTIONS: { value: string; label: string; icon: string }[] = [
+  { value: "simple-icons:salesforce", label: "CRM", icon: "simple-icons:salesforce" },
+  { value: "simple-icons:hubspot", label: "HubSpot", icon: "simple-icons:hubspot" },
+  { value: "simple-icons:zoho", label: "Zoho", icon: "simple-icons:zoho" },
+  { value: "mdi:database", label: "ERP", icon: "mdi:database" },
+  { value: "mdi:headset", label: "Helpdesk", icon: "mdi:headset" },
+  { value: "simple-icons:zendesk", label: "Zendesk", icon: "simple-icons:zendesk" },
+  { value: "mdi:account-heart", label: "HR", icon: "mdi:account-heart" },
+  { value: "mdi:cash", label: "Payroll", icon: "mdi:cash" },
+  { value: "mdi:finance", label: "Finance", icon: "mdi:finance" },
+  { value: "mdi:calculator", label: "Accounting", icon: "mdi:calculator" },
+  { value: "mdi:bullhorn", label: "Marketing", icon: "mdi:bullhorn" },
+  { value: "mdi:clipboard-list", label: "Project", icon: "mdi:clipboard-list" },
+  { value: "mdi:message-text", label: "Communication", icon: "mdi:message-text" },
+  { value: "simple-icons:slack", label: "Slack", icon: "simple-icons:slack" },
+  { value: "simple-icons:microsoftteams", label: "Teams", icon: "simple-icons:microsoftteams" },
+  { value: "mdi:cloud", label: "Cloud", icon: "mdi:cloud" },
+  { value: "mdi:shield-lock", label: "Security", icon: "mdi:shield-lock" },
+  { value: "mdi:dev-to", label: "DevOps", icon: "mdi:dev-to" },
+  { value: "mdi:chart-line", label: "Analytics", icon: "mdi:chart-line" },
+  { value: "mdi:shopping", label: "E-Commerce", icon: "mdi:shopping" },
+  { value: "simple-icons:shopify", label: "Shopify", icon: "simple-icons:shopify" },
+  { value: "mdi:package-variant-closed", label: "Inventory", icon: "mdi:package-variant-closed" },
+  { value: "mdi:wordpress", label: "CMS", icon: "mdi:wordpress" },
+  { value: "mdi:api", label: "Integration", icon: "mdi:api" },
+  { value: "mdi:application", label: "General", icon: "mdi:application" },
+];
+
 const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const ACCEPTED_MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "video/mp4"]);
 
@@ -182,7 +214,7 @@ const getSystemDetail = createServerFn({ method: "GET" }).handler(async ({ data 
        s.id, s.name, s.slug, s.description,
        s.tagline, s.verified, s.pricing_tier,
        s.starting_price, s.deployment_type, s.status,
-       s.category_id,
+       s.category_id, s.icon, s.implementation_cost, s.requirements,
        c.name AS category_name
       FROM systems s
       LEFT JOIN categories c ON s.category_id = c.id
@@ -266,6 +298,9 @@ function VendorSystemEditPage() {
   const [description, setDescription] = useState(system.description ?? "");
   const [categoryId, setCategoryId] = useState(system.category_id ?? "");
   const [status, setStatus] = useState(system.status);
+  const [icon, setIcon] = useState(system.icon ?? "");
+  const [implementationCost, setImplementationCost] = useState(system.implementation_cost ?? "");
+  const [requirements, setRequirements] = useState(system.requirements ?? "");
   const [features, setFeatures] = useState<FeatureDraft[]>(() => toFeatureDrafts(initialFeatures));
   const [media, setMedia] = useState<MediaRow[]>(initialMedia);
   const [packages, setPackages] = useState<PricingPackageDraft[]>(() =>
@@ -306,6 +341,9 @@ function VendorSystemEditPage() {
         description?: string | null;
         category_id?: string | null;
         status?: string;
+        icon?: string | null;
+        implementation_cost?: string | null;
+        requirements?: string | null;
       };
       features?: FeatureRow[];
     }) => {
@@ -315,6 +353,10 @@ function VendorSystemEditPage() {
         if (data.system.description !== undefined) setDescription(data.system.description ?? "");
         if (data.system.category_id !== undefined) setCategoryId(data.system.category_id ?? "");
         if (data.system.status !== undefined) setStatus(data.system.status);
+        if (data.system.icon !== undefined) setIcon(data.system.icon ?? "");
+        if (data.system.implementation_cost !== undefined)
+          setImplementationCost(data.system.implementation_cost ?? "");
+        if (data.system.requirements !== undefined) setRequirements(data.system.requirements ?? "");
       }
       if (data.features) {
         setFeatures(toFeatureDrafts(data.features));
@@ -329,6 +371,9 @@ function VendorSystemEditPage() {
     description: description.trim() || null,
     category_id: categoryId || null,
     status: nextStatus,
+    icon: icon || null,
+    implementation_cost: implementationCost ? parseFloat(implementationCost) : null,
+    requirements: requirements.trim() || null,
     features: features
       .filter((f) => f.feature_name.trim())
       .map((f) => ({
@@ -644,6 +689,24 @@ function VendorSystemEditPage() {
                 <Input id="system-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
+                <Label htmlFor="system-icon">Icon</Label>
+                <Select value={icon} onValueChange={setIcon}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select icon…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SYSTEM_ICON_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        <span className="flex items-center gap-2">
+                          <Icon icon={opt.icon} className="h-4 w-4" />
+                          {opt.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="system-category">Category</Label>
                 <select
                   id="system-category"
@@ -674,6 +737,28 @@ function VendorSystemEditPage() {
                   rows={6}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="system-implementation-cost">Implementation Cost (USD)</Label>
+                <Input
+                  id="system-implementation-cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={implementationCost}
+                  onChange={(e) => setImplementationCost(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="system-requirements">Requirements</Label>
+                <Textarea
+                  id="system-requirements"
+                  rows={4}
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  placeholder="e.g., Minimum 4GB RAM, Windows 10 or later, .NET 6+"
                 />
               </div>
             </CardContent>
@@ -869,15 +954,27 @@ function VendorSystemEditPage() {
                         {pkg.trial_available && (
                           <div>
                             <Label>Trial Duration (days)</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={pkg.trial_duration_days}
-                              onChange={(e) =>
-                                updatePackage(pkg.key, "trial_duration_days", e.target.value)
+                            <Select
+                              value={pkg.trial_duration_days?.toString() ?? ""}
+                              onValueChange={(val) =>
+                                updatePackage(
+                                  pkg.key,
+                                  "trial_duration_days",
+                                  val ? parseInt(val) : "",
+                                )
                               }
-                              placeholder="14"
-                            />
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select duration…" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="7">7 days</SelectItem>
+                                <SelectItem value="14">14 days</SelectItem>
+                                <SelectItem value="30">30 days</SelectItem>
+                                <SelectItem value="60">60 days</SelectItem>
+                                <SelectItem value="90">90 days</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         )}
 

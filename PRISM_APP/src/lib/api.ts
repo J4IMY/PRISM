@@ -3,7 +3,10 @@ import { getAuthToken } from "./auth-storage";
 function getApiBase(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && envUrl.length > 0) return envUrl;
-  if (typeof window !== "undefined") return window.location.origin;
+  if (typeof window !== "undefined") {
+    const origin = window.location.origin;
+    if (!origin.includes(":8081")) return origin;
+  }
   return "http://localhost:5000";
 }
 

@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as VendorRouteImport } from './routes/vendor'
+import { Route as TcoRouteImport } from './routes/tco'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ModeratorRouteImport } from './routes/moderator'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorIndexRouteImport } from './routes/vendor.index'
@@ -31,6 +33,7 @@ import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
+import { Route as AdminWebsiteScraperRouteImport } from './routes/admin.website-scraper'
 import { Route as AdminVendorsRouteImport } from './routes/admin.vendors'
 import { Route as AdminScraperRouteImport } from './routes/admin.scraper'
 import { Route as AdminModeratorsRouteImport } from './routes/admin.moderators'
@@ -49,6 +52,11 @@ const WatchlistRoute = WatchlistRouteImport.update({
 const VendorRoute = VendorRouteImport.update({
   id: '/vendor',
   path: '/vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TcoRoute = TcoRouteImport.update({
+  id: '/tco',
+  path: '/tco',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -79,6 +87,11 @@ const ChatsRoute = ChatsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssessmentRoute = AssessmentRouteImport.update({
+  id: '/assessment',
+  path: '/assessment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -151,6 +164,11 @@ const AuthForgotRoute = AuthForgotRouteImport.update({
   path: '/forgot',
   getParentRoute: () => AuthRoute,
 } as any)
+const AdminWebsiteScraperRoute = AdminWebsiteScraperRouteImport.update({
+  id: '/website-scraper',
+  path: '/website-scraper',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminVendorsRoute = AdminVendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
@@ -200,12 +218,14 @@ const ModeratorItemIdRoute = ModeratorItemIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/assessment': typeof AssessmentRoute
   '/auth': typeof AuthRouteWithChildren
   '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/moderator': typeof ModeratorRouteWithChildren
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/tco': typeof TcoRoute
   '/vendor': typeof VendorRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -213,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
@@ -232,17 +253,20 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assessment': typeof AssessmentRoute
   '/auth': typeof AuthRouteWithChildren
   '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/tco': typeof TcoRoute
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/deletions': typeof AdminDeletionsRoute
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
@@ -264,12 +288,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/assessment': typeof AssessmentRoute
   '/auth': typeof AuthRouteWithChildren
   '/chats': typeof ChatsRoute
   '/compare': typeof CompareRoute
   '/moderator': typeof ModeratorRouteWithChildren
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/tco': typeof TcoRoute
   '/vendor': typeof VendorRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -277,6 +303,7 @@ export interface FileRoutesById {
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
@@ -299,12 +326,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/assessment'
     | '/auth'
     | '/chats'
     | '/compare'
     | '/moderator'
     | '/profile'
     | '/settings'
+    | '/tco'
     | '/vendor'
     | '/watchlist'
     | '/admin/audit'
@@ -312,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin/moderators'
     | '/admin/scraper'
     | '/admin/vendors'
+    | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
@@ -331,17 +361,20 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assessment'
     | '/auth'
     | '/chats'
     | '/compare'
     | '/profile'
     | '/settings'
+    | '/tco'
     | '/watchlist'
     | '/admin/audit'
     | '/admin/deletions'
     | '/admin/moderators'
     | '/admin/scraper'
     | '/admin/vendors'
+    | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
@@ -362,12 +395,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/assessment'
     | '/auth'
     | '/chats'
     | '/compare'
     | '/moderator'
     | '/profile'
     | '/settings'
+    | '/tco'
     | '/vendor'
     | '/watchlist'
     | '/admin/audit'
@@ -375,6 +410,7 @@ export interface FileRouteTypes {
     | '/admin/moderators'
     | '/admin/scraper'
     | '/admin/vendors'
+    | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
@@ -396,12 +432,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AssessmentRoute: typeof AssessmentRoute
   AuthRoute: typeof AuthRouteWithChildren
   ChatsRoute: typeof ChatsRoute
   CompareRoute: typeof CompareRoute
   ModeratorRoute: typeof ModeratorRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
+  TcoRoute: typeof TcoRoute
   VendorRoute: typeof VendorRouteWithChildren
   WatchlistRoute: typeof WatchlistRoute
   SystemsSlugRoute: typeof SystemsSlugRoute
@@ -421,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor'
       fullPath: '/vendor'
       preLoaderRoute: typeof VendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tco': {
+      id: '/tco'
+      path: '/tco'
+      fullPath: '/tco'
+      preLoaderRoute: typeof TcoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -463,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assessment': {
+      id: '/assessment'
+      path: '/assessment'
+      fullPath: '/assessment'
+      preLoaderRoute: typeof AssessmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -563,6 +615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/admin/website-scraper': {
+      id: '/admin/website-scraper'
+      path: '/website-scraper'
+      fullPath: '/admin/website-scraper'
+      preLoaderRoute: typeof AdminWebsiteScraperRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/vendors': {
       id: '/admin/vendors'
       path: '/vendors'
@@ -635,6 +694,7 @@ interface AdminRouteChildren {
   AdminModeratorsRoute: typeof AdminModeratorsRoute
   AdminScraperRoute: typeof AdminScraperRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
+  AdminWebsiteScraperRoute: typeof AdminWebsiteScraperRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -644,6 +704,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModeratorsRoute: AdminModeratorsRoute,
   AdminScraperRoute: AdminScraperRoute,
   AdminVendorsRoute: AdminVendorsRoute,
+  AdminWebsiteScraperRoute: AdminWebsiteScraperRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -707,12 +768,14 @@ const VendorRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AssessmentRoute: AssessmentRoute,
   AuthRoute: AuthRouteWithChildren,
   ChatsRoute: ChatsRoute,
   CompareRoute: CompareRoute,
   ModeratorRoute: ModeratorRouteWithChildren,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
+  TcoRoute: TcoRoute,
   VendorRoute: VendorRouteWithChildren,
   WatchlistRoute: WatchlistRoute,
   SystemsSlugRoute: SystemsSlugRoute,

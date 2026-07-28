@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — Sign In</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .wrap { width: 100%; max-width: 400px; padding: 24px; }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; margin-bottom: 24px; }
+    .logo img { width: 24px; height: 24px; border-radius: 4px; }
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;
+      background: white;
+    }
+    .card-header { margin-bottom: 20px; }
+    .card-header h1 { font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+    .card-header p { margin: 0; font-size: 14px; color: #64748b; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label { font-size: 14px; font-weight: 500; }
+    .field input {
+      padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px;
+      font-family: inherit; font-size: 14px;
+    }
+    .btn {
+      width: 100%; padding: 10px; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #0f172a; color: white;
+    }
+    .btn:hover { background: #1e293b; }
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 16px 0;
+      font-size: 12px; color: #94a3b8; text-transform: uppercase;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+    .alt-btn {
+      width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;
+      font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; background: white;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .alt-btn:hover { background: #f8fafc; }
+    .footer { text-align: center; margin-top: 16px; font-size: 14px; color: #64748b; }
+    .footer a { color: #0f172a; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <img src="prism_logo.png" alt="PRISM">
+      <span>PRISM</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h1>Sign in</h1>
+        <p>Welcome back to PRISM.</p>
+      </div>
+
+      <button class="alt-btn">Continue with Google</button>
+
+      <div class="divider">Or continue with email</div>
+
+      <form onsubmit="event.preventDefault();">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@company.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password">
+        </div>
+        <button class="btn">Sign in</button>
+      </form>
+    </div>
+
+    <div class="footer">
+      No account? <a href="#">Sign up</a>
+    </div>
+  </div>
+</body>
+</html>

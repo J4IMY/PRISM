@@ -21,12 +21,14 @@ function ProfilePage() {
   const { user } = Route.useRouteContext();
   const { theme, setTheme } = useTheme();
   const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [username, setUsername] = useState(user?.username ?? "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
   const isPrivileged = user && ["admin", "moderator", "vendor"].includes(user.role);
 
-  const handleSaveName = async () => {
+  const handleSave = async () => {
     setSaving(true);
     setMessage("");
     try {
@@ -34,13 +36,20 @@ function ProfilePage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({
+          name: name.trim() || undefined,
+          email: email.trim() || undefined,
+          username: username.trim() || undefined,
+        }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string; name?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed to update name");
-      setMessage("Name updated");
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        user?: { name?: string; email?: string; username?: string };
+      };
+      if (!res.ok) throw new Error(data.error ?? "Failed to update profile");
+      setMessage("Profile updated");
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Failed to update name");
+      setMessage(e instanceof Error ? e.message : "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -60,19 +69,30 @@ function ProfilePage() {
             <div>
               <Label>Name</Label>
               <div className="flex gap-2 mt-1">
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={saving}
-                />
-                <Button onClick={handleSaveName} disabled={saving}>
-                  {saving ? "Saving…" : "Save"}
-                </Button>
+                <Input value={name} onChange={(e) => setName(e.target.value)} disabled={saving} />
               </div>
             </div>
             <div>
               <Label>Email</Label>
-              <Input type="email" defaultValue={user?.email ?? ""} readOnly />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Username</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={saving}
+                  placeholder="Enter a unique username"
+                />
+              </div>
             </div>
             {isPrivileged && (
               <div>
@@ -80,6 +100,9 @@ function ProfilePage() {
                 <Input defaultValue={user?.role ?? ""} readOnly />
               </div>
             )}
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </Button>
             {message && <p className="text-sm text-muted-foreground">{message}</p>}
           </CardContent>
         </Card>

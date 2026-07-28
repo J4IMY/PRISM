@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -19,28 +19,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, ShieldCheck, ExternalLink, Check, Minus, Star, Clock } from "lucide-react";
+import {
+  MessageSquare,
+  ShieldCheck,
+  ExternalLink,
+  Check,
+  Minus,
+  Star,
+  Clock,
+  Sparkles,
+  Building2,
+  Users,
+  Calendar,
+  MapPin,
+  Globe,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
+import { Icon } from "@iconify/react";
 import { query, queryOne } from "@/lib/db";
 import { WatchlistButton } from "@/components/watchlist-button";
-
-type PricingPackage = {
-  id: string;
-  name: string;
-  description: string | null;
-  pricing_model: string;
-  currency: string;
-  base_price: number | null;
-  billing_cadence: string | null;
-  is_free: boolean;
-  contact_sales: boolean;
-  trial_available: boolean;
-  trial_duration_days: number | null;
-  minimum_seats: number | null;
-  maximum_seats: number | null;
-  is_unlimited_seats: boolean;
-  is_popular: boolean;
-  features: string[];
-};
+import { SystemTcoCalculator, type TcoPackage } from "@/components/system-tco-calculator";
 
 type Review = {
   rating: number;
@@ -50,6 +49,36 @@ type Review = {
   review_text: string | null;
   is_verified_customer: boolean;
   created_at: string;
+};
+
+type VendorInfo = {
+  id: string;
+  company_name: string;
+  slug: string;
+  description: string | null;
+  website: string | null;
+  logo_url: string | null;
+  verification_status: string;
+  industry: string | null;
+  company_size: string | null;
+  founded_date: string | null;
+  location: string | null;
+  location_label: string | null;
+  social_links: Record<string, unknown>;
+};
+
+type Technology = {
+  id: string;
+  name: string;
+  color: string;
+};
+
+type Contact = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  avatar_url: string | null;
 };
 
 const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any) => {
@@ -62,21 +91,25 @@ const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any
        s.verified, s.trial_available, s.has_api, s.has_mobile_app,
        s.has_ai_features, s.has_offline_mode, s.security_certifications,
        c.name AS category_name,
-       v.company_name AS vendor_name
-    FROM systems s
-    LEFT JOIN categories c ON s.category_id = c.id
-    LEFT JOIN vendors v ON s.vendor_id = v.id
-    WHERE s.slug = $1 AND s.status = 'active'`,
+       v.id AS vendor_id, v.company_name AS vendor_name, v.slug AS vendor_slug,
+       v.description AS vendor_description, v.website AS vendor_website,
+       v.logo_url AS vendor_logo, v.verification_status,
+        v.industry, v.company_size, v.founded_date, v.location, v.location_label,
+        v.social_links
+     FROM systems s
+     LEFT JOIN categories c ON s.category_id = c.id
+     LEFT JOIN vendors v ON s.vendor_id = v.id
+     WHERE s.slug = $1 AND s.status = 'active'`,
     [slug],
   );
   if (!system) return null;
 
-  const [media, packages, reviews] = await Promise.all([
+  const [media, packages, reviews, technologies, contacts] = await Promise.all([
     query<{ id: string; media_type: string; url: string; caption: string | null }>(
       "SELECT id, media_type, url, caption FROM system_media WHERE system_id = $1 ORDER BY sort_order",
       [system.id],
     ),
-    query<PricingPackage>(
+    query<TcoPackage>(
       `SELECT p.id, p.name, p.description, p.pricing_model, p.currency, p.base_price,
               p.billing_cadence, p.is_free, p.contact_sales, p.trial_available,
               p.trial_duration_days, p.minimum_seats, p.maximum_seats, p.is_unlimited_seats, p.is_popular,
@@ -96,9 +129,41 @@ const getSystem = createServerFn({ method: "GET" }).handler(async ({ data }: any
        ORDER BY r.created_at DESC`,
       [system.id],
     ),
+    query<Technology>(
+      `SELECT id, name, color FROM technologies WHERE vendor_id = $1 ORDER BY name`,
+      [system.vendor_id],
+    ),
+    query<Contact>(
+      `SELECT id, name, role, email, avatar_url FROM contacts WHERE vendor_id = $1 ORDER BY name`,
+      [system.vendor_id],
+    ),
   ]);
 
-  return { system, media, packages, reviews };
+  return {
+    system,
+    media,
+    packages,
+    reviews,
+    vendor: system
+      ? {
+          id: system.vendor_id,
+          company_name: system.vendor_name,
+          slug: system.vendor_slug,
+          description: system.vendor_description,
+          website: system.vendor_website,
+          logo_url: system.vendor_logo,
+          verification_status: system.verification_status,
+          industry: system.industry,
+          company_size: system.company_size,
+          founded_date: system.founded_date,
+          location: system.location,
+          location_label: system.location_label,
+          social_links: system.social_links || {},
+        }
+      : null,
+    technologies,
+    contacts,
+  };
 });
 
 export const Route = createFileRoute("/systems/$slug")({
@@ -117,12 +182,116 @@ export const Route = createFileRoute("/systems/$slug")({
   component: SystemDetailPage,
 });
 
+function formatPrice(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+const SYSTEM_ICON_MAP: Record<string, string> = {
+  crm: "simple-icons:salesforce",
+  salesforce: "simple-icons:salesforce",
+  hubspot: "simple-icons:hubspot",
+  zoho: "simple-icons:zoho",
+  erp: "mdi:database",
+  helpdesk: "mdi:headset",
+  support: "mdi:headset",
+  zendesk: "simple-icons:zendesk",
+  hr: "mdi:account-heart",
+  hris: "mdi:account-heart",
+  payroll: "mdi:cash",
+  finance: "mdi:finance",
+  accounting: "mdi:calculator",
+  marketing: "mdi:bullhorn",
+  project: "mdi:clipboard-list",
+  management: "mdi:clipboard-list",
+  communication: "mdi:message-text",
+  chat: "mdi:message-text",
+  cloud: "mdi:cloud",
+  security: "mdi:shield-lock",
+  devops: "mdi:dev-to",
+  analytics: "mdi:chart-line",
+  ecommerce: "mdi:shopping",
+  shopify: "simple-icons:shopify",
+  inventory: "mdi:package-variant-closed",
+  cms: "mdi:wordpress",
+  wordpress: "simple-icons:wordpress",
+  integration: "mdi:api",
+  api: "mdi:api",
+};
+
+function getSystemIcon(name: string, storedIcon?: string | null): string {
+  if (storedIcon) return storedIcon;
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]+/g, " ");
+  const words = normalized.split(" ");
+  for (const w of words) {
+    if (SYSTEM_ICON_MAP[w]) return SYSTEM_ICON_MAP[w];
+  }
+  return "mdi:application";
+}
+
+const TECH_ICON_MAP: Record<string, string> = {
+  postgresql: "simple-icons:postgresql",
+  mysql: "simple-icons:mysql",
+  mongodb: "simple-icons:mongodb",
+  redis: "simple-icons:redis",
+  docker: "simple-icons:docker",
+  kubernetes: "simple-icons:kubernetes",
+  aws: "simple-icons:amazonaws",
+  azure: "simple-icons:microsoftazure",
+  gcp: "simple-icons:googlecloud",
+  react: "simple-icons:react",
+  vue: "simple-icons:vuedotjs",
+  angular: "simple-icons:angular",
+  nodejs: "simple-icons:nodedotjs",
+  python: "simple-icons:python",
+  java: "simple-icons:openjdk",
+  go: "simple-icons:go",
+  rust: "simple-icons:rust",
+  typescript: "simple-icons:typescript",
+  javascript: "simple-icons:javascript",
+  graphql: "simple-icons:graphql",
+  linux: "simple-icons:linux",
+  git: "simple-icons:git",
+  github: "simple-icons:github",
+  gitlab: "simple-icons:gitlab",
+  terraform: "simple-icons:terraform",
+  ansible: "simple-icons:ansible",
+  prometheus: "simple-icons:prometheus",
+  grafana: "simple-icons:grafana",
+  elasticsearch: "simple-icons:elasticsearch",
+  kafka: "simple-icons:apachekafka",
+  nginx: "simple-icons:nginx",
+  apache: "simple-icons:apache",
+  flutter: "simple-icons:flutter",
+  ios: "simple-icons:apple",
+  android: "simple-icons:android",
+  tensorflow: "simple-icons:tensorflow",
+  pytorch: "simple-icons:pytorch",
+  firebase: "simple-icons:firebase",
+  supabase: "simple-icons:supabase",
+  vercel: "simple-icons:vercel",
+  cloudflare: "simple-icons:cloudflare",
+  sentry: "simple-icons:sentry",
+  datadog: "simple-icons:datadog",
+  splunk: "simple-icons:splunk",
+  ai: "mdi:brain",
+  security: "mdi:shield-lock",
+};
+
+function getTechIconName(name: string): string | null {
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return TECH_ICON_MAP[normalized] ?? null;
+}
+
 function SystemDetailPage() {
   const {
     system,
     media,
     packages: initialPackages,
     reviews: initialReviews,
+    vendor,
+    technologies,
+    contacts,
   } = Route.useLoaderData();
   const { user } = Route.useRouteContext();
   const router = useRouter();
@@ -130,7 +299,7 @@ function SystemDetailPage() {
   const [messageBody, setMessageBody] = useState("");
   const [messageError, setMessageError] = useState("");
   const [messageSending, setMessageSending] = useState(false);
-  const [packages] = useState<PricingPackage[]>(initialPackages ?? []);
+  const [packages] = useState<TcoPackage[]>(initialPackages ?? []);
   const [reviews] = useState<Review[]>(initialReviews ?? []);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -141,6 +310,7 @@ function SystemDetailPage() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState("");
+  const [showMore, setShowMore] = useState(false);
 
   const handleMessageVendor = async () => {
     if (!messageBody.trim() || messageSending) return;
@@ -219,7 +389,9 @@ function SystemDetailPage() {
       <SiteHeader user={user} />
       <main className="container mx-auto px-4 py-8 space-y-8">
         <header className="flex flex-wrap items-start gap-4">
-          <div className="h-16 w-16 rounded-lg bg-secondary" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-secondary">
+            <Icon icon={getSystemIcon(system.name, system.icon)} className="h-8 w-8" />
+          </div>
           <div className="flex-1 min-w-[200px]">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-semibold">{system.name}</h1>
@@ -227,6 +399,12 @@ function SystemDetailPage() {
                 <Badge className="gap-1">
                   <ShieldCheck className="h-3 w-3" />
                   Verified
+                </Badge>
+              )}
+              {system.trial_available && (
+                <Badge variant="outline" className="gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Free trial
                 </Badge>
               )}
             </div>
@@ -376,6 +554,7 @@ function SystemDetailPage() {
             <TabsTrigger value="pricing">Pricing</TabsTrigger>
             <TabsTrigger value="tco">TCO Calculator</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
+            <TabsTrigger value="company">Company</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -386,22 +565,22 @@ function SystemDetailPage() {
               </CardContent>
             </Card>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">Reviews</h3>
-                  <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>
-                    Write a review
-                  </Button>
-                </div>
-                {reviews.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No reviews yet. Be the first to review.
-                  </p>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {reviews.map((r, i) => (
-                      <Card key={i} className="h-full">
-                        <CardContent className="pt-6 space-y-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Reviews</h3>
+                <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>
+                  Write a review
+                </Button>
+              </div>
+              {reviews.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No reviews yet. Be the first to review.
+                </p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {reviews.map((r, i) => (
+                    <Card key={i} className="h-full">
+                      <CardContent className="pt-6 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             {"★".repeat(Math.round(r.rating))}
@@ -424,9 +603,7 @@ function SystemDetailPage() {
                             </p>
                           )}
                         </div>
-                        {r.review_text && (
-                          <p className="text-sm line-clamp-4">{r.review_text}</p>
-                        )}
+                        {r.review_text && <p className="text-sm line-clamp-4">{r.review_text}</p>}
                       </CardContent>
                     </Card>
                   ))}
@@ -491,7 +668,7 @@ function SystemDetailPage() {
                           "Free"
                         ) : (
                           <>
-                            {pkg.currency} {pkg.base_price}
+                            {pkg.currency} {formatPrice(pkg.base_price)}
                             {pkg.billing_cadence && (
                               <span className="text-sm text-muted-foreground">
                                 /{pkg.billing_cadence}
@@ -564,73 +741,230 @@ function SystemDetailPage() {
           </TabsContent>
 
           <TabsContent value="tco">
-            <Card>
-              <CardContent className="pt-6 grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Seats</Label>
-                    <Input type="number" defaultValue={50} />
-                  </div>
-                  <div>
-                    <Label>Term length</Label>
-                    <select className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                      <option>1 year</option>
-                      <option>3 years</option>
-                      <option>5 years</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label>Annual escalation %</Label>
-                    <Slider defaultValue={[5]} max={20} step={1} className="mt-3" />
-                  </div>
-                  <div>
-                    <Label>Discount %</Label>
-                    <Slider defaultValue={[10]} max={50} step={1} className="mt-3" />
-                  </div>
-                  <div>
-                    <Label>Implementation cost</Label>
-                    <Input type="number" defaultValue={5000} />
-                  </div>
-                </div>
-                <div className="rounded-lg bg-secondary p-6 space-y-3">
-                  <div className="text-sm text-muted-foreground">Estimated TCO (3 years)</div>
-                  <div className="text-4xl font-semibold">$182,400</div>
-                  <Separator />
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Year 1</span>
-                      <span>$56,000</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Year 2</span>
-                      <span>$60,800</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Year 3</span>
-                      <span>$65,600</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SystemTcoCalculator systemName={system.name} packages={packages} />
           </TabsContent>
 
           <TabsContent value="links">
             <Card>
               <CardContent className="pt-6 space-y-2">
                 {[
-                  ["Website", "https://example.com"],
-                  ["Documentation", "https://docs.example.com"],
-                  ["LinkedIn", "https://linkedin.com/company/example"],
-                  ["YouTube demo", "https://youtube.com/example"],
-                ].map(([l, h]) => (
-                  <Link key={l} to="." className="flex items-center gap-2 text-sm hover:underline">
-                    <ExternalLink className="h-4 w-4" /> {l}{" "}
-                    <span className="text-muted-foreground">— {h}</span>
-                  </Link>
-                ))}
+                  ["Website", system.vendor_website],
+                  ["Documentation", null],
+                  ["LinkedIn", (system.social_links as any)?.linkedin || null],
+                  ["YouTube demo", null],
+                ]
+                  .filter(([, url]) => !!url)
+                  .map(([l, h]) => (
+                    <Link
+                      key={l}
+                      to="."
+                      className="flex items-center gap-2 text-sm hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" /> {l}{" "}
+                      <span className="text-muted-foreground">— {h as string}</span>
+                    </Link>
+                  ))}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="company">
+            {vendor ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                      <div className="flex-1 min-w-0 space-y-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-24 w-24 shrink-0 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden">
+                            {vendor.logo_url ? (
+                              <img
+                                src={vendor.logo_url}
+                                alt={vendor.company_name}
+                                className="h-full w-full object-contain"
+                              />
+                            ) : (
+                              <Building2 className="h-8 w-8 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h2 className="text-xl font-bold">{vendor.company_name}</h2>
+                              <Badge variant="secondary" className="gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                Active
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                              {vendor.location || vendor.location_label ? (
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.location || vendor.location_label)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <MapPin className="h-3.5 w-3.5" />
+                                  {vendor.location_label || vendor.location}
+                                </a>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                  <MapPin className="h-3.5 w-3.5" />
+                                  No location
+                                </span>
+                              )}
+                              {vendor.website ? (
+                                <a
+                                  href={vendor.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                                >
+                                  <Globe className="h-3.5 w-3.5" />
+                                  {vendor.website.replace(/^https?:\/\//, "")}
+                                </a>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                  <Globe className="h-3.5 w-3.5" />
+                                  No website
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {vendor.description && (
+                          <div className="space-y-1">
+                            <p
+                              className={`text-sm text-muted-foreground leading-relaxed ${
+                                showMore ? "" : "line-clamp-2"
+                              }`}
+                            >
+                              {vendor.description}
+                            </p>
+                            {vendor.description.length > 120 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowMore(!showMore)}
+                                className="h-auto p-0 text-xs font-medium text-primary hover:bg-transparent"
+                              >
+                                {showMore ? "Show Less" : "Show More"}
+                                {showMore ? (
+                                  <ChevronUp className="ml-1 h-3 w-3" />
+                                ) : (
+                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-6 sm:grid-cols-3">
+                  <div className="flex items-start gap-2 text-sm">
+                    <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Industry</p>
+                      <p className="font-medium">{vendor.industry || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Users className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Company size</p>
+                      <p className="font-medium">{vendor.company_size || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Founded</p>
+                      <p className="font-medium">{vendor.founded_date || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-semibold">Technologies</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {technologies.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No technologies listed.</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          {technologies.map((tech) => {
+                            const iconName = getTechIconName(tech.name);
+                            return (
+                              <div
+                                key={tech.id}
+                                className="flex items-center gap-2 rounded-lg border border-border p-2"
+                              >
+                                <span
+                                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white"
+                                  style={{ backgroundColor: tech.color }}
+                                >
+                                  {iconName && <Icon icon={iconName} className="h-4 w-4" />}
+                                </span>
+                                <span className="truncate text-sm font-medium">{tech.name}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-semibold">Key Contacts</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-4">
+                      {contacts.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No contacts listed.</p>
+                      ) : (
+                        contacts.map((contact) => (
+                          <div key={contact.id} className="flex items-start gap-3">
+                            <Avatar className="h-9 w-9">
+                              {contact.avatar_url ? <AvatarImage src={contact.avatar_url} /> : null}
+                              <AvatarFallback className="text-xs">
+                                {contact.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <p className="text-sm font-medium truncate">{contact.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {contact.role}
+                              </p>
+                              <p className="text-xs text-primary truncate">{contact.email}</p>
+                            </div>
+                            <a
+                              href={`mailto:${contact.email}`}
+                              className="text-xs font-medium text-primary hover:underline"
+                            >
+                              Email
+                            </a>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="pt-6 text-sm text-muted-foreground">
+                  No company profile available for this system.
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>

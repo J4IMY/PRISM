@@ -28,6 +28,13 @@ type PricingPackageInput = {
   features?: string[];
 };
 
+const VALID_TRIAL_DAYS = [7, 14, 30, 60, 90] as const;
+
+function coerceTrialDays(raw: unknown): number | null {
+  const n = typeof raw === "number" ? raw : typeof raw === "string" ? parseInt(raw, 10) : NaN;
+  return VALID_TRIAL_DAYS.includes(n as (typeof VALID_TRIAL_DAYS)[number]) ? n : null;
+}
+
 export const APIRoute = createAPIFileRoute("/api/vendor-systems/$id")({
   GET: async ({ request, params }) => {
     const user = await requireRole(request, "vendor", "admin");
@@ -105,6 +112,9 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems/$id")({
       "logo_url",
       "website_url",
       "status",
+      "icon",
+      "implementation_cost",
+      "requirements",
     ];
     const fields: string[] = [];
     const values: unknown[] = [];
@@ -191,7 +201,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems/$id")({
                 pkg.is_free ?? false,
                 pkg.contact_sales ?? false,
                 pkg.trial_available ?? false,
-                pkg.trial_available ? pkg.trial_duration_days : null,
+                coerceTrialDays(pkg.trial_available ? pkg.trial_duration_days : null),
                 pkg.minimum_seats,
                 pkg.maximum_seats,
                 pkg.is_unlimited_seats ?? false,
@@ -219,7 +229,7 @@ export const APIRoute = createAPIFileRoute("/api/vendor-systems/$id")({
                 pkg.is_free ?? false,
                 pkg.contact_sales ?? false,
                 pkg.trial_available ?? false,
-                pkg.trial_available ? pkg.trial_duration_days : null,
+                coerceTrialDays(pkg.trial_available ? pkg.trial_duration_days : null),
                 pkg.minimum_seats,
                 pkg.maximum_seats,
                 pkg.is_unlimited_seats ?? false,

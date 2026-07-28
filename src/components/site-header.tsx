@@ -34,27 +34,27 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           <img src="/prism_logo.png" alt="PRISM" className="h-6 w-6 rounded object-contain" />
           <span>PRISM</span>
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
+        <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
           <Link
             to="/"
             activeOptions={{ exact: true }}
-            activeProps={{ className: "text-foreground" }}
-            className="hover:text-foreground inline-flex items-center gap-1"
+            activeProps={{ className: "text-foreground font-medium" }}
+            className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
           >
             <Search className="h-4 w-4" /> Discover
           </Link>
           <Link
             to="/chats"
-            activeProps={{ className: "text-foreground" }}
-            className="hover:text-foreground inline-flex items-center gap-1"
+            activeProps={{ className: "text-foreground font-medium" }}
+            className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
           >
             <MessageSquare className="h-4 w-4" /> Messages
           </Link>
           {user && (
             <Link
               to="/watchlist"
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground inline-flex items-center gap-1"
+              activeProps={{ className: "text-foreground font-medium" }}
+              className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
             >
               <Heart className="h-4 w-4" /> Watchlist
             </Link>
@@ -62,8 +62,8 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           {showVendor && (
             <Link
               to="/vendor"
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground inline-flex items-center gap-1"
+              activeProps={{ className: "text-foreground font-medium" }}
+              className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
             >
               <LayoutDashboard className="h-4 w-4" /> Vendor
             </Link>
@@ -71,8 +71,8 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           {showAdmin && (
             <Link
               to="/admin"
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground inline-flex items-center gap-1"
+              activeProps={{ className: "text-foreground font-medium" }}
+              className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
             >
               <ShieldCheck className="h-4 w-4" /> Admin
             </Link>
@@ -80,8 +80,8 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           {showModerator && (
             <Link
               to="/moderator"
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground inline-flex items-center gap-1"
+              activeProps={{ className: "text-foreground font-medium" }}
+              className="hover:text-foreground inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
             >
               <GavelIcon className="h-4 w-4" /> Moderator
             </Link>
@@ -92,14 +92,14 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
           {user ? (
             <>
               <span className="hidden sm:inline text-sm text-muted-foreground">
-                {user.name ?? user.email}
+                {user.username ? `@${user.username}` : (user.name ?? user.email)}
               </span>
-              <Button asChild variant="outline" size="icon">
+              <Button asChild variant="outline" size="icon" className="h-9 w-9">
                 <Link to="/profile" aria-label="Profile">
                   <User className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sign out">
+              <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sign out" className="h-9 w-9">
                 <LogOut className="h-4 w-4" />
               </Button>
             </>

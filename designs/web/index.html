@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — Discover</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    header {
+      position: sticky; top: 0; z-index: 40;
+      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .nav { display: flex; align-items: center; gap: 24px; height: 56px; }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; }
+    .logo img { width: 24px; height: 24px; border-radius: 4px; }
+    .nav-links { display: flex; gap: 16px; margin-left: 16px; }
+    .nav-links a { text-decoration: none; color: #64748b; font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: #0f172a; }
+    .nav-actions { margin-left: auto; display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: #0f172a; color: white; }
+    .btn-primary:hover { background: #1e293b; }
+    .btn-ghost { background: transparent; color: #0f172a; }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .hero { padding: 48px 0 32px; }
+    .hero h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px; }
+    .hero p { color: #64748b; margin: 0 0 24px; }
+    .search-bar {
+      display: flex; gap: 8px; max-width: 800px;
+    }
+    .search-bar input {
+      flex: 1; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px;
+      font-family: inherit; font-size: 14px;
+    }
+    .layout { display: flex; gap: 32px; }
+    .sidebar { width: 220px; flex-shrink: 0; }
+    .sidebar h3 { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 0;
+      font-size: 14px; color: #475569; cursor: pointer;
+    }
+    .sidebar-item:hover { color: #0f172a; }
+    .grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;
+      background: white; transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-icon img { width: 20px; height: 20px; }
+    .card-title { font-size: 16px; font-weight: 600; margin: 0; }
+    .card-meta { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 4px; font-size: 12px; font-weight: 500;
+      background: #f1f5f9; color: #475569; margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="nav">
+        <div class="logo">
+          <img src="prism_logo.png" alt="PRISM">
+          <span>PRISM</span>
+        </div>
+        <nav class="nav-links">
+          <a href="#">Discover</a>
+          <a href="#">Messages</a>
+          <a href="#">Watchlist</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="btn btn-ghost" title="Toggle theme">🌙</button>
+          <button class="btn btn-ghost">Sign in</button>
+          <button class="btn btn-primary">Sign up</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Discover the right software for your stack</h1>
+      <p>Compare pricing, features, and total cost of ownership across 120+ verified vendors.</p>
+      <div class="search-bar">
+        <input type="text" placeholder="Search CRM, ERP, helpdesk…">
+        <button class="btn btn-primary">Search</button>
+        <button class="btn btn-primary" title="Get personalized recommendations">
+          ✨ Feature Assessment
+        </button>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <h3>Category</h3>
+        <div class="sidebar-item"><span>ERP</span> <span style="margin-left:auto;color:#94a3b8">12</span></div>
+        <div class="sidebar-item"><span>CRM</span> <span style="margin-left:auto;color:#94a3b8">8</span></div>
+        <div class="sidebar-item"><span>HRM</span> <span style="margin-left:auto;color:#94a3b8">5</span></div>
+        <div class="sidebar-item"><span>POS</span> <span style="margin-left:auto;color:#94a3b8">3</span></div>
+      </aside>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">📊</div>
+            <div>
+              <div class="card-title">Acme CRM Pro</div>
+              <div class="card-meta">CRM • $29/mo</div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:#475569;margin:0 0 12px;">Powerful CRM for growing sales teams.</p>
+          <div class="badge">Most Popular</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">💬</div>
+            <div>
+              <div class="card-title">HelpDesk X</div>
+              <div class="card-meta">Help Desk • $49/mo</div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:#475569;margin:0 0 12px;">Customer support platform with AI.</p>
+          <div class="badge">Verified</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">📦</div>
+            <div>
+              <div class="card-title">Skynet</div>
+              <div class="card-meta">Inventory • KES 20,000/mo</div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:#475569;margin:0 0 12px;">Real-time inventory and analytics.</p>
+          <div class="badge">Popular</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

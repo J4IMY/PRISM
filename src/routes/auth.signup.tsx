@@ -45,6 +45,7 @@ function SignupPage() {
         if (result.devVerificationUrl) {
           setDevVerificationUrl(result.devVerificationUrl);
         }
+        localStorage.setItem("needs_assessment", "true");
         setSuccess(true);
       } else {
         setError(result.error || "Failed to create account");

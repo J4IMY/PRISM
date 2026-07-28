@@ -37,11 +37,6 @@ function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Row label="New vendor reply" hint="Email me when a vendor responds to a thread" />
-            <Row
-              label="Price change on watchlist"
-              hint="Email me when a saved system changes pricing"
-            />
-            <Row label="Weekly digest" hint="A summary of new systems and updates" />
           </CardContent>
         </Card>
 

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — Assessment</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    header {
+      position: sticky; top: 0; z-index: 40;
+      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .nav { display: flex; align-items: center; gap: 24px; height: 56px; }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; }
+    .logo img { width: 24px; height: 24px; border-radius: 4px; }
+    .nav-links { display: flex; gap: 16px; margin-left: 16px; }
+    .nav-links a { text-decoration: none; color: #64748b; font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: #0f172a; }
+    .nav-actions { margin-left: auto; display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: #0f172a; color: white; }
+    .btn-primary:hover { background: #1e293b; }
+    .btn-ghost { background: transparent; color: #0f172a; }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .progress { margin-bottom: 24px; }
+    .progress-text { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; margin-bottom: 8px; }
+    .progress-bar { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #0f172a; width: 10%; transition: width 0.3s; }
+
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;
+      background: white;
+    }
+    .card-header { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .card-subtitle { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .option-btn {
+      padding: 14px; border: 1px solid #e5e7eb; border-radius: 10px;
+      background: white; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500;
+      text-align: center; transition: all 0.15s;
+    }
+    .option-btn:hover { background: #f8fafc; }
+    .option-btn.selected {
+      border-color: #0f172a; background: rgba(15,23,42,0.05); color: #0f172a;
+    }
+    .chip-btn {
+      padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 999px;
+      background: white; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .chip-btn:hover { background: #f8fafc; }
+    .chip-btn.selected {
+      border-color: #0f172a; background: rgba(15,23,42,0.05); color: #0f172a;
+    }
+
+    .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="nav">
+        <div class="logo">
+          <img src="prism_logo.png" alt="PRISM">
+          <span>PRISM</span>
+        </div>
+        <nav class="nav-links">
+          <a href="#">Discover</a>
+          <a href="#">Messages</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="btn btn-ghost">🌙</button>
+          <button class="btn btn-ghost">Sign in</button>
+          <button class="btn btn-primary">Sign up</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="progress">
+      <div class="progress-text"><span>Step 1 of 11</span><span>9%</span></div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">What type of system are you looking for?</div>
+      <div class="card-subtitle">Select the category that best describes the software you need.</div>
+
+      <div class="grid-2">
+        <button class="option-btn">ERP</button>
+        <button class="option-btn selected">CRM</button>
+        <button class="option-btn">HRM</button>
+        <button class="option-btn">POS</button>
+        <button class="option-btn">Accounting</button>
+        <button class="option-btn">Inventory Management</button>
+        <button class="option-btn">Project Management</button>
+        <button class="option-btn">Help Desk</button>
+        <button class="option-btn">Other</button>
+      </div>
+
+      <div class="actions">
+        <div></div>
+        <button class="btn btn-primary" disabled>Next →</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
