@@ -7,9 +7,13 @@ function isSmtpConfigured(): boolean {
   return !!(process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-/** Console-only mailer when SMTP creds are missing (unless SMTP_FORCE opts into Ethereal). */
-export function useConsoleMailer(): boolean {
+function isResendConfigured(): boolean {
+  return !!process.env.RESEND_API_KEY;
+}
+
+export function isConsoleMailer(): boolean {
   if (isSmtpConfigured()) return false;
+  if (isResendConfigured()) return false;
   if (process.env.SMTP_FORCE === "true") return false;
   return true;
 }
@@ -71,9 +75,36 @@ export interface EmailOptions {
   html?: string;
 }
 
+async function sendViaResend(options: EmailOptions): Promise<void> {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || "noreply@prism.local",
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+      html: options.html,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Resend email failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+}
+
 export async function sendEmail(options: EmailOptions, label = "email"): Promise<void> {
-  if (useConsoleMailer()) {
+  if (isConsoleMailer()) {
     logConsoleEmail(options, label);
+    return;
+  }
+
+  if (isResendConfigured()) {
+    await sendViaResend(options);
     return;
   }
 

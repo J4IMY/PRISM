@@ -1,7 +1,7 @@
 import { createAPIFileRoute } from "@/lib/create-api-file-route";
 import crypto from "crypto";
 import { query, queryOne } from "@/lib/db";
-import { isDevEnvironment, sendEmail, useConsoleMailer } from "@/lib/email";
+import { isDevEnvironment, sendEmail, isConsoleMailer } from "@/lib/email";
 
 export const APIRoute = createAPIFileRoute("/api/auth/forgot")({
   POST: async ({ request }) => {
@@ -40,7 +40,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/forgot")({
           },
           "password reset",
         );
-        if (isDevEnvironment() && useConsoleMailer()) {
+        if (isDevEnvironment() && isConsoleMailer()) {
           devResetUrl = resetUrl;
         }
       }

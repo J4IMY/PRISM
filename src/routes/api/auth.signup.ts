@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { query } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { COMPANY_EMAIL_REQUIRED_MESSAGE, isCompanyEmail } from "@/lib/company-email";
-import { isDevEnvironment, sendVerificationEmail, useConsoleMailer } from "@/lib/email";
+import { isDevEnvironment, sendVerificationEmail, isConsoleMailer } from "@/lib/email";
 
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -98,7 +98,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/signup")({
         message: "Account created! Check your email to verify your address.",
         user: { id: user.id, email: user.email, name: user.name ?? undefined },
       };
-      if (isDevEnvironment() && useConsoleMailer()) {
+      if (isDevEnvironment() && isConsoleMailer()) {
         response.devVerificationUrl = verificationUrl;
       }
 

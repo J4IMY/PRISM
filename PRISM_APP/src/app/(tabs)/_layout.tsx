@@ -72,6 +72,7 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }
 
@@ -137,6 +138,7 @@ function WatchlistIcon({ color, size }: { color: string; size: number }) {
 }
 
 function ChatsIcon({ color, size }: { color: string; size: number }) {
+  const theme = useTheme();
   return (
     <View style={{ width: size + 4, height: size + 4, alignItems: "center", justifyContent: "center" }}>
       <View
