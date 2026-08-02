@@ -97,7 +97,7 @@ export default function DiscoverScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <Image
-          source={require("@/assets/images/prism_logo.png")}
+          source={require("@/assets/images/prism_icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -323,13 +323,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: Radius.full,
     borderWidth: 1,
     marginRight: Spacing.xs,
   },
-  catLabel: { fontSize: 13, fontWeight: "600" },
+  catLabel: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
   resultsMeta: {
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xs,
@@ -358,8 +358,8 @@ const styles = StyleSheet.create({
   heart: { fontSize: 22 },
   tagline: { fontSize: 13, lineHeight: 18 },
   badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.sm },
-  badgeText: { fontSize: 11, fontWeight: "600" },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: Radius.sm },
+  badgeText: { fontSize: 11, fontWeight: "700", lineHeight: 14 },
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",

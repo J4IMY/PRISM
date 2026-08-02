@@ -94,7 +94,16 @@ export const APIRoute = createAPIFileRoute("/api/scraper/$id")({
     if (user instanceof Response) return user;
 
     try {
-      const body = (await request.json()) as { status?: string; publish?: boolean };
+      const body = (await request.json()) as {
+        status?: string;
+        publish?: boolean;
+        name?: string;
+        description?: string;
+        starting_price?: string;
+        pricing_tier?: string;
+        plans?: unknown[];
+      };
+
       const item = await queryOne<{
         id: string;
         name: string;
@@ -185,6 +194,33 @@ export const APIRoute = createAPIFileRoute("/api/scraper/$id")({
 
           return Response.json({ item: updated.rows[0], system_id: systemId });
         });
+      }
+
+      if (
+        body.name !== undefined ||
+        body.description !== undefined ||
+        body.starting_price !== undefined ||
+        body.pricing_tier !== undefined ||
+        body.plans !== undefined
+      ) {
+        const payload = { ...(item.payload ?? {}) };
+        if (body.name !== undefined) payload.name = body.name;
+        if (body.description !== undefined) payload.description = body.description;
+        if (body.starting_price !== undefined) payload.starting_price = body.starting_price;
+        if (body.pricing_tier !== undefined) payload.pricing_tier = body.pricing_tier;
+        if (body.plans !== undefined) payload.plans = body.plans;
+
+        const updated = await query(
+          `UPDATE scraper_items
+           SET payload = $1::jsonb, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2
+           RETURNING id, name, source, source_url, confidence, age_days, status, payload, system_id, created_at, updated_at`,
+          [JSON.stringify(payload), params.id],
+        );
+
+        await logAudit(user.id, user.email, "scraper.update", params.id, item.name);
+
+        return Response.json({ item: updated[0] });
       }
 
       const items = await query(

@@ -7,25 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
-import { Globe, ExternalLink, Image, Tag, FileText, Sparkles } from "lucide-react";
+import { Globe, ExternalLink, Tag, FileText, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 type ScrapedPayload = {
   name?: string;
-  tagline?: string;
   description?: string;
-  website_url?: string;
   starting_price?: string;
   pricing_tier?: string;
-  deployment_type?: string;
-  industry?: string;
-  target_size?: string;
-  trial_available?: boolean;
-  enterprise_pricing?: boolean;
-  features?: unknown[];
   plans?: unknown[];
-  media?: { url: string; media_type?: string }[];
-  links?: string[];
 };
 
 export const Route = createFileRoute("/admin/website-scraper")({
@@ -52,11 +42,11 @@ function WebsiteScraperPage() {
         credentials: "include",
       });
       const data = (await res.json().catch(() => ({}))) as {
-        scraped?: ScrapedPayload;
+        item?: ScrapedPayload;
         error?: string;
       };
       if (!res.ok) throw new Error(data.error ?? "Failed to scrape");
-      setResult(data.scraped ?? null);
+      setResult(data.item ?? null);
       toast.success("Website scraped and queued for review");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to scrape");
@@ -65,10 +55,10 @@ function WebsiteScraperPage() {
     }
   };
 
-  const featureLabels = (result?.features ?? []).flatMap((f) => {
+  const planLabels = (result?.plans ?? []).flatMap((f) => {
     if (typeof f === "string") return [f];
-    if (f && typeof f === "object" && "feature_name" in f) {
-      return [String((f as { feature_name: string }).feature_name)];
+    if (f && typeof f === "object" && "name" in f) {
+      return [String((f as { name: string }).name)];
     }
     return [];
   });
@@ -80,7 +70,7 @@ function WebsiteScraperPage() {
         <div>
           <h1 className="text-3xl font-semibold">Website Scraper</h1>
           <p className="text-muted-foreground">
-            Enter a product website URL to extract system listing fields via ScraperAPI.
+            Enter a product website URL to extract system name, description, pricing and packages.
           </p>
         </div>
 
@@ -118,33 +108,16 @@ function WebsiteScraperPage() {
                       <Globe className="h-5 w-5" />
                       {result.name ?? "Untitled"}
                     </CardTitle>
-                    {result.website_url && (
-                      <a
-                        href={result.website_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1"
-                      >
-                        {result.website_url} <ExternalLink className="h-3 w-3" />
-                      </a>
+                    {result.starting_price && (
+                      <Badge variant="secondary" className="shrink-0 mt-2">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        {result.starting_price}
+                      </Badge>
                     )}
                   </div>
-                  {result.starting_price && (
-                    <Badge variant="secondary" className="shrink-0">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      {result.starting_price}
-                    </Badge>
-                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {result.tagline && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Tagline</p>
-                    <p className="text-sm">{result.tagline}</p>
-                  </div>
-                )}
-
                 {result.description && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
@@ -154,74 +127,18 @@ function WebsiteScraperPage() {
 
                 <div className="flex flex-wrap gap-2">
                   {result.pricing_tier && <Badge variant="outline">{result.pricing_tier}</Badge>}
-                  {result.deployment_type && (
-                    <Badge variant="outline">{result.deployment_type}</Badge>
-                  )}
-                  {result.industry && <Badge variant="outline">{result.industry}</Badge>}
-                  {result.target_size && <Badge variant="outline">{result.target_size}</Badge>}
-                  {result.trial_available && <Badge variant="outline">Free trial</Badge>}
-                  {result.enterprise_pricing && <Badge variant="outline">Enterprise pricing</Badge>}
                 </div>
 
-                {featureLabels.length > 0 && (
+                {planLabels.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                      <Tag className="h-3 w-3" /> Features ({featureLabels.length})
+                      <Tag className="h-3 w-3" /> Pricing plans ({planLabels.length})
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {featureLabels.slice(0, 15).map((f, i) => (
+                      {planLabels.slice(0, 15).map((f, i) => (
                         <span key={i} className="text-xs bg-secondary rounded px-2 py-0.5">
                           {f}
                         </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {result.media && result.media.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                      <Image className="h-3 w-3" /> Media ({result.media.length})
-                    </p>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {result.media.slice(0, 5).map((m, i) => (
-                        <p key={i} className="text-xs text-muted-foreground truncate">
-                          {m.url}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {result.plans && result.plans.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                      <FileText className="h-3 w-3" /> Pricing plans
-                    </p>
-                    <pre className="text-xs bg-secondary rounded p-2 overflow-x-auto max-h-40">
-                      {JSON.stringify(result.plans, null, 2)}
-                    </pre>
-                  </div>
-                )}
-
-                <Separator />
-
-                {result.links && result.links.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">
-                      Links ({result.links.length})
-                    </p>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {result.links.slice(0, 20).map((link, i) => (
-                        <a
-                          key={i}
-                          href={link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline block truncate"
-                        >
-                          {link}
-                        </a>
                       ))}
                     </div>
                   </div>

@@ -24,53 +24,13 @@ export type PricingPlan = {
   features: string[];
 };
 
-export type MediaItem = {
-  media_type: "image" | "video" | "screenshot";
-  url: string;
-  caption: string | null;
-};
-
-export type SystemFeature = {
-  feature_name: string;
-  feature_detail?: string | null;
-  category?: string | null;
-};
-
 export type ScrapedSystem = {
   url: string;
   name: string;
   description: string;
-  tagline: string;
-  type: string;
-  demo_url: string;
-  category: string;
-  industry: string;
-  target_size: string;
-  deployment_type: string;
-  pricing_tier: string;
-  pricing_model: string;
-  base_price: number | null;
   starting_price: string;
-  billing_cadence: string;
-  has_api: boolean;
-  has_mobile_app: boolean;
-  has_ai_features: boolean;
-  has_offline_mode: boolean;
-  trial_available: boolean;
-  enterprise_pricing: boolean;
-  free_trial: boolean;
-  contact_sales: boolean;
-  logo_url: string;
-  website_url: string;
-  icon: string;
-  implementation_cost: string;
-  requirements: string;
-  features: string[];
-  system_features: SystemFeature[];
+  pricing_tier: string;
   plans: PricingPlan[];
-  media: MediaItem[];
-  links: string[];
-  screenshots: string[];
 };
 
 export type ScraperOptions = {
@@ -204,15 +164,6 @@ function extractDescription($: CheerioAPI, jsonLd: Record<string, unknown>[]): s
   return p.slice(0, 500);
 }
 
-function extractTagline($: CheerioAPI): string {
-  const selectors = [".hero p", ".tagline", ".slogan", '[class*="subtitle"]', "h2"];
-  for (const sel of selectors) {
-    const text = cleanText($(sel).first().text());
-    if (text && text.length > 5 && text.length <= 200) return text;
-  }
-  return "";
-}
-
 function extractPricingSectionText($: CheerioAPI): string {
   const section = $('[class*="pricing"], [class*="price"], #pricing, [id*="pricing"]').first();
   return cleanText(section.text());
@@ -315,196 +266,7 @@ function extractTrialDurationDays(text: string): number | null {
   return null;
 }
 
-function extractDeploymentType(text: string): string {
-  if (/on-premise|on-prem|self-hosted|self hosted|on premise/.test(text)) {
-    if (/hybrid/.test(text)) return "hybrid";
-    return "on-premise";
-  }
-  if (/hybrid/.test(text)) return "hybrid";
-  if (/cloud|saas|hosted/.test(text)) return "cloud";
-  return "cloud";
-}
-
-function extractIndustry(text: string): string {
-  const industries = [
-    { pattern: /\bcrm\b|customer relationship/, value: "crm" },
-    { pattern: /\berp\b|enterprise resource/, value: "erp" },
-    { pattern: /helpdesk|customer support|ticketing/, value: "helpdesk" },
-    { pattern: /\bhr\b|human resources|payroll/, value: "hr" },
-    { pattern: /marketing automation|email marketing/, value: "marketing" },
-    { pattern: /analytics|business intelligence|\bbi\b/, value: "analytics" },
-    { pattern: /cybersecurity|security|infosec/, value: "security" },
-    { pattern: /project management/, value: "project management" },
-    { pattern: /communication|collaboration|messaging/, value: "communication" },
-    { pattern: /finance|accounting|invoicing/, value: "finance" },
-    { pattern: /devops|ci\/cd|developer tools/, value: "devops" },
-    { pattern: /e-?commerce|online store|shopping cart/, value: "ecommerce" },
-  ];
-
-  for (const { pattern, value } of industries) {
-    if (pattern.test(text)) return value;
-  }
-  return "";
-}
-
-function extractTargetSize(text: string): string {
-  if (/small business|small businesses|smb|startups?/.test(text)) return "small business";
-  if (/mid-market|mid market|midsize|medium business/.test(text)) return "mid-market";
-  if (/enterprise|large enterprise|large companies|fortune/.test(text)) return "enterprise";
-  return "";
-}
-
-function extractCategory(text: string, industry: string): string {
-  if (industry) return industry;
-  const categories = ["crm", "erp", "helpdesk", "hr", "marketing", "analytics", "security"];
-  for (const cat of categories) {
-    if (text.includes(cat)) return cat;
-  }
-  return "";
-}
-
-function extractType(text: string): string {
-  if (/platform/.test(text)) return "platform";
-  if (/service/.test(text)) return "service";
-  if (/software|application|app\b/.test(text)) return "software";
-  return "";
-}
-
-function extractDemoUrl($: CheerioAPI, baseUrl: string): string {
-  const demoPatterns = /demo|try it|get started|start free|free trial|request demo/i;
-  let found = "";
-  $("a[href]").each((_, el) => {
-    if (found) return;
-    const label = cleanText($(el).text());
-    const href = $(el).attr("href") ?? "";
-    if (!href || href.startsWith("#")) return;
-    if (demoPatterns.test(label)) {
-      found = absoluteUrl(baseUrl, href);
-    }
-  });
-  return found;
-}
-
-function extractRequirements($: CheerioAPI): string {
-  const section = $(
-    '[class*="requirement"], [id*="requirement"], [class*="system-requirement"]',
-  ).first();
-  const text = cleanText(section.text());
-  return text.slice(0, 500);
-}
-
-function extractImplementationCost(text: string): string {
-  const match = text.match(
-    /implementation(?:\s+cost|\s+fee|\s+price)?[^$€£]{0,30}([$€£]\s?[0-9,]+(?:\.[0-9]{2})?)/i,
-  );
-  return match?.[1]?.trim() ?? "";
-}
-
-function detectCapabilities(text: string): {
-  has_api: boolean;
-  has_mobile_app: boolean;
-  has_ai_features: boolean;
-  has_offline_mode: boolean;
-} {
-  return {
-    has_api: /\bapi\b|rest api|graphql|webhook|developer api/.test(text),
-    has_mobile_app: /mobile app|ios app|android app|mobile application/.test(text),
-    has_ai_features:
-      /\bai\b|artificial intelligence|machine learning|\bml\b|generative ai|copilot/.test(text),
-    has_offline_mode: /offline mode|offline access|works offline|offline capability/.test(text),
-  };
-}
-
-function extractFeatures($: CheerioAPI): string[] {
-  const features: string[] = [];
-  const selectors = [
-    '[class*="feature"] li',
-    ".features li",
-    "#features li",
-    '[class*="capability"] li',
-    "ul li",
-  ];
-
-  for (const selector of selectors) {
-    $(selector).each((_, el) => {
-      const text = cleanText($(el).text());
-      if (text.length > 2 && text.length < 200 && !features.includes(text)) {
-        features.push(text);
-      }
-    });
-    if (features.length >= 20) break;
-  }
-
-  return features.slice(0, 20);
-}
-
-function toSystemFeatures(features: string[]): SystemFeature[] {
-  return features.map((name) => ({ feature_name: name }));
-}
-
-function extractLogoUrl($: CheerioAPI, baseUrl: string): string {
-  const ogImage = $('meta[property="og:image"]').attr("content");
-  if (ogImage) return absoluteUrl(baseUrl, ogImage);
-
-  const logo = $('img[alt*="logo" i], img[class*="logo" i], .logo img, header img').first();
-  const src = logo.attr("src") || logo.attr("data-src");
-  if (src) return absoluteUrl(baseUrl, src);
-  return "";
-}
-
-function extractWebsiteUrl($: CheerioAPI, baseUrl: string): string {
-  const canonical = $('link[rel="canonical"]').attr("href");
-  if (canonical) return absoluteUrl(baseUrl, canonical);
-  return baseUrl;
-}
-
-function extractScreenshots($: CheerioAPI, baseUrl: string): string[] {
-  const images: string[] = [];
-  const selectors = [
-    '[class*="screenshot"] img',
-    '[class*="product"] img',
-    '[class*="gallery"] img',
-    '[class*="hero"] img',
-    ".demo img",
-    ".preview img",
-    "main img",
-  ];
-
-  for (const selector of selectors) {
-    $(selector).each((_, el) => {
-      const src = $(el).attr("src") || $(el).attr("data-src");
-      if (!src || src.startsWith("data:")) return;
-      const abs = absoluteUrl(baseUrl, src);
-      if (!images.includes(abs)) images.push(abs);
-    });
-    if (images.length >= 10) break;
-  }
-
-  return images.slice(0, 10);
-}
-
-function extractLinks($: CheerioAPI, baseUrl: string): string[] {
-  const urls: string[] = [];
-  const canonical = $('link[rel="canonical"]').attr("href");
-  if (canonical) urls.push(absoluteUrl(baseUrl, canonical));
-
-  $("a[href]").each((_, el) => {
-    const href = $(el).attr("href")?.trim();
-    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:"))
-      return;
-    const abs = absoluteUrl(baseUrl, href);
-    if (abs.startsWith("http") && !urls.includes(abs)) urls.push(abs);
-  });
-
-  return urls.slice(0, 20);
-}
-
-function extractPricingPlans(
-  $: CheerioAPI,
-  features: string[],
-  pricingText: string,
-  fullText: string,
-): PricingPlan[] {
+function extractPricingPlans($: CheerioAPI, pricingText: string, fullText: string): PricingPlan[] {
   const price = extractBasePrice(pricingText, fullText);
   const pricingModel = extractPricingModel(`${pricingText} ${fullText}`);
   const billingCadence = extractBillingCadence(`${pricingText} ${fullText}`);
@@ -540,7 +302,7 @@ function extractPricingPlans(
       maximum_seats: null,
       is_unlimited_seats: /unlimited seats|unlimited users/.test(cardText),
       is_popular: /popular|most popular|recommended|best value/.test(cardText),
-      features: features.slice(0, 10),
+      features: [],
     });
   });
 
@@ -562,7 +324,7 @@ function extractPricingPlans(
       maximum_seats: null,
       is_unlimited_seats: false,
       is_popular: false,
-      features: features.slice(0, 10),
+      features: [],
     },
   ];
 }
@@ -572,61 +334,20 @@ function parseSystemFromHtml(html: string, url: string): ScrapedSystem {
   const jsonLd = extractJsonLd($);
   const fullText = pageText($);
   const pricingText = extractPricingSectionText($);
-  const features = extractFeatures($);
   const price = extractBasePrice(pricingText, fullText);
   const pricingModel = extractPricingModel(`${pricingText} ${fullText}`);
-  const industry = extractIndustry(fullText);
-  const capabilities = detectCapabilities(fullText);
+  const billingCadence = extractBillingCadence(`${pricingText} ${fullText}`);
+  const tier = extractPricingTier(`${pricingText} ${fullText}`) || "standard";
   const trialAvailable = hasFreeTrial(fullText);
   const contactSales = hasContactSales(fullText);
-  const screenshots = extractScreenshots($, url);
-
-  const media: MediaItem[] = screenshots.map((src) => ({
-    media_type: "screenshot" as const,
-    url: src,
-    caption: null,
-  }));
-
-  const logoUrl = extractLogoUrl($, url);
-  if (logoUrl && !screenshots.includes(logoUrl)) {
-    media.unshift({ media_type: "image", url: logoUrl, caption: "Logo" });
-  }
 
   return {
     url,
     name: extractName($, url, jsonLd),
     description: extractDescription($, jsonLd),
-    tagline: extractTagline($),
-    type: extractType(fullText),
-    demo_url: extractDemoUrl($, url),
-    category: extractCategory(fullText, industry),
-    industry,
-    target_size: extractTargetSize(fullText),
-    deployment_type: extractDeploymentType(fullText),
-    pricing_tier: extractPricingTier(`${pricingText} ${fullText}`),
-    pricing_model: pricingModel,
-    base_price: price,
     starting_price: formatStartingPrice(price),
-    billing_cadence: extractBillingCadence(`${pricingText} ${fullText}`),
-    has_api: capabilities.has_api,
-    has_mobile_app: capabilities.has_mobile_app,
-    has_ai_features: capabilities.has_ai_features,
-    has_offline_mode: capabilities.has_offline_mode,
-    trial_available: trialAvailable,
-    enterprise_pricing: contactSales,
-    free_trial: trialAvailable,
-    contact_sales: contactSales,
-    logo_url: logoUrl,
-    website_url: extractWebsiteUrl($, url),
-    icon: "",
-    implementation_cost: extractImplementationCost(fullText),
-    requirements: extractRequirements($),
-    features,
-    system_features: toSystemFeatures(features),
-    plans: extractPricingPlans($, features, pricingText, fullText),
-    media,
-    links: extractLinks($, url),
-    screenshots,
+    pricing_tier: tier,
+    plans: extractPricingPlans($, pricingText, fullText),
   };
 }
 

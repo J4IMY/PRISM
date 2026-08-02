@@ -43,7 +43,7 @@ export default function SignupScreen() {
 
         <View style={styles.logoRow}>
           <Image
-            source={require("@/assets/images/prism_logo.png")}
+            source={require("@/assets/images/prism_icon.png")}
             style={styles.logo}
             resizeMode="contain"
           />

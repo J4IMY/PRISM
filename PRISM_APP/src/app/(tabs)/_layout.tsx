@@ -1,44 +1,48 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, View } from "react-native";
+import { Platform, View, Animated } from "react-native";
 
 import { useTheme } from "@/hooks/use-theme";
+import { useNavInactivity } from "@/hooks/use-nav-inactivity";
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const { navStyle, panResponder } = useNavInactivity(3000);
   const iconSize = Platform.OS === "android" ? 20 : 24;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          position: "absolute",
-          bottom: Platform.OS === "ios" ? 28 : 12,
-          left: 20,
-          right: 20,
-          backgroundColor: theme.tabBar,
-          borderTopWidth: 0,
-          borderRadius: 24,
-          height: Platform.OS === "android" ? 56 : 64,
-          paddingBottom: Platform.OS === "android" ? 6 : 8,
-          paddingTop: Platform.OS === "android" ? 6 : 8,
-          paddingHorizontal: 8,
-          elevation: 12,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 16,
-        },
-        tabBarActiveTintColor: theme.tabBarActive,
-        tabBarInactiveTintColor: theme.tabBarInactive,
-        tabBarLabelStyle: {
-          fontSize: Platform.OS === "android" ? 10 : 11,
-          fontWeight: "600",
-          marginTop: 2,
-        },
-      }}
-    >
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            position: "absolute",
+            bottom: Platform.OS === "ios" ? 28 : 12,
+            left: 20,
+            right: 20,
+            backgroundColor: theme.tabBar,
+            borderTopWidth: 0,
+            borderRadius: 24,
+            height: Platform.OS === "android" ? 60 : 68,
+            paddingBottom: Platform.OS === "android" ? 8 : 10,
+            paddingTop: Platform.OS === "android" ? 8 : 10,
+            paddingHorizontal: 8,
+            elevation: 12,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.12,
+            shadowRadius: 16,
+            ...navStyle,
+          } as any,
+          tabBarActiveTintColor: theme.tabBarActive,
+          tabBarInactiveTintColor: theme.tabBarInactive,
+          tabBarLabelStyle: {
+            fontSize: Platform.OS === "android" ? 10 : 11,
+            fontWeight: "700",
+            marginTop: 2,
+          },
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -73,12 +77,12 @@ export default function TabsLayout() {
 
 function DiscoverIcon({ color, size }: { color: string; size: number }) {
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ width: size + 4, height: size + 4, alignItems: "center", justifyContent: "center" }}>
       <View
         style={{
-          width: size * 0.85,
-          height: size * 0.85,
-          borderRadius: size * 0.42,
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size * 0.4,
           borderWidth: 2,
           borderColor: color,
         }}
@@ -86,12 +90,12 @@ function DiscoverIcon({ color, size }: { color: string; size: number }) {
         <View
           style={{
             position: "absolute",
-            width: size * 0.28,
+            width: size * 0.35,
             height: 2,
             backgroundColor: color,
             transform: [{ rotate: "-45deg" }],
-            top: size * 0.55,
-            left: size * 0.55,
+            top: size * 0.52,
+            left: size * 0.52,
           }}
         />
       </View>
@@ -101,7 +105,7 @@ function DiscoverIcon({ color, size }: { color: string; size: number }) {
 
 function WatchlistIcon({ color, size }: { color: string; size: number }) {
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ width: size + 4, height: size + 4, alignItems: "center", justifyContent: "center" }}>
       <View
         style={{
           width: size * 0.75,
@@ -112,19 +116,19 @@ function WatchlistIcon({ color, size }: { color: string; size: number }) {
           alignItems: "center",
           justifyContent: "flex-end",
           paddingBottom: 2,
-          overflow: "hidden",
         }}
       >
         <View
           style={{
             width: 0,
             height: 0,
-            borderLeftWidth: size * 0.375,
-            borderRightWidth: size * 0.375,
-            borderTopWidth: size * 0.3,
+            borderLeftWidth: size * 0.3,
+            borderRightWidth: size * 0.3,
+            borderTopWidth: size * 0.25,
             borderLeftColor: "transparent",
             borderRightColor: "transparent",
             borderTopColor: color,
+            marginBottom: size * 0.1,
           }}
         />
       </View>
@@ -133,9 +137,8 @@ function WatchlistIcon({ color, size }: { color: string; size: number }) {
 }
 
 function ChatsIcon({ color, size }: { color: string; size: number }) {
-  const r = Radius_sm;
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ width: size + 4, height: size + 4, alignItems: "center", justifyContent: "center" }}>
       <View
         style={{
           width: size * 0.88,
@@ -146,6 +149,7 @@ function ChatsIcon({ color, size }: { color: string; size: number }) {
           justifyContent: "center",
           alignItems: "center",
           position: "relative",
+          marginBottom: 2,
         }}
       >
         <View
@@ -158,9 +162,9 @@ function ChatsIcon({ color, size }: { color: string; size: number }) {
             <View
               key={i}
               style={{
-                width: size * 0.1,
-                height: size * 0.1,
-                borderRadius: size * 0.05,
+                width: size * 0.08,
+                height: size * 0.08,
+                borderRadius: size * 0.04,
                 backgroundColor: color,
               }}
             />
@@ -170,15 +174,15 @@ function ChatsIcon({ color, size }: { color: string; size: number }) {
       <View
         style={{
           position: "absolute",
-          bottom: size * 0.02,
+          bottom: size * 0.1,
           left: size * 0.15,
-          width: size * 0.22,
-          height: size * 0.22,
+          width: size * 0.2,
+          height: size * 0.2,
           borderRightWidth: 2,
           borderBottomWidth: 2,
           borderColor: color,
           transform: [{ rotate: "45deg" }],
-          backgroundColor: "transparent",
+          backgroundColor: theme.tabBar,
         }}
       />
     </View>
@@ -189,12 +193,12 @@ const Radius_sm = 4;
 
 function ProfileIcon({ color, size }: { color: string; size: number }) {
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ width: size + 4, height: size + 4, alignItems: "center", justifyContent: "center" }}>
       <View
         style={{
-          width: size * 0.45,
-          height: size * 0.45,
-          borderRadius: size * 0.225,
+          width: size * 0.42,
+          height: size * 0.42,
+          borderRadius: size * 0.21,
           borderWidth: 2,
           borderColor: color,
           marginBottom: 1,
@@ -202,10 +206,10 @@ function ProfileIcon({ color, size }: { color: string; size: number }) {
       />
       <View
         style={{
-          width: size * 0.8,
-          height: size * 0.35,
-          borderTopLeftRadius: size * 0.4,
-          borderTopRightRadius: size * 0.4,
+          width: size * 0.75,
+          height: size * 0.32,
+          borderTopLeftRadius: size * 0.35,
+          borderTopRightRadius: size * 0.35,
           borderWidth: 2,
           borderBottomWidth: 0,
           borderColor: color,

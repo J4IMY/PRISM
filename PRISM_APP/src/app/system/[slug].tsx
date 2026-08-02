@@ -821,13 +821,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   tabChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: Radius.full,
     borderWidth: 1,
     marginRight: Spacing.xs,
   },
-  tabLabel: { fontSize: 13, fontWeight: "600" },
+  tabLabel: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
   tabBody: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xxl, gap: Spacing.sm },
   card: {
     borderRadius: Radius.lg,
@@ -844,8 +844,8 @@ const styles = StyleSheet.create({
   },
   bodyText: { fontSize: 14, lineHeight: 21 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs },
-  chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full },
-  chipText: { fontSize: 12, fontWeight: "600" },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.full },
+  chipText: { fontSize: 12, fontWeight: "600", lineHeight: 16 },
   divider: { height: 1, marginVertical: Spacing.xs },
   infoRow: {
     flexDirection: "row",
