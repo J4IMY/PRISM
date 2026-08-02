@@ -320,8 +320,10 @@ function Msg({ from, text, sender }: { from: "us" | "them"; text: string; sender
         <span className="text-[10px] text-muted-foreground mb-0.5 px-1">{sender}</span>
       )}
       <div
-        className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
-          from === "us" ? "bg-primary text-primary-foreground" : "bg-secondary"
+        className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+          from === "us"
+            ? "bg-primary text-primary-foreground rounded-br-md"
+            : "bg-secondary text-secondary-foreground rounded-bl-md"
         }`}
       >
         {text}

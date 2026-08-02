@@ -62,6 +62,9 @@ function ResetPage() {
             </Button>
           </form>
         )}
+        <Link to="/auth/login" className="text-sm text-muted-foreground hover:underline">
+          Back to sign in
+        </Link>
       </CardContent>
     </Card>
   );

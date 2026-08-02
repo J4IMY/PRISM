@@ -8,6 +8,8 @@ interface ScraperActionsProps {
   status: string;
   layout?: "inline" | "stacked";
   onUpdated?: () => void;
+  onDeleted?: () => void;
+  showApprove?: boolean;
 }
 
 async function patchScraper(
@@ -25,11 +27,23 @@ async function patchScraper(
   return {};
 }
 
+async function deleteScraper(id: string): Promise<{ error?: string }> {
+  const res = await fetch(`/api/scraper/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: (data as { error?: string }).error ?? "Failed to delete" };
+  return {};
+}
+
 export function ScraperActions({
   itemId,
   status,
   layout = "inline",
   onUpdated,
+  onDeleted,
+  showApprove = true,
 }: ScraperActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -53,11 +67,25 @@ export function ScraperActions({
     await router.invalidate();
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to permanently delete this scraper item?")) return;
+    setLoading("delete");
+    const result = await deleteScraper(itemId);
+    setLoading(null);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Item deleted");
+    onDeleted?.();
+    await router.invalidate();
+  };
+
   const btnClass = layout === "stacked" ? "w-full sm:w-auto" : "";
 
   return (
     <div className={layout === "stacked" ? "flex flex-wrap gap-2 justify-end" : "space-x-1"}>
-      {status !== "rejected" && (
+      {showApprove && status !== "rejected" && (
         <Button
           size="sm"
           variant="outline"
@@ -68,7 +96,7 @@ export function ScraperActions({
           {loading === "reject" ? "…" : "Reject"}
         </Button>
       )}
-      {status !== "approved" && status !== "published" && (
+      {showApprove && status !== "approved" && status !== "published" && (
         <Button
           size="sm"
           variant="secondary"
@@ -79,7 +107,7 @@ export function ScraperActions({
           {loading === "approve" ? "…" : "Approve"}
         </Button>
       )}
-      {status !== "published" && (
+      {showApprove && status !== "published" && (
         <Button
           size="sm"
           className={btnClass}
@@ -89,6 +117,15 @@ export function ScraperActions({
           {loading === "publish" ? "…" : "Publish"}
         </Button>
       )}
+      <Button
+        size="sm"
+        variant="destructive"
+        className={btnClass}
+        disabled={!!loading}
+        onClick={handleDelete}
+      >
+        {loading === "delete" ? "…" : "Delete"}
+      </Button>
     </div>
   );
 }

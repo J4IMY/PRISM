@@ -104,7 +104,7 @@ export default function DiscoverScreen() {
       </View>
 
       <View style={styles.heroRow}>
-        <Text style={[styles.heroTitle, { color: theme.text }]}>Discover the right software</Text>
+        <Text style={[styles.heroTitle, { color: theme.text }]}>Get the best solution for your business</Text>
       </View>
 
       <View style={[styles.searchRow, { backgroundColor: theme.background }]}>

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRoles } from "@/lib/route-guards";
 import { createServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,9 @@ import { query } from "@/lib/db";
 import { ScraperActions } from "@/components/scraper-actions";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import React from "react";
 
 const getScraperItems = createServerFn({ method: "GET" }).handler(async () => {
   return query<{
@@ -29,15 +31,23 @@ const getScraperItems = createServerFn({ method: "GET" }).handler(async () => {
   );
 });
 
-export const Route = createFileRoute("/admin/scraper")({
-  loader: async () => {
-    const items = await getScraperItems();
-    return { items };
+export const Route = createFileRoute("/moderator/scraper")({
+  beforeLoad: ({ context }) => {
+    requireRoles(context.user, ["moderator", "admin"]);
   },
-  component: AdminScraperPage,
+  loader: async () => {
+    try {
+      const items = await getScraperItems();
+      return { items };
+    } catch (err) {
+      console.error("Failed to load scraper items:", err);
+      return { items: [] };
+    }
+  },
+  component: ScraperQueuePage,
 });
 
-function AdminScraperPage() {
+function ScraperQueuePage() {
   const router = useRouter();
   const { items } = Route.useLoaderData();
   const { user } = Route.useRouteContext();
@@ -133,9 +143,8 @@ function AdminScraperPage() {
             </thead>
             <tbody>
               {items.map((it) => (
-                <>
+                <React.Fragment key={it.id}>
                   <tr
-                    key={it.id}
                     className="border-b border-border last:border-0 cursor-pointer"
                     onClick={() => setExpandedId(expandedId === it.id ? null : it.id)}
                   >
@@ -163,7 +172,7 @@ function AdminScraperPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

@@ -24,6 +24,15 @@ import { registerPushTokenAfterAuth } from "@/hooks/use-notifications";
 
 export default function LoginScreen() {
   const theme = useTheme();
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      goBack();
+    } else {
+      router.replace("/");
+    }
+  };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -50,7 +59,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.inner}
       >
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+        <Pressable onPress={() => goBack()} style={styles.closeBtn}>
           <Text style={[styles.closeText, { color: theme.mutedForeground }]}>✕</Text>
         </Pressable>
 

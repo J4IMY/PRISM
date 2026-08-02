@@ -5,7 +5,7 @@ import { requireRoles } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/vendor")({
   beforeLoad: ({ context }) => {
-    requireRoles(context.user, ["vendor", "admin"]);
+    requireRoles(context.user, ["vendor"]);
   },
   component: VendorLayout,
 });

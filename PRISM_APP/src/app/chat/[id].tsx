@@ -16,11 +16,57 @@ import {
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { api, Message } from "@/lib/api";
+import { getAuthToken } from "@/lib/auth-storage";
+
+function decodeJwt(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    let payload = parts[1];
+    payload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = payload.length % 4;
+    if (pad) payload += "=".repeat(4 - pad);
+    const decoded =
+      typeof atob !== "undefined" ? atob(payload) : Buffer.from(payload, "base64").toString();
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
 export default function ChatDetailScreen() {
   const theme = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const flatRef = useRef<FlatList>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { user } = await api.auth.me();
+        if (user?.id) {
+          setCurrentUserId(user.id);
+          return;
+        }
+      } catch {
+        // fallback to token
+      }
+      const token = await getAuthToken();
+      if (token) {
+        const payload = decodeJwt(token);
+        if (payload?.sub) setCurrentUserId(payload.sub as string);
+      }
+    })();
+  }, []);
+
   const [subject, setSubject] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -72,7 +118,7 @@ export default function ChatDetailScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+        <Pressable onPress={() => goBack()} style={styles.backBtn} hitSlop={12}>
           <Text style={[styles.backArrow, { color: theme.primary }]}>‹</Text>
         </Pressable>
         <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
@@ -85,19 +131,40 @@ export default function ChatDetailScreen() {
         data={messages}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.messageList}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.bubble,
-              { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-            ]}
-          >
-            <Text style={[styles.sender, { color: theme.mutedForeground }]}>
-              {item.sender_name}
-            </Text>
-            <Text style={[styles.msgText, { color: theme.text }]}>{item.body}</Text>
-          </View>
-        )}
+        extraData={currentUserId}
+        renderItem={({ item }) => {
+          const isMe = item.sender_id === currentUserId;
+          return (
+            <View
+              style={[
+                styles.bubbleWrapper,
+                isMe ? styles.bubbleWrapperRight : styles.bubbleWrapperLeft,
+              ]}
+            >
+              <View
+                style={[
+                  styles.bubble,
+                  isMe ? styles.bubbleRight : styles.bubbleLeft,
+                  {
+                    backgroundColor: isMe ? theme.primary : theme.backgroundElement,
+                    borderColor: isMe ? theme.primary : theme.border,
+                  },
+                ]}
+              >
+                {!isMe && (
+                  <Text style={[styles.sender, { color: theme.mutedForeground }]}>
+                    {item.sender_name}
+                  </Text>
+                )}
+                <Text
+                  style={[styles.msgText, { color: isMe ? theme.primaryForeground : theme.text }]}
+                >
+                  {item.body}
+                </Text>
+              </View>
+            </View>
+          );
+        }}
       />
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -149,9 +216,23 @@ const styles = StyleSheet.create({
   backArrow: { fontSize: 28, fontWeight: "300" },
   headerTitle: { flex: 1, fontSize: 16, fontWeight: "700" },
   messageList: { padding: Spacing.md, gap: Spacing.sm },
-  bubble: { borderRadius: Radius.md, borderWidth: 1, padding: Spacing.sm, maxWidth: "85%" },
+  bubbleWrapper: { flexDirection: "row" },
+  bubbleWrapperLeft: { justifyContent: "flex-start" },
+  bubbleWrapperRight: { justifyContent: "flex-end" },
+  bubble: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    padding: Spacing.sm,
+    maxWidth: "80%",
+  },
+  bubbleLeft: {
+    borderBottomLeftRadius: Radius.sm,
+  },
+  bubbleRight: {
+    borderBottomRightRadius: Radius.sm,
+  },
   sender: { fontSize: 11, marginBottom: 2 },
-  msgText: { fontSize: 15, lineHeight: 20 },
+  msgText: { fontSize: 15, lineHeight: 20, flexWrap: "wrap" },
   composer: {
     flexDirection: "row",
     padding: Spacing.sm,

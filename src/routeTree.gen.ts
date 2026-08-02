@@ -27,17 +27,17 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VendorTeamRouteImport } from './routes/vendor.team'
 import { Route as VendorInboxRouteImport } from './routes/vendor.inbox'
 import { Route as SystemsSlugRouteImport } from './routes/systems.$slug'
-import { Route as ModeratorQueueRouteImport } from './routes/moderator.queue'
+import { Route as ModeratorScraperRouteImport } from './routes/moderator/scraper'
+import { Route as ModeratorCleaningQueueRouteImport } from './routes/moderator/cleaning-queue'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AdminWebsiteScraperRouteImport } from './routes/admin.website-scraper'
-import { Route as AdminVendorsRouteImport } from './routes/admin.vendors'
 import { Route as AdminScraperRouteImport } from './routes/admin.scraper'
 import { Route as AdminModeratorsRouteImport } from './routes/admin.moderators'
-import { Route as AdminDeletionsRouteImport } from './routes/admin.deletions'
+import { Route as AdminCleaningQueueRouteImport } from './routes/admin.cleaning-queue'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as VendorSystemsIndexRouteImport } from './routes/vendor.systems.index'
 import { Route as VendorCompanyIndexRouteImport } from './routes/vendor/company/index'
@@ -134,9 +134,14 @@ const SystemsSlugRoute = SystemsSlugRouteImport.update({
   path: '/systems/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ModeratorQueueRoute = ModeratorQueueRouteImport.update({
-  id: '/queue',
-  path: '/queue',
+const ModeratorScraperRoute = ModeratorScraperRouteImport.update({
+  id: '/scraper',
+  path: '/scraper',
+  getParentRoute: () => ModeratorRoute,
+} as any)
+const ModeratorCleaningQueueRoute = ModeratorCleaningQueueRouteImport.update({
+  id: '/cleaning-queue',
+  path: '/cleaning-queue',
   getParentRoute: () => ModeratorRoute,
 } as any)
 const AuthVerifyRoute = AuthVerifyRouteImport.update({
@@ -169,11 +174,6 @@ const AdminWebsiteScraperRoute = AdminWebsiteScraperRouteImport.update({
   path: '/website-scraper',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminVendorsRoute = AdminVendorsRouteImport.update({
-  id: '/vendors',
-  path: '/vendors',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminScraperRoute = AdminScraperRouteImport.update({
   id: '/scraper',
   path: '/scraper',
@@ -184,9 +184,9 @@ const AdminModeratorsRoute = AdminModeratorsRouteImport.update({
   path: '/moderators',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminDeletionsRoute = AdminDeletionsRouteImport.update({
-  id: '/deletions',
-  path: '/deletions',
+const AdminCleaningQueueRoute = AdminCleaningQueueRouteImport.update({
+  id: '/cleaning-queue',
+  path: '/cleaning-queue',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
@@ -229,17 +229,17 @@ export interface FileRoutesByFullPath {
   '/vendor': typeof VendorRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
-  '/admin/deletions': typeof AdminDeletionsRoute
+  '/admin/cleaning-queue': typeof AdminCleaningQueueRoute
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
-  '/admin/vendors': typeof AdminVendorsRoute
   '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
-  '/moderator/queue': typeof ModeratorQueueRoute
+  '/moderator/cleaning-queue': typeof ModeratorCleaningQueueRoute
+  '/moderator/scraper': typeof ModeratorScraperRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
@@ -262,17 +262,17 @@ export interface FileRoutesByTo {
   '/tco': typeof TcoRoute
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
-  '/admin/deletions': typeof AdminDeletionsRoute
+  '/admin/cleaning-queue': typeof AdminCleaningQueueRoute
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
-  '/admin/vendors': typeof AdminVendorsRoute
   '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
-  '/moderator/queue': typeof ModeratorQueueRoute
+  '/moderator/cleaning-queue': typeof ModeratorCleaningQueueRoute
+  '/moderator/scraper': typeof ModeratorScraperRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
@@ -299,17 +299,17 @@ export interface FileRoutesById {
   '/vendor': typeof VendorRouteWithChildren
   '/watchlist': typeof WatchlistRoute
   '/admin/audit': typeof AdminAuditRoute
-  '/admin/deletions': typeof AdminDeletionsRoute
+  '/admin/cleaning-queue': typeof AdminCleaningQueueRoute
   '/admin/moderators': typeof AdminModeratorsRoute
   '/admin/scraper': typeof AdminScraperRoute
-  '/admin/vendors': typeof AdminVendorsRoute
   '/admin/website-scraper': typeof AdminWebsiteScraperRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
-  '/moderator/queue': typeof ModeratorQueueRoute
+  '/moderator/cleaning-queue': typeof ModeratorCleaningQueueRoute
+  '/moderator/scraper': typeof ModeratorScraperRoute
   '/systems/$slug': typeof SystemsSlugRoute
   '/vendor/inbox': typeof VendorInboxRoute
   '/vendor/team': typeof VendorTeamRoute
@@ -337,17 +337,17 @@ export interface FileRouteTypes {
     | '/vendor'
     | '/watchlist'
     | '/admin/audit'
-    | '/admin/deletions'
+    | '/admin/cleaning-queue'
     | '/admin/moderators'
     | '/admin/scraper'
-    | '/admin/vendors'
     | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
     | '/auth/verify'
-    | '/moderator/queue'
+    | '/moderator/cleaning-queue'
+    | '/moderator/scraper'
     | '/systems/$slug'
     | '/vendor/inbox'
     | '/vendor/team'
@@ -370,17 +370,17 @@ export interface FileRouteTypes {
     | '/tco'
     | '/watchlist'
     | '/admin/audit'
-    | '/admin/deletions'
+    | '/admin/cleaning-queue'
     | '/admin/moderators'
     | '/admin/scraper'
-    | '/admin/vendors'
     | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
     | '/auth/verify'
-    | '/moderator/queue'
+    | '/moderator/cleaning-queue'
+    | '/moderator/scraper'
     | '/systems/$slug'
     | '/vendor/inbox'
     | '/vendor/team'
@@ -406,17 +406,17 @@ export interface FileRouteTypes {
     | '/vendor'
     | '/watchlist'
     | '/admin/audit'
-    | '/admin/deletions'
+    | '/admin/cleaning-queue'
     | '/admin/moderators'
     | '/admin/scraper'
-    | '/admin/vendors'
     | '/admin/website-scraper'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/reset'
     | '/auth/signup'
     | '/auth/verify'
-    | '/moderator/queue'
+    | '/moderator/cleaning-queue'
+    | '/moderator/scraper'
     | '/systems/$slug'
     | '/vendor/inbox'
     | '/vendor/team'
@@ -573,11 +573,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/moderator/queue': {
-      id: '/moderator/queue'
-      path: '/queue'
-      fullPath: '/moderator/queue'
-      preLoaderRoute: typeof ModeratorQueueRouteImport
+    '/moderator/scraper': {
+      id: '/moderator/scraper'
+      path: '/scraper'
+      fullPath: '/moderator/scraper'
+      preLoaderRoute: typeof ModeratorScraperRouteImport
+      parentRoute: typeof ModeratorRoute
+    }
+    '/moderator/cleaning-queue': {
+      id: '/moderator/cleaning-queue'
+      path: '/cleaning-queue'
+      fullPath: '/moderator/cleaning-queue'
+      preLoaderRoute: typeof ModeratorCleaningQueueRouteImport
       parentRoute: typeof ModeratorRoute
     }
     '/auth/verify': {
@@ -622,13 +629,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWebsiteScraperRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/vendors': {
-      id: '/admin/vendors'
-      path: '/vendors'
-      fullPath: '/admin/vendors'
-      preLoaderRoute: typeof AdminVendorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/scraper': {
       id: '/admin/scraper'
       path: '/scraper'
@@ -643,11 +643,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminModeratorsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/deletions': {
-      id: '/admin/deletions'
-      path: '/deletions'
-      fullPath: '/admin/deletions'
-      preLoaderRoute: typeof AdminDeletionsRouteImport
+    '/admin/cleaning-queue': {
+      id: '/admin/cleaning-queue'
+      path: '/cleaning-queue'
+      fullPath: '/admin/cleaning-queue'
+      preLoaderRoute: typeof AdminCleaningQueueRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/audit': {
@@ -690,20 +690,18 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
-  AdminDeletionsRoute: typeof AdminDeletionsRoute
+  AdminCleaningQueueRoute: typeof AdminCleaningQueueRoute
   AdminModeratorsRoute: typeof AdminModeratorsRoute
   AdminScraperRoute: typeof AdminScraperRoute
-  AdminVendorsRoute: typeof AdminVendorsRoute
   AdminWebsiteScraperRoute: typeof AdminWebsiteScraperRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
-  AdminDeletionsRoute: AdminDeletionsRoute,
+  AdminCleaningQueueRoute: AdminCleaningQueueRoute,
   AdminModeratorsRoute: AdminModeratorsRoute,
   AdminScraperRoute: AdminScraperRoute,
-  AdminVendorsRoute: AdminVendorsRoute,
   AdminWebsiteScraperRoute: AdminWebsiteScraperRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -729,13 +727,15 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface ModeratorRouteChildren {
-  ModeratorQueueRoute: typeof ModeratorQueueRoute
+  ModeratorCleaningQueueRoute: typeof ModeratorCleaningQueueRoute
+  ModeratorScraperRoute: typeof ModeratorScraperRoute
   ModeratorIndexRoute: typeof ModeratorIndexRoute
   ModeratorItemIdRoute: typeof ModeratorItemIdRoute
 }
 
 const ModeratorRouteChildren: ModeratorRouteChildren = {
-  ModeratorQueueRoute: ModeratorQueueRoute,
+  ModeratorCleaningQueueRoute: ModeratorCleaningQueueRoute,
+  ModeratorScraperRoute: ModeratorScraperRoute,
   ModeratorIndexRoute: ModeratorIndexRoute,
   ModeratorItemIdRoute: ModeratorItemIdRoute,
 }

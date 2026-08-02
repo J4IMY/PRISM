@@ -23,7 +23,7 @@ export function SiteHeader({ user }: { user?: AuthUser | null }) {
     router.navigate({ to: "/" });
   };
 
-  const showVendor = user && ["vendor", "admin"].includes(user.role);
+  const showVendor = user?.role === "vendor";
   const showAdmin = user?.role === "admin";
   const showModerator = user && ["moderator", "admin"].includes(user.role);
 

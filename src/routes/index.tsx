@@ -203,15 +203,14 @@ function HomePage() {
     <div className="min-h-screen bg-background">
       <SiteHeader user={user} />
       <main className="container mx-auto px-4 py-8">
-        <section className="mb-8">
+        <section className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
-            Discover the right software for your stack
+            Get the best solution for your business
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Compare pricing, features, and total cost of ownership across {systems.length} verified
-            vendors.
+            Analyze, compare and reach out
           </p>
-          <div className="mt-6 flex gap-2">
+          <div className="mt-6 flex gap-2 justify-center">
             <div className="relative flex-1 max-w-2xl">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -232,7 +231,7 @@ function HomePage() {
           </div>
         </section>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6">
           <aside className="w-full lg:w-64 shrink-0 space-y-6">
             <FilterGroup
               title="Category"
@@ -246,11 +245,6 @@ function HomePage() {
           <section className="flex-1 min-w-0">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">{systems.length} systems</p>
-              <select className="rounded-md border border-input bg-background px-3 py-1.5 text-sm">
-                <option>Relevance</option>
-                <option>Top rated</option>
-                <option>Price: low → high</option>
-              </select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {systems.map((s) => (

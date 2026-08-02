@@ -17,9 +17,9 @@ export type ScraperItem = {
 };
 
 function checkScraperKey(request: Request): boolean {
-  const key = process.env.SCRAPER_API_KEY;
+  const key = process.env.SCRAPER_API_KEY?.trim();
   if (!key) return true;
-  return request.headers.get("x-scraper-key") === key;
+  return request.headers.get("x-scraper-key")?.trim() === key;
 }
 
 function slugify(name: string): string {

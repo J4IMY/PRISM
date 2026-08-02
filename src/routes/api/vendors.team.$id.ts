@@ -16,11 +16,11 @@ async function authorizeTeamManager(
   if (!target) {
     return { ok: false, response: Response.json({ error: "Member not found" }, { status: 404 }) };
   }
-  const manager = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
-    "SELECT vendor_id, can_manage_team FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
+  const member = await queryOne<{ vendor_id: string }>(
+    "SELECT vendor_id FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
     [userId, target.vendor_id],
   );
-  if (!manager?.can_manage_team) {
+  if (!member) {
     return { ok: false, response: Response.json({ error: "Not authorized" }, { status: 403 }) };
   }
   return { ok: true, vendorId: target.vendor_id };

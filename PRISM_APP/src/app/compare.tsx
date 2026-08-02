@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,8 +13,8 @@ import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { api, SystemDetailResponse } from "@/lib/api";
 
-const COL_W = 130;
-const LABEL_W = 140;
+const COL_W = 150;
+const LABEL_W = 120;
 
 const SECTIONS = ["Overview", "Packages", "Features", "TCO"] as const;
 type Section = (typeof SECTIONS)[number];
@@ -28,6 +27,14 @@ function parsePriceNum(price: string | undefined): number {
   if (!price) return 0;
   return parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
 }
+
+const goBack = () => {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace("/");
+  }
+};
 
 export default function CompareScreen() {
   const theme = useTheme();
@@ -83,19 +90,19 @@ export default function CompareScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
+      <View style={[styles.root, { backgroundColor: theme.background }]}>
         <View style={styles.loaderBox}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (entries.length < 2) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
+      <View style={[styles.root, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+          <Pressable onPress={() => goBack()} hitSlop={12} style={styles.backBtn}>
             <Text style={[styles.backArrow, { color: theme.primary }]}>‹</Text>
           </Pressable>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Compare</Text>
@@ -108,14 +115,14 @@ export default function CompareScreen() {
             Save systems to your watchlist or pass ?ids= in the URL.
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
+    <View style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+        <Pressable onPress={() => goBack()} hitSlop={12} style={styles.backBtn}>
           <Text style={[styles.backArrow, { color: theme.primary }]}>‹</Text>
         </Pressable>
         <Text style={[styles.headerTitle, { color: theme.text }]}>
@@ -152,22 +159,21 @@ export default function CompareScreen() {
       </ScrollView>
 
       <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
         style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View>
-            {section === "Overview" && <OverviewSection entries={entries} />}
-            {section === "Packages" && <PackagesSection entries={entries} />}
-            {section === "Features" && (
-              <FeaturesSection entries={entries} featureKeys={featureKeys} />
-            )}
-            {section === "TCO" && <TCOSection entries={entries} />}
-          </View>
-        </ScrollView>
+        <View>
+          {section === "Overview" && <OverviewSection entries={entries} />}
+          {section === "Packages" && <PackagesSection entries={entries} />}
+          {section === "Features" && (
+            <FeaturesSection entries={entries} featureKeys={featureKeys} />
+          )}
+          {section === "TCO" && <TCOSection entries={entries} />}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -536,12 +542,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     gap: Spacing.sm,
   },
-  backBtn: { paddingRight: 4 },
-  backArrow: { fontSize: 32, lineHeight: 36, fontWeight: "300" },
+  backBtn: { padding: 4 },
+  backArrow: { fontSize: 28, lineHeight: 32, fontWeight: "300" },
   headerTitle: { fontSize: 17, fontWeight: "700", flex: 1 },
   empty: {
     flex: 1,
@@ -564,7 +570,7 @@ const styles = StyleSheet.create({
   sectionTabActive: {},
   sectionLabel: { fontSize: 14, fontWeight: "500" },
   sectionLabelActive: { fontWeight: "700" },
-  sysHeaderRow: { flexDirection: "row", paddingVertical: Spacing.md },
+  sysHeaderRow: { flexDirection: "row", paddingVertical: Spacing.sm },
   labelCol: {
     width: LABEL_W,
     paddingHorizontal: Spacing.sm,
@@ -578,49 +584,49 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
   },
   sysLogoBox: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: Radius.md,
-    marginBottom: 6,
+    marginBottom: 4,
     alignItems: "center",
     justifyContent: "center",
   },
-  sysLogoLetter: { fontSize: 16, fontWeight: "700" },
-  sysName: { fontSize: 13, fontWeight: "700", textAlign: "center", lineHeight: 17 },
-  sysVendor: { fontSize: 11, textAlign: "center", marginTop: 2 },
+  sysLogoLetter: { fontSize: 14, fontWeight: "700" },
+  sysName: { fontSize: 12, fontWeight: "700", textAlign: "center", lineHeight: 16 },
+  sysVendor: { fontSize: 10, textAlign: "center", marginTop: 2 },
   dataRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    minHeight: 46,
+    minHeight: 40,
     alignItems: "center",
   },
-  rowLabel: { fontSize: 12, lineHeight: 16 },
-  cellText: { fontSize: 13, lineHeight: 18, textAlign: "center" },
+  rowLabel: { fontSize: 11, lineHeight: 15 },
+  cellText: { fontSize: 12, lineHeight: 17, textAlign: "center" },
   cellBold: { fontWeight: "700" },
   starsRow: { flexDirection: "row", alignItems: "center", gap: 1 },
-  ratingNum: { fontSize: 11, marginLeft: 4 },
+  ratingNum: { fontSize: 10, marginLeft: 3 },
   pkgCell: { padding: Spacing.xs, alignItems: "center", gap: 2, width: "100%" },
-  pkgName: { fontSize: 12, fontWeight: "600", textAlign: "center" },
-  pkgPrice: { fontSize: 15, fontWeight: "800", textAlign: "center" },
+  pkgName: { fontSize: 11, fontWeight: "600", textAlign: "center" },
+  pkgPrice: { fontSize: 14, fontWeight: "800", textAlign: "center" },
   pkgBilling: { fontSize: 10, textAlign: "center" },
   popularBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Radius.full,
-    marginTop: 3,
+    marginTop: 2,
   },
   popularText: { fontSize: 9, fontWeight: "700" },
   featureCell: { alignItems: "center", justifyContent: "center", width: "100%" },
   featureDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  featureCheck: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  featureDash: { fontSize: 12 },
+  featureCheck: { color: "#fff", fontSize: 10, fontWeight: "700" },
+  featureDash: { fontSize: 11 },
   tcoCallout: {
     flexDirection: "row",
     borderWidth: 1,

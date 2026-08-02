@@ -27,8 +27,16 @@ export function WatchlistButton({
       return;
     }
     fetch("/api/watchlist", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((data: { items?: { id: string }[] }) => {
+      .then((r) => {
+        if (r.status === 401) {
+          setInList(false);
+          return null;
+        }
+        if (!r.ok) return { items: [] };
+        return r.json();
+      })
+      .then((data: { items?: { id: string }[] } | null) => {
+        if (!data) return;
         const ids = new Set((data.items ?? []).map((i) => i.id));
         setInList(ids.has(systemId));
       })

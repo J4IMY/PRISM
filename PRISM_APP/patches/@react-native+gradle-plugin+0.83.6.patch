@@ -1,0 +1,41 @@
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.bin b/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.bin
+new file mode 100644
+index 0000000..d6c2efa
+Binary files /dev/null and b/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.bin differ
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.lock b/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.lock
+new file mode 100644
+index 0000000..619f880
+Binary files /dev/null and b/node_modules/@react-native/gradle-plugin/.gradle/9.0.0/executionHistory/executionHistory.lock differ
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+new file mode 100644
+index 0000000..538111e
+Binary files /dev/null and b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock differ
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/cache.properties b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/cache.properties
+new file mode 100644
+index 0000000..2d404b0
+--- /dev/null
++++ b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/cache.properties
+@@ -0,0 +1,2 @@
++#Fri Jul 31 12:37:39 EAT 2026
++gradle.version=9.0.0
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/outputFiles.bin b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/outputFiles.bin
+new file mode 100644
+index 0000000..4e566bd
+Binary files /dev/null and b/node_modules/@react-native/gradle-plugin/.gradle/buildOutputCleanup/outputFiles.bin differ
+diff --git a/node_modules/@react-native/gradle-plugin/.gradle/file-system.probe b/node_modules/@react-native/gradle-plugin/.gradle/file-system.probe
+new file mode 100644
+index 0000000..cdfd4d2
+Binary files /dev/null and b/node_modules/@react-native/gradle-plugin/.gradle/file-system.probe differ
+diff --git a/node_modules/@react-native/gradle-plugin/settings.gradle.kts b/node_modules/@react-native/gradle-plugin/settings.gradle.kts
+index b3c46a3..14f1e9c 100644
+--- a/node_modules/@react-native/gradle-plugin/settings.gradle.kts
++++ b/node_modules/@react-native/gradle-plugin/settings.gradle.kts
+@@ -13,7 +13,7 @@ pluginManagement {
+   }
+ }
+ 
+-plugins { id("org.gradle.toolchains.foojay-resolver-convention").version("0.5.0") }
++plugins { id("org.gradle.toolchains.foojay-resolver-convention").version("1.0.0") }
+ 
+ include(
+     ":react-native-gradle-plugin",

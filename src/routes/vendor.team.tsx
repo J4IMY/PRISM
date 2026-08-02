@@ -89,7 +89,6 @@ function VendorTeamPage() {
   const [success, setSuccess] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
-  const [canManageTeam, setCanManageTeam] = useState(false);
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("support");
@@ -116,7 +115,6 @@ function VendorTeamPage() {
       }
       setMembers(data.members ?? []);
       setInvites(data.invites ?? []);
-      setCanManageTeam(!!data.canManageTeam);
     } catch {
       setError("Failed to load team");
     } finally {
@@ -293,12 +291,11 @@ function VendorTeamPage() {
               placeholder="invite@company.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              disabled={!canManageTeam}
             />
           </div>
           <div className="space-y-1.5">
             <Label>Role</Label>
-            <Select value={inviteRole} onValueChange={setInviteRole} disabled={!canManageTeam}>
+            <Select value={inviteRole} onValueChange={setInviteRole}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -310,7 +307,7 @@ function VendorTeamPage() {
           <Button
             type="button"
             onClick={handleInvite}
-            disabled={!canManageTeam || inviteLoading || !inviteEmail}
+            disabled={inviteLoading || !inviteEmail}
             className="gap-1.5"
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -362,12 +359,10 @@ function VendorTeamPage() {
                         ))}
                       </td>
                       <td>
-                        {canManageTeam ? (
-                          <Button size="sm" variant="ghost" onClick={() => openManage(m)}>
-                            <Pencil className="h-3.5 w-3.5 mr-1" />
-                            Manage
-                          </Button>
-                        ) : null}
+                        <Button size="sm" variant="ghost" onClick={() => openManage(m)}>
+                          <Pencil className="h-3.5 w-3.5 mr-1" />
+                          Manage
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -388,31 +383,27 @@ function VendorTeamPage() {
               <div key={invite.id} className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm flex-1 truncate">{invite.email}</span>
-                {canManageTeam ? (
-                  <>
-                    <Select
-                      value={invite.role}
-                      onValueChange={(role) => handleUpdateInviteRole(invite, role)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <RoleSelectItems />
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-600"
-                      onClick={() => handleRevokeInvite(invite)}
-                    >
-                      Revoke
-                    </Button>
-                  </>
-                ) : (
-                  <Badge variant="outline">{ROLE_LABELS[invite.role] ?? invite.role}</Badge>
-                )}
+                <>
+                  <Select
+                    value={invite.role}
+                    onValueChange={(role) => handleUpdateInviteRole(invite, role)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <RoleSelectItems />
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-600"
+                    onClick={() => handleRevokeInvite(invite)}
+                  >
+                    Revoke
+                  </Button>
+                </>
               </div>
             ))}
           </CardContent>

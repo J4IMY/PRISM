@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, AlertTriangle } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { ScraperActions } from "@/components/scraper-actions";
 import { Toaster } from "@/components/ui/sonner";
@@ -47,11 +48,11 @@ function ModeratorItemPage() {
     <div className="space-y-6">
       <Toaster />
       <Link
-        to="/moderator/queue"
+        to="/moderator/cleaning-queue"
         className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to queue
+        Back to cleaning queue
       </Link>
       <div className="flex items-center justify-between">
         <div>
@@ -62,24 +63,6 @@ function ModeratorItemPage() {
         </div>
         <Badge variant="outline">{item.status}</Badge>
       </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-2 pb-2">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <CardTitle className="text-sm">Possible duplicate: Nimbus CRM (94% match)</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Merge with existing record or keep as new system.
-          <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline">
-              Merge
-            </Button>
-            <Button size="sm" variant="ghost">
-              Ignore
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -123,7 +106,12 @@ function ModeratorItemPage() {
       </div>
 
       <div className="flex gap-2 justify-end">
-        <ScraperActions itemId={item.id} status={item.status} layout="stacked" />
+        <ScraperActions
+          itemId={item.id}
+          status={item.status}
+          layout="stacked"
+          onDeleted={() => router.navigate({ to: "/moderator/cleaning-queue" })}
+        />
       </div>
     </div>
   );

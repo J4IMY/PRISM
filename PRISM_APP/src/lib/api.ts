@@ -3,11 +3,24 @@ import { getAuthToken } from "./auth-storage";
 function getApiBase(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && envUrl.length > 0) return envUrl;
+
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
-    if (!origin.includes(":8081")) return origin;
+
+    if (origin.includes(":8081") || origin.includes(":5173") || origin.includes(":3000")) {
+      return "http://localhost:5000";
+    }
+
+    if (origin.startsWith("exp://")) {
+      const host = origin.replace("exp://", "").split(":")[0].split("/")[0];
+      if (host === "localhost" || host === "127.0.0.1") {
+        return "http://10.0.2.2:5000";
+      }
+      return `http://${host}:5000`;
+    }
   }
-  return "http://localhost:5000";
+
+  return "http://10.0.2.2:5000";
 }
 
 const API_BASE = getApiBase();

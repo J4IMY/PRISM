@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
-import { ListChecks } from "lucide-react";
+import { ClipboardList, Database } from "lucide-react";
 import { requireRoles } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/moderator")({
@@ -22,12 +22,20 @@ function ModeratorLayout() {
           </p>
           <nav className="space-y-1">
             <Link
-              to="/moderator/queue"
+              to="/moderator/scraper"
               activeProps={{ className: "bg-secondary text-foreground" }}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
-              <ListChecks className="h-4 w-4" />
-              My queue
+              <Database className="h-4 w-4" />
+              Scraper queue
+            </Link>
+            <Link
+              to="/moderator/cleaning-queue"
+              activeProps={{ className: "bg-secondary text-foreground" }}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Cleaning queue
             </Link>
           </nav>
         </aside>

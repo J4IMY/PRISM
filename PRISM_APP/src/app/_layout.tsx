@@ -5,11 +5,11 @@ import { useColorScheme } from "react-native";
 import { useNotifications } from "@/hooks/use-notifications";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const scheme = useColorScheme();
   useNotifications();
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={scheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen

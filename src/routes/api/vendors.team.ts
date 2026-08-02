@@ -36,7 +36,7 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team")({
     return Response.json({
       members,
       invites,
-      canManageTeam: !!member.can_manage_team || user.role === "admin",
+      canManageTeam: true,
     });
   },
 
@@ -47,12 +47,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team")({
     const body = (await request.json()) as { email?: string; role?: string };
     if (!body.email) return Response.json({ error: "email is required" }, { status: 400 });
 
-    const member = await queryOne<{ vendor_id: string; can_manage_team: boolean }>(
-      `SELECT vendor_id, can_manage_team FROM vendor_members
-        WHERE user_id = $1 AND role IN ('dev', 'sales', 'support')`,
+    const member = await queryOne<{ vendor_id: string }>(
+      `SELECT vendor_id FROM vendor_members WHERE user_id = $1`,
       [user.id],
     );
-    if (!member?.can_manage_team && user.role !== "admin") {
+    if (!member) {
       return Response.json({ error: "Not authorized to invite" }, { status: 403 });
     }
 

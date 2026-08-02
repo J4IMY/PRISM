@@ -18,6 +18,15 @@ import { useTheme } from "@/hooks/use-theme";
 
 export default function SignupScreen() {
   const theme = useTheme();
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      goBack();
+    } else {
+      router.replace("/");
+    }
+  };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -28,7 +37,7 @@ export default function SignupScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.inner}
       >
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+        <Pressable onPress={() => goBack()} style={styles.closeBtn}>
           <Text style={[styles.closeText, { color: theme.mutedForeground }]}>✕</Text>
         </Pressable>
 

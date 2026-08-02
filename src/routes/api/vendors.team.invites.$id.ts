@@ -17,11 +17,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team/invites/$id")({
     if (!invite) {
       return Response.json({ error: "Invite not found" }, { status: 404 });
     }
-    const manager = await queryOne<{ can_manage_team: boolean }>(
-      "SELECT can_manage_team FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
+    const member = await queryOne<{ vendor_id: string }>(
+      "SELECT vendor_id FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
       [user.id, invite.vendor_id],
     );
-    if (!manager?.can_manage_team && user.role !== "admin") {
+    if (!member) {
       return Response.json({ error: "Not authorized" }, { status: 403 });
     }
 
@@ -50,11 +50,11 @@ export const APIRoute = createAPIFileRoute("/api/vendors/team/invites/$id")({
     if (!invite) {
       return Response.json({ error: "Invite not found" }, { status: 404 });
     }
-    const manager = await queryOne<{ can_manage_team: boolean }>(
-      "SELECT can_manage_team FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
+    const member = await queryOne<{ vendor_id: string }>(
+      "SELECT vendor_id FROM vendor_members WHERE user_id = $1 AND vendor_id = $2",
       [user.id, invite.vendor_id],
     );
-    if (!manager?.can_manage_team && user.role !== "admin") {
+    if (!member) {
       return Response.json({ error: "Not authorized" }, { status: 403 });
     }
 

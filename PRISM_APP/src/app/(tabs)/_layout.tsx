@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const iconSize = Platform.OS === "android" ? 20 : 24;
 
   return (
     <Tabs
@@ -13,15 +14,15 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? 28 : 16,
+          bottom: Platform.OS === "ios" ? 28 : 12,
           left: 20,
           right: 20,
           backgroundColor: theme.tabBar,
           borderTopWidth: 0,
-          borderRadius: 28,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          borderRadius: 24,
+          height: Platform.OS === "android" ? 56 : 64,
+          paddingBottom: Platform.OS === "android" ? 6 : 8,
+          paddingTop: Platform.OS === "android" ? 6 : 8,
           paddingHorizontal: 8,
           elevation: 12,
           shadowColor: "#000",
@@ -32,7 +33,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.tabBarActive,
         tabBarInactiveTintColor: theme.tabBarInactive,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: Platform.OS === "android" ? 10 : 11,
           fontWeight: "600",
           marginTop: 2,
         },
@@ -42,28 +43,28 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Discover",
-          tabBarIcon: ({ color, size }) => <DiscoverIcon color={color} size={size} />,
+          tabBarIcon: ({ color }) => <DiscoverIcon color={color} size={iconSize} />,
         }}
       />
       <Tabs.Screen
         name="watchlist"
         options={{
           title: "Watchlist",
-          tabBarIcon: ({ color, size }) => <WatchlistIcon color={color} size={size} />,
+          tabBarIcon: ({ color }) => <WatchlistIcon color={color} size={iconSize} />,
         }}
       />
       <Tabs.Screen
         name="chats"
         options={{
           title: "Chats",
-          tabBarIcon: ({ color, size }) => <ChatsIcon color={color} size={size} />,
+          tabBarIcon: ({ color }) => <ChatsIcon color={color} size={iconSize} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <ProfileIcon color={color} size={size} />,
+          tabBarIcon: ({ color }) => <ProfileIcon color={color} size={iconSize} />,
         }}
       />
     </Tabs>

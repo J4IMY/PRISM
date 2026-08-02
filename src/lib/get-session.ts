@@ -4,5 +4,10 @@ import { getAuthUser } from "./auth";
 
 export const getSessionUser = createServerFn({ method: "GET" }).handler(async () => {
   const request = getRequest();
-  return getAuthUser(request);
+  try {
+    return await getAuthUser(request);
+  } catch (err) {
+    console.error("getSessionUser error:", err);
+    return null;
+  }
 });

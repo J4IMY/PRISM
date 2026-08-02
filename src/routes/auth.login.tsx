@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { login } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/login")({
@@ -60,8 +59,8 @@ function LoginPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Welcome back to PRISM.</CardDescription>
+        <CardTitle className="text-center">Sign in</CardTitle>
+        <CardDescription className="text-center">Welcome back to PRISM.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {google === "unavailable" && (
@@ -80,24 +79,6 @@ function LoginPage() {
             {error}
           </div>
         )}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => {
-            window.location.href = "/api/auth/google";
-          }}
-        >
-          Continue with Google
-        </Button>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
-          </div>
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

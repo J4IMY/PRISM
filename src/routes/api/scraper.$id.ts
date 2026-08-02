@@ -204,4 +204,26 @@ export const APIRoute = createAPIFileRoute("/api/scraper/$id")({
       return Response.json({ error: `Failed to update scraper item: ${message}` }, { status: 500 });
     }
   },
+
+  DELETE: async ({ params, request }) => {
+    const user = await requireRole(request, "moderator", "admin");
+    if (user instanceof Response) return user;
+
+    try {
+      const item = await queryOne<{ id: string; name: string }>(
+        "SELECT id, name FROM scraper_items WHERE id = $1",
+        [params.id],
+      );
+      if (!item) return Response.json({ error: "Item not found" }, { status: 404 });
+
+      await query("DELETE FROM scraper_items WHERE id = $1", [params.id]);
+      await logAudit(user.id, user.email, "scraper.delete", params.id, item.name);
+
+      return Response.json({ deleted: true });
+    } catch (err) {
+      console.error(`DELETE /api/scraper/${params.id} error:`, err);
+      const message = err instanceof Error ? err.message : String(err);
+      return Response.json({ error: `Failed to delete scraper item: ${message}` }, { status: 500 });
+    }
+  },
 });

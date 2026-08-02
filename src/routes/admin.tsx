@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
-import { Database, Trash2, Users, Inbox, FileText, Globe } from "lucide-react";
+import { Database, Trash2, Users, FileText, Globe, ClipboardList } from "lucide-react";
 import { requireRoles } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/admin")({
@@ -13,9 +13,8 @@ export const Route = createFileRoute("/admin")({
 const nav = [
   { to: "/admin/scraper", label: "Scraper queue", icon: Database },
   { to: "/admin/website-scraper", label: "Website scraper", icon: Globe },
-  { to: "/admin/deletions", label: "Deletion requests", icon: Trash2 },
+  { to: "/admin/cleaning-queue", label: "Cleaning queue", icon: ClipboardList },
   { to: "/admin/moderators", label: "Moderators", icon: Users },
-  { to: "/admin/vendors", label: "Vendor inbox", icon: Inbox },
   { to: "/admin/audit", label: "Audit log", icon: FileText },
 ] as const;
 

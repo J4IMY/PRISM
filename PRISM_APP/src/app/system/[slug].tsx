@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Video, ResizeMode } from "expo-av";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -31,6 +32,13 @@ export default function SystemDetailScreen() {
   const [term, setTerm] = useState("3");
   const [escalation, setEscalation] = useState("5");
   const [discount, setDiscount] = useState("10");
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [tcoResult, setTcoResult] = useState<{ total: number; years: { year: number; cost: number }[] } | null>(null);
+  const [tcoError, setTcoError] = useState("");
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageBody, setMessageBody] = useState("");
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [messageError, setMessageError] = useState("");
 
   const { data, loading, error } = useApi(() => api.systems.get(slug ?? ""), [slug]);
 
@@ -40,6 +48,14 @@ export default function SystemDetailScreen() {
   const plans = data?.plans ?? [];
   const reviews = data?.reviews ?? [];
   const media = data?.media ?? [];
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  };
 
   useEffect(() => {
     if (!system?.id) return;
@@ -78,19 +94,47 @@ export default function SystemDetailScreen() {
     }
   }, [system, watchlisted]);
 
+  const handleMessageVendor = async () => {
+    if (!system) return;
+    const token = await getAuthToken();
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
+    if (!messageBody.trim()) return;
+
+    setMessageLoading(true);
+    setMessageError("");
+    try {
+      const subject = `Re: ${system.name}`;
+      const result = await api.threads.create({
+        system_id: system.id,
+        subject,
+        message: messageBody.trim(),
+      });
+      setMessageOpen(false);
+      setMessageBody("");
+      router.push(`/chat/${result.thread.id}`);
+    } catch (e) {
+      setMessageError(e instanceof Error ? e.message : "Failed to send message");
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
+  const toNum = (v: string) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const basePrice = plans.find((p) => p.is_popular)?.price ?? "$0";
-  const basePriceNum = parseInt(basePrice.replace(/[^0-9]/g, "")) || 0;
-  const tcoYear1 = parseInt(seats) * basePriceNum * 12 * (1 - parseInt(discount) / 100);
-  const tcoYear2 = tcoYear1 * (1 + parseInt(escalation) / 100);
-  const tcoYear3 = tcoYear2 * (1 + parseInt(escalation) / 100);
-  const tcoTotal =
-    tcoYear1 + (parseInt(term) >= 2 ? tcoYear2 : 0) + (parseInt(term) >= 3 ? tcoYear3 : 0);
+  const basePriceNum = parseInt(basePrice.replace(/[^0-9]/g, ""), 10) || 0;
 
   if (loading) {
     return (
       <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Pressable onPress={() => goBack()} style={styles.backBtn} hitSlop={8}>
             <Text style={[styles.backArrow, { color: theme.text }]}>‹</Text>
           </Pressable>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Loading…</Text>
@@ -106,7 +150,7 @@ export default function SystemDetailScreen() {
     return (
       <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Pressable onPress={() => goBack()} style={styles.backBtn} hitSlop={8}>
             <Text style={[styles.backArrow, { color: theme.text }]}>‹</Text>
           </Pressable>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Error</Text>
@@ -116,7 +160,7 @@ export default function SystemDetailScreen() {
             {error ?? "System not found"}
           </Text>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => goBack()}
             style={[styles.backLink, { borderColor: theme.border }]}
           >
             <Text style={[styles.backLinkText, { color: theme.text }]}>Go back</Text>
@@ -136,7 +180,7 @@ export default function SystemDetailScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable onPress={() => goBack()} style={styles.backBtn} hitSlop={8}>
           <Text style={[styles.backArrow, { color: theme.text }]}>‹</Text>
         </Pressable>
         <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
@@ -193,7 +237,10 @@ export default function SystemDetailScreen() {
               {watchlisted ? "♥ Saved" : "♡ Watchlist"}
             </Text>
           </Pressable>
-          <Pressable style={[styles.ctaBtn, { backgroundColor: theme.primary, flex: 1 }]}>
+          <Pressable
+            onPress={() => setMessageOpen(true)}
+            style={[styles.ctaBtn, { backgroundColor: theme.primary, flex: 1 }]}
+          >
             <Text style={[styles.ctaBtnText, { color: theme.primaryForeground }]}>
               Message vendor
             </Text>
@@ -265,9 +312,9 @@ export default function SystemDetailScreen() {
                 <Card theme={theme}>
                   <SectionTitle title="Compliance" theme={theme} />
                   <View style={styles.chipRow}>
-                    {(system.security_certifications ?? []).map((c: string) => (
+                    {(system.security_certifications ?? []).map((c: string, idx: number) => (
                       <View
-                        key={c}
+                        key={`${c}-${idx}`}
                         style={[styles.chip, { backgroundColor: theme.backgroundElement }]}
                       >
                         <Text style={[styles.chipText, { color: theme.text }]}>{c}</Text>
@@ -281,9 +328,9 @@ export default function SystemDetailScreen() {
                 <Card theme={theme}>
                   <SectionTitle title="Integrations" theme={theme} />
                   <View style={styles.chipRow}>
-                    {integrations.map((i: SystemIntegration) => (
+                    {integrations.map((i: SystemIntegration, idx: number) => (
                       <View
-                        key={i.integration_name}
+                        key={`${i.integration_name}-${i.integration_type}-${idx}`}
                         style={[styles.chip, { backgroundColor: theme.backgroundElement }]}
                       >
                         <Text style={[styles.chipText, { color: theme.text }]}>
@@ -308,7 +355,7 @@ export default function SystemDetailScreen() {
                 </Card>
               ) : (
                 plans.map((plan: PricingPlan) => (
-                  <Card key={plan.name} theme={theme}>
+                  <Card key={plan.name + plan.price} theme={theme}>
                     {plan.is_popular && (
                       <View style={[styles.popularBadge, { backgroundColor: theme.primary }]}>
                         <Text style={[styles.popularText, { color: theme.primaryForeground }]}>
@@ -328,8 +375,8 @@ export default function SystemDetailScreen() {
                       </View>
                     </View>
                     <View style={[styles.divider, { backgroundColor: theme.border }]} />
-                    {(plan.features ?? []).map((f: string) => (
-                      <View key={f} style={styles.featureRow}>
+                     {(plan.features ?? []).map((f: string, fIdx: number) => (
+                       <View key={`${f}-${fIdx}`} style={styles.featureRow}>
                         <Text style={[styles.checkmark, { color: theme.verified }]}>✓</Text>
                         <Text style={[styles.featureText, { color: theme.text }]}>{f}</Text>
                       </View>
@@ -366,7 +413,7 @@ export default function SystemDetailScreen() {
                 <Card key={category} theme={theme}>
                   <SectionTitle title={category} theme={theme} />
                   {catFeatures.map((f: SystemFeature, i: number) => (
-                    <View key={f.feature_name}>
+                    <View key={`${f.feature_name}-${i}`}>
                       <View style={styles.featureMatrixRow}>
                         <Text style={[styles.featureMatrixName, { color: theme.text }]}>
                           {f.feature_name}
@@ -410,34 +457,51 @@ export default function SystemDetailScreen() {
                   onChange={setEscalation}
                   theme={theme}
                 />
-                <TcoInput
-                  label="Discount %"
-                  value={discount}
-                  onChange={setDiscount}
-                  theme={theme}
-                />
-                {basePriceNum === 0 && (
-                  <Text style={[styles.tcoNote, { color: theme.mutedForeground }]}>
-                    Custom pricing — TCO uses your inputs. Update base price manually below.
+                <TcoInput label="Discount %" value={discount} onChange={setDiscount} theme={theme} />
+                <Pressable
+                  onPress={() => {
+                    setTcoError("");
+                    const seatsNum = toNum(seats);
+                    const termNum = toNum(term);
+                    const escalationNum = toNum(escalation);
+                    const discountNum = toNum(discount);
+                    const base = basePriceNum;
+                    if (base <= 0 && seatsNum <= 0) {
+                      setTcoError("Enter a valid base price or number of seats.");
+                      setTcoResult(null);
+                      return;
+                    }
+                    const year1 = seatsNum * base * 12 * (1 - discountNum / 100);
+                    const years: { year: number; cost: number }[] = [];
+                    for (let i = 1; i <= termNum; i++) {
+                      const cost = i === 1 ? year1 : year1 * Math.pow(1 + escalationNum / 100, i - 1);
+                      years.push({ year: i, cost });
+                    }
+                    setTcoResult({ total: years.reduce((sum, y) => sum + y.cost, 0), years });
+                  }}
+                  style={[styles.calcBtn, { backgroundColor: theme.primary }]}
+                >
+                  <Text style={[styles.calcBtnText, { color: theme.primaryForeground }]}>Calculate TCO</Text>
+                </Pressable>
+                {tcoError ? (
+                  <Text style={[styles.tcoNote, { color: "#E53E3E" }]}>{tcoError}</Text>
+                ) : null}
+              </Card>
+
+              {tcoResult && (
+                <Card theme={theme} bg={theme.primary}>
+                  <Text style={[styles.tcoLabel, { color: theme.primaryForeground, opacity: 0.7 }]}>
+                    Estimated {term}-year TCO
                   </Text>
-                )}
-              </Card>
-              <Card theme={theme} bg={theme.primary}>
-                <Text style={[styles.tcoLabel, { color: theme.primaryForeground, opacity: 0.7 }]}>
-                  Estimated {term}-year TCO
-                </Text>
-                <Text style={[styles.tcoTotal, { color: theme.primaryForeground }]}>
-                  ${Math.round(tcoTotal).toLocaleString()}
-                </Text>
-                <View style={[styles.divider, { backgroundColor: "rgba(255,255,255,0.2)" }]} />
-                <TcoRow label="Year 1" value={tcoYear1} color={theme.primaryForeground} />
-                {parseInt(term) >= 2 && (
-                  <TcoRow label="Year 2" value={tcoYear2} color={theme.primaryForeground} />
-                )}
-                {parseInt(term) >= 3 && (
-                  <TcoRow label="Year 3" value={tcoYear3} color={theme.primaryForeground} />
-                )}
-              </Card>
+                  <Text style={[styles.tcoTotal, { color: theme.primaryForeground }]}>
+                    ${Math.round(tcoResult.total).toLocaleString()}
+                  </Text>
+                  <View style={[styles.divider, { backgroundColor: "rgba(255,255,255,0.2)" }]} />
+                  {tcoResult.years.map((row) => (
+                    <TcoRow key={row.year} label={`Year ${row.year}`} value={row.cost} color={theme.primaryForeground} />
+                  ))}
+                </Card>
+              )}
             </>
           )}
 
@@ -453,25 +517,29 @@ export default function SystemDetailScreen() {
               ) : (
                 media.map((m: SystemMedia) => (
                   <Card key={m.id} theme={theme}>
-                    {m.media_type === "video" ? (
-                      <Video
-                        source={{ uri: m.url }}
-                        style={styles.videoPlayer}
-                        useNativeControls
-                        resizeMode={ResizeMode.CONTAIN}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.mediaPlaceholder,
-                          { backgroundColor: theme.backgroundElement },
-                        ]}
-                      >
-                        <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
-                          {m.media_type}: {m.url}
-                        </Text>
-                      </View>
-                    )}
+                     {m.media_type === "video" &&
+                     typeof m.url === "string" &&
+                     (m.url.startsWith("http://") || m.url.startsWith("https://")) ? (
+                       <Video
+                         source={{ uri: m.url }}
+                         style={styles.videoPlayer}
+                         useNativeControls
+                         resizeMode={ResizeMode.CONTAIN}
+                       />
+                     ) : (
+                       <View
+                         style={[
+                           styles.mediaPlaceholder,
+                           { backgroundColor: theme.backgroundElement },
+                         ]}
+                       >
+                         <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
+                           {m.media_type === "video"
+                             ? "Video unavailable"
+                             : `${m.media_type}: ${m.url}`}
+                         </Text>
+                       </View>
+                     )}
                     {m.caption ? (
                       <Text style={[styles.bodyText, { color: theme.mutedForeground }]}>
                         {m.caption}
@@ -536,6 +604,72 @@ export default function SystemDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={messageOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setMessageOpen(false)}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Message vendor</Text>
+            <Text style={[styles.modalSubtitle, { color: theme.mutedForeground }]}>
+              {system.vendor_name}
+            </Text>
+
+            {messageError ? (
+              <Text style={[styles.modalError, { color: "#E53E3E" }]}>{messageError}</Text>
+            ) : null}
+
+            <TextInput
+              style={[
+                styles.modalInput,
+                {
+                  color: theme.text,
+                  borderColor: theme.border,
+                  backgroundColor: theme.backgroundElement,
+                },
+              ]}
+              placeholder="Hi, I have a question about…"
+              placeholderTextColor={theme.mutedForeground}
+              value={messageBody}
+              onChangeText={setMessageBody}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => {
+                  setMessageOpen(false);
+                  setMessageBody("");
+                  setMessageError("");
+                }}
+                style={[styles.modalBtn, { borderColor: theme.border }]}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.text }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleMessageVendor}
+                disabled={messageLoading || !messageBody.trim()}
+                style={[
+                  styles.modalBtn,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: messageLoading || !messageBody.trim() ? 0.5 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.modalBtnText, { color: theme.primaryForeground }]}>
+                  {messageLoading ? "Sending…" : "Send"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -766,6 +900,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   tcoNote: { fontSize: 12, lineHeight: 17, opacity: 0.7 },
+  calcBtn: {
+    marginTop: Spacing.sm,
+    height: 44,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calcBtnText: { fontSize: 15, fontWeight: "700" },
   tcoLabel: { fontSize: 13, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
   tcoTotal: { fontSize: 40, fontWeight: "800" },
   tcoBreakRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -804,4 +946,38 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     justifyContent: "center",
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "700" },
+  modalSubtitle: { fontSize: 14, marginTop: -Spacing.xs },
+  modalError: { fontSize: 13 },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    fontSize: 15,
+    minHeight: 100,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  modalBtnText: { fontSize: 15, fontWeight: "700" },
 });
