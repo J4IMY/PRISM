@@ -47,7 +47,25 @@ function normalizePlans(payload: Record<string, unknown>) {
 
   return payload.plans.flatMap((plan) => {
     if (typeof plan === "string" && plan.trim()) {
-      return [{ name: plan.trim() }];
+      return [
+        {
+          name: plan.trim(),
+          description: null,
+          pricing_model: "custom",
+          currency: "USD",
+          base_price: null,
+          billing_cadence: null,
+          is_free: false,
+          contact_sales: false,
+          trial_available: false,
+          trial_duration_days: null,
+          minimum_seats: null,
+          maximum_seats: null,
+          is_unlimited_seats: false,
+          is_popular: false,
+          features: [],
+        },
+      ];
     }
 
     if (plan && typeof plan === "object") {
@@ -59,7 +77,36 @@ function normalizePlans(payload: Record<string, unknown>) {
       return [
         {
           name,
-          price: asString((plan as { price?: unknown }).price),
+          description: asString((plan as { description?: unknown }).description) ?? null,
+          pricing_model: asString((plan as { pricing_model?: unknown }).pricing_model) ?? "custom",
+          currency: asString((plan as { currency?: unknown }).currency) ?? "USD",
+          base_price:
+            (plan as { base_price?: unknown }).base_price !== undefined
+              ? (() => {
+                  const raw = (plan as { base_price?: unknown }).base_price;
+                  if (typeof raw === "number") return raw;
+                  if (typeof raw === "string" && raw.trim()) return parseFloat(raw);
+                  return null;
+                })()
+              : null,
+          billing_cadence: asString((plan as { billing_cadence?: unknown }).billing_cadence) ?? null,
+          is_free: (plan as { is_free?: unknown }).is_free === true,
+          contact_sales: (plan as { contact_sales?: unknown }).contact_sales === true,
+          trial_available: (plan as { trial_available?: unknown }).trial_available === true,
+          trial_duration_days:
+            (plan as { trial_duration_days?: unknown }).trial_duration_days !== undefined
+              ? Number((plan as { trial_duration_days?: unknown }).trial_duration_days) || null
+              : null,
+          minimum_seats:
+            (plan as { minimum_seats?: unknown }).minimum_seats !== undefined
+              ? Number((plan as { minimum_seats?: unknown }).minimum_seats) || null
+              : null,
+          maximum_seats:
+            (plan as { maximum_seats?: unknown }).maximum_seats !== undefined
+              ? Number((plan as { maximum_seats?: unknown }).maximum_seats) || null
+              : null,
+          is_unlimited_seats: (plan as { is_unlimited_seats?: unknown }).is_unlimited_seats === true,
+          is_popular: (plan as { is_popular?: unknown }).is_popular === true,
           features,
         },
       ];
@@ -172,11 +219,43 @@ export const APIRoute = createAPIFileRoute("/api/scraper/$id")({
           }
 
           for (const plan of plans) {
-            await client.query(
-              `INSERT INTO pricing_plans (system_id, name, price, features)
-               VALUES ($1, $2, $3, $4)`,
-              [systemId, plan.name, plan.price, plan.features],
+            const packageResult = await client.query<{ id: string }>(
+              `INSERT INTO pricing_packages (
+                 system_id, name, description, pricing_model, currency, base_price,
+                 billing_cadence, is_free, contact_sales, trial_available, trial_duration_days,
+                 minimum_seats, maximum_seats, is_unlimited_seats, is_popular, display_order
+               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+               RETURNING id`,
+              [
+                systemId,
+                plan.name,
+                plan.description,
+                plan.pricing_model,
+                plan.currency,
+                plan.base_price,
+                plan.billing_cadence,
+                plan.is_free,
+                plan.contact_sales,
+                plan.trial_available,
+                plan.trial_duration_days,
+                plan.minimum_seats,
+                plan.maximum_seats,
+                plan.is_unlimited_seats,
+                plan.is_popular,
+                0,
+              ],
             );
+
+            const packageId = packageResult.rows[0].id;
+
+            for (const feature of plan.features) {
+              await client.query(
+                `INSERT INTO package_features (package_id, feature_name)
+                 VALUES ($1, $2)
+                 ON CONFLICT (package_id, feature_name) DO NOTHING`,
+                [packageId, feature],
+              );
+            }
           }
 
           await client.query(
